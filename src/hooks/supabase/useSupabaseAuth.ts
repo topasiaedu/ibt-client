@@ -2,42 +2,60 @@ import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../../utils/supabaseClient';
 
-/**
- * Hook to manage user authentication state and actions in a Supabase application.
- * @returns An object with the current user, signIn, and signOut functions.
- */
 const useSupabaseAuth = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true); // Added loading state
 
   useEffect(() => {
-    // Retrieve current session and set user state accordingly
-    const user = supabase.auth.getUser();
-    user.then((data) => setUser(data.data.user));
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
 
+      if (error) {
+        console.error('Error getting user:', error);
+      }
 
-    // Listen for authentication state changes
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(user);
+      setLoading(false); // Update loading state after user is set
+    };
+
+    fetchUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
+      setLoading(false); // Ensure to set loading to false here as well
     });
 
-    // Cleanup listener on component unmount
     return () => {
       listener?.subscription.unsubscribe();
     };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const response = await supabase.auth.signInWithPassword({ email, password });
-    setUser(response.data.user);
-    return response;
+    setLoading(true); // Consider setting loading to true to indicate starting the sign-in process
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      console.error('Error during sign in:', error);
+      setLoading(false); // Ensure to set loading to false in case of an error
+      return { error };
+    }
+    setUser(data.user);
+    setLoading(false);
+    return { user: data.user };
   }, []);
 
-  const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-  }, []);
+    const signOut = useCallback(async () => {
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error during sign out:', error);
+        setLoading(false);
+        return { error };
+      }
+      setUser(null);
+      setLoading(false);
+    }, []);
 
-  return { user, signIn, signOut };
-};
+    return { user, signIn, signOut, loading };
+  } 
 
-export { useSupabaseAuth }
+  export default useSupabaseAuth;
