@@ -1,0 +1,51 @@
+import { supabase } from '../utils/supabaseClient';
+import { Contact } from '../types/contactTypes';
+export const getContacts = async (): Promise<Contact[]> => {
+  let { data: contacts, error } = await supabase
+    .from('contacts')
+    .select('*');
+
+  if (error) throw new Error(error.message);
+  return contacts as Contact[];
+}
+
+export const getContact = async (id: string): Promise<Contact> => {
+  let { data: contact, error } = await supabase
+    .from('contacts')
+    .select('*')
+    .match({ id })
+    .single(); // Use .single() if you're fetching one row to get an object instead of an array back
+
+  if (error) throw new Error(error.message);
+  return contact as Contact;
+}
+
+export const createContact = async (formData: Contact): Promise<Contact> => {
+  const { data, error } = await supabase
+    .from('contacts')
+    .insert([formData])
+    .single(); // Use .single() if you're inserting one row to get an object instead of an array back
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updateContact = async (id: number, formData: Contact): Promise<Contact | null> => {
+  const { data, error } = await supabase
+    .from('contacts')
+    .update(formData)
+    .match({ id });
+
+  if (error) throw new Error(error.message);
+  return data as Contact | null;
+};
+
+export const deleteContact = async (id: number): Promise<Contact | null> => {
+  const { data, error } = await supabase
+    .from('contacts')
+    .delete()
+    .match({ id });
+
+  if (error) throw new Error(error.message);
+  return data as Contact | null;
+};

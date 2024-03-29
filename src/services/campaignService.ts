@@ -12,7 +12,7 @@ export const getCampaigns = async (): Promise<Campaign[]> => {
   return campaigns as Campaign[];
 };
 
-export const getCampaign = async (id: string): Promise<Campaign> => {
+export const getCampaign = async (id: number): Promise<Campaign> => {
   let { data: campaign, error } = await supabase
     .from('campaigns')
     .select('*')
@@ -33,10 +33,20 @@ export const createCampaign = async (formData: CampaignFormData): Promise<Campai
   return data;
 };
 
-export const updateCampaign = async (id: string, formData: CampaignFormData): Promise<Campaign | null> => {
+export const updateCampaign = async (id: number, formData: CampaignFormData): Promise<Campaign | null> => {
   const { data, error } = await supabase
     .from('campaigns')
     .update(formData)
+    .match({ id });
+
+  if (error) throw new Error(error.message);
+  return data as Campaign | null;
+};
+
+export const deleteCampaign = async (id: number): Promise<Campaign | null> => {
+  const { data, error } = await supabase
+    .from('campaigns')
+    .delete()
     .match({ id });
 
   if (error) throw new Error(error.message);

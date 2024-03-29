@@ -1,8 +1,8 @@
 // /hooks/useCampaign.ts
 
 import { useState, useEffect, useCallback } from 'react';
-import { Campaign, CampaignFormData } from '../types/campaignTypes';
-import * as campaignService from '../services/campaignService';
+import { Campaign, CampaignFormData } from '../../types/campaignTypes';
+import * as campaignService from '../../services/campaignService';
 
 export const useCampaigns = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -20,7 +20,7 @@ export const useCampaigns = () => {
     }
   }, []);
 
-  const fetchCampaign = async (id: string) => {
+  const fetchCampaign = async (id: number) => {
     setIsLoading(true);
     try {
       const data = await campaignService.getCampaign(id);
@@ -43,7 +43,7 @@ export const useCampaigns = () => {
     }
   };
 
-  const updateCampaign = async (id: string, formData: CampaignFormData) => {
+  const updateCampaign = async (id: number, formData: CampaignFormData) => {
     setIsLoading(true);
     try {
       const updatedCampaign = await campaignService.updateCampaign(id, formData);

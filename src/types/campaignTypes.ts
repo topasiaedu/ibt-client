@@ -1,7 +1,7 @@
 // /types/campaignTypes.ts
 
 export interface Campaign {
-  id: string;
+  id: number;
   campaign_id: number;
   project_id: number;
   template_id: number;

@@ -31,6 +31,7 @@ import WhatsAppContactListPage from "./pages/whatsapp/contact-list/list";
 import TemplateListPage from "./pages/whatsapp/templates/list";
 import ConversationPage from "./pages/whatsapp/conversation/index";
 import PrivacyPage from "./pages/legal/privacy";
+import LoadingPage from "./pages/pages/loading";
 
 const App = () => (
   <BrowserRouter>
@@ -69,6 +70,9 @@ const App = () => (
         {/* Legal Pages */}
         <Route path="/legal/privacy" element={<PrivacyPage />} />
 
+        {/* Testing */}
+        <Route path="/loading" element={<LoadingPage />} />
+        
         {/* Error Handling Routes */}
         <Route path="/500" element={<ServerErrorPage />} />
         <Route path="*" element={<NotFoundPage />} />
