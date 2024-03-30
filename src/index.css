@@ -74,4 +74,39 @@
   @apply hover:bg-gray-50 cursor-pointer !important;
 }
 
+/* Transparent background minimalist scrollbar with rounded ends */
+::-webkit-scrollbar {
+  width: 12px;
+}
 
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 6px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+  scale: 1.1;
+}
+
+/* Custom scrollbar for Firefox */
+
+/* width */
+* {
+  scrollbar-width: thin;
+}
+
+/* Track */
+* {
+  scrollbar-color: #d1d5db transparent;
+}
+
+/* Handle on hover */
+
+* {
+  scrollbar-color: #9ca3af transparent;
+}

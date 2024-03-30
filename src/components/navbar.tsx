@@ -4,9 +4,7 @@ import {
   Avatar,
   DarkThemeToggle,
   Dropdown,
-  Label,
   Navbar,
-  TextInput,
 } from "flowbite-react";
 import {
   HiArchive,
@@ -24,7 +22,7 @@ import {
 import { useSidebarContext } from "../context/SidebarContext";
 import React from "react";
 
-const ExampleNavbar: FC = function () {
+const ExampleNavbar: React.FC = function () {
   const { isOpenOnSmallScreens, setOpenOnSmallScreens } =
     useSidebarContext();
 

@@ -5,9 +5,9 @@ import React from "react";
 const ChatWindow: React.FC = function () {
   return (
     <>
-      <div className="col-span-2 m-auto mb-5 h-full max-w-3xl space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6">
+      <div className="col-span-2 m-auto mb-5 h-full max-w-3xl space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full">
         {/* Chat Messages */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 xl:h-[calc(100vh-15rem)] overflow-y-auto">
           <TextMessage />
           <ImageMessage />
           <VoiceMessage />
@@ -49,7 +49,7 @@ const ChatWindow: React.FC = function () {
 const TextMessage: React.FC = function () {
   return (
     <div className="flex items-start gap-2.5">
-      <img className="w-8 h-8 rounded-full" src="/docs/images/people/profile-picture-3.jpg" alt="" />
+      <img className="w-8 h-8 rounded-full" src="../../images/users/jese-leos-2x.png" alt="" />
       <div className="flex flex-col gap-1 w-full max-w-[320px]">
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <span className="text-sm font-semibold text-gray-900 dark:text-white">Bonnie Green</span>
@@ -68,7 +68,7 @@ const ImageMessage: React.FC = function () {
   return (
 
     <div className="flex items-start gap-2.5">
-      <img className="w-8 h-8 rounded-full" src="/docs/images/people/profile-picture-3.jpg" alt="" />
+      <img className="w-8 h-8 rounded-full" src="../../images/users/jese-leos-2x.png" alt="" />
       <div className="flex flex-col gap-1">
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <span className="text-sm font-semibold text-gray-900 dark:text-white">Bonnie Green</span>
@@ -102,7 +102,7 @@ const VoiceMessage: React.FC = function () {
   return (
 
     <div className="flex items-start gap-2.5">
-      <img className="w-8 h-8 rounded-full" src="/docs/images/people/profile-picture-3.jpg" alt="" />
+      <img className="w-8 h-8 rounded-full" src="../../images/users/jese-leos-2x.png" alt="" />
       <div className="flex flex-col gap-1">
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <span className="text-sm font-semibold text-gray-900 dark:text-white">Bonnie Green</span>
@@ -159,7 +159,7 @@ const FileMessage: React.FC = function () {
   return (
 
     <div className="flex items-start gap-2.5">
-      <img className="w-8 h-8 rounded-full" src="/docs/images/people/profile-picture-3.jpg" alt="" />
+      <img className="w-8 h-8 rounded-full" src="../../images/users/jese-leos-2x.png" alt="" />
       <div className="flex flex-col gap-1">
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <span className="text-sm font-semibold text-gray-900 dark:text-white">Bonnie Green</span>
@@ -219,7 +219,7 @@ const MultipleImagesMessage: React.FC = function () {
   return (
 
     <div className="flex items-start gap-2.5">
-      <img className="h-8 w-8 rounded-full" src="/docs/images/people/profile-picture-3.jpg" alt="" />
+      <img className="h-8 w-8 rounded-full" src="../../images/users/jese-leos-2x.png" alt="" />
       <div className="flex flex-col gap-2.5">
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <span className="text-sm font-semibold text-gray-900 dark:text-white">Bonnie Green</span>
@@ -240,7 +240,7 @@ const MultipleImagesMessage: React.FC = function () {
                   <div className="tooltip-arrow" data-popper-arrow></div>
                 </div>
               </div>
-              <img src="/docs/images/blog/image-1.jpg" className="rounded-lg" alt="" />
+              <img src="../../images/users/jese-leos-2x.png" className="rounded-lg" alt="" />
             </div>
             <div className="group relative">
               <div className="absolute w-full h-full bg-gray-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
@@ -254,7 +254,7 @@ const MultipleImagesMessage: React.FC = function () {
                   <div className="tooltip-arrow" data-popper-arrow></div>
                 </div>
               </div>
-              <img src="/docs/images/blog/image-2.jpg" className="rounded-lg" alt="" />
+              <img src="../../images/users/jese-leos-2x.png" className="rounded-lg" alt="" />
             </div>
             <div className="group relative">
               <div className="absolute w-full h-full bg-gray-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
@@ -268,7 +268,7 @@ const MultipleImagesMessage: React.FC = function () {
                   <div className="tooltip-arrow" data-popper-arrow></div>
                 </div>
               </div>
-              <img src="/docs/images/blog/image-3.jpg" className="rounded-lg" alt="" />
+              <img src="../../images/users/jese-leos-2x.png" className="rounded-lg" alt="" />
             </div>
             <div className="group relative">
               <button className="absolute w-full h-full bg-gray-900/90 hover:bg-gray-900/50 transition-all duration-300 rounded-lg flex items-center justify-center">
@@ -278,7 +278,7 @@ const MultipleImagesMessage: React.FC = function () {
                   <div className="tooltip-arrow" data-popper-arrow></div>
                 </div>
               </button>
-              <img src="/docs/images/blog/image-1.jpg" className="rounded-lg" alt="" />
+              <img src="../../images/users/jese-leos-2x.png" className="rounded-lg" alt="" />
             </div>
           </div>
         </div>
