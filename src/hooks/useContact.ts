@@ -31,6 +31,7 @@ export const useContacts = () => {
   };
 
   const addContact = async (formData: Contact) => {
+    console.log("Form Data: ", formData);
     try {
       const newContact = await contactService.createContact(formData);
       setContacts(prev => [...prev, newContact]);
@@ -41,11 +42,11 @@ export const useContacts = () => {
     }
   };
 
-  const updateContact = async (id: number, formData: Contact) => {
+  const updateContact = async (contact_id: number, formData: Contact) => {
     setIsLoading(true);
     try {
-      const updatedContact = await contactService.updateContact(id, formData);
-      setContacts(prev => prev.map(contact => contact.id === id ? updatedContact : contact).filter(Boolean) as Contact[]);
+      const updatedContact = await contactService.updateContact(contact_id, formData);
+      setContacts(prev => prev.map(contact => contact.contact_id === contact_id ? updatedContact : contact).filter(Boolean) as Contact[]);
     } catch (error) {
       console.error('Failed to update contact:', error);
     } finally {
@@ -53,11 +54,11 @@ export const useContacts = () => {
     }
   };
 
-  const deleteContact = async (id: number) => {
+  const deleteContact = async (contact_id: number) => {
     setIsLoading(true);
     try {
-      await contactService.deleteContact(id);
-      setContacts(prev => prev.filter(contact => contact.id !== id));
+      await contactService.deleteContact(contact_id);
+      setContacts(prev => prev.filter(contact => contact.contact_id !== contact_id));
     } catch (error) {
       console.error('Failed to delete contact:', error);
     } finally {

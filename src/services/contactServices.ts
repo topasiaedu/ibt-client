@@ -27,14 +27,15 @@ export const createContact = async (formData: Contact): Promise<Contact> => {
     .single(); // Use .single() if you're inserting one row to get an object instead of an array back
 
   if (error) throw new Error(error.message);
+  console.log(data);
   return data;
 };
 
-export const updateContact = async (id: number, formData: Contact): Promise<Contact | null> => {
+export const updateContact = async (contact_id: number, formData: Contact): Promise<Contact | null> => {
   const { data, error } = await supabase
     .from('contacts')
     .update(formData)
-    .match({ id });
+    .match({ contact_id });
 
   if (error) throw new Error(error.message);
   return data as Contact | null;

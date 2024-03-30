@@ -10,9 +10,24 @@ import React, { useState } from "react";
 import {
   HiPlus,
 } from "react-icons/hi";
+import { useContacts } from "../../hooks/useContact";
+import { Contact } from "../../types/contactTypes";
+import SuccessAlert from "../../components/alerts/success";
 
 const AddContactModal: FC = function () {
   const [isOpen, setOpen] = useState(false);
+  const { addContact } = useContacts();
+  const [contactData, setContactData] = useState({
+    name: "",
+    email: "",
+    wa_id: "",
+  });
+
+  const handleAddContact = async () => {
+    await addContact(contactData as Contact);
+    
+    setOpen(false);
+  };
 
   return (
     <>
@@ -29,21 +44,17 @@ const AddContactModal: FC = function () {
         <Modal.Body>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
-              <Label htmlFor="firstName">First name</Label>
+              <Label htmlFor="firstName">Full name</Label>
               <div className="mt-1">
                 <TextInput
                   id="firstName"
                   name="firstName"
                   placeholder="Bonnie"
+                  value={contactData.name}
+                  onChange={(e) => setContactData({ ...contactData, name: e.target.value })}
                 />
               </div>
-            </div>
-            <div>
-              <Label htmlFor="lastName">Last name</Label>
-              <div className="mt-1">
-                <TextInput id="lastName" name="lastName" placeholder="Green" />
-              </div>
-            </div>
+            </div>           
             <div>
               <Label htmlFor="email">Email</Label>
               <div className="mt-1">
@@ -52,6 +63,8 @@ const AddContactModal: FC = function () {
                   name="email"
                   placeholder="example@company.com"
                   type="email"
+                  value={contactData.email}
+                  onChange={(e) => setContactData({ ...contactData, email: e.target.value })}
                 />
               </div>
             </div>
@@ -63,33 +76,15 @@ const AddContactModal: FC = function () {
                   name="phone"
                   placeholder="e.g., +(12)3456 789"
                   type="tel"
+                  value={contactData.wa_id}
+                  onChange={(e) => setContactData({ ...contactData, wa_id: e.target.value })}
                 />
               </div>
-            </div>
-            <div>
-              <Label htmlFor="department">Department</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="department"
-                  name="department"
-                  placeholder="Development"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="company">Company</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="company"
-                  name="company"
-                  placeholder="Somewhere"
-                />
-              </div>
-            </div>
+            </div>          
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button color="primary" onClick={() => setOpen(false)}>
+          <Button color="primary" onClick={handleAddContact}>
             Add user
           </Button>
         </Modal.Footer>
