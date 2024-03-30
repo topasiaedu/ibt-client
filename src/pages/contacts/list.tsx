@@ -6,7 +6,7 @@ import {
   TextInput,
 } from "flowbite-react";
 import type { FC } from "react";
-import React, { useEffect } from "react";
+import React from "react";
 import {
   HiHome,
 } from "react-icons/hi";

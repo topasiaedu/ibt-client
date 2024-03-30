@@ -24,6 +24,8 @@ const EditContactModal: FC<EditContactModalProps> = ({ contact }) => {
   const handleUpdateContact = async (contact_id: number, formData: Contact) => {
     await updateContact(contact_id, formData);
     setOpen(false);
+    // Refresh the page to show the new contact
+    window.location.reload();
   }  
 
   return (

@@ -12,7 +12,6 @@ import {
 } from "react-icons/hi";
 import { useContacts } from "../../hooks/useContact";
 import { Contact } from "../../types/contactTypes";
-import SuccessAlert from "../../components/alerts/success";
 
 const AddContactModal: FC = function () {
   const [isOpen, setOpen] = useState(false);
@@ -25,8 +24,9 @@ const AddContactModal: FC = function () {
 
   const handleAddContact = async () => {
     await addContact(contactData as Contact);
-    
     setOpen(false);
+    // Refresh the page to show the new contact
+    window.location.reload();
   };
 
   return (
