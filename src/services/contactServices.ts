@@ -1,5 +1,5 @@
 import { supabase } from '../utils/supabaseClient';
-import { Contact } from '../types/contactTypes';
+import { Contact, CreateContactFormData } from '../types/contactTypes';
 export const getContacts = async (): Promise<Contact[]> => {
   let { data: contacts, error } = await supabase
     .from('contacts')
@@ -20,7 +20,7 @@ export const getContact = async (id: string): Promise<Contact> => {
   return contact as Contact;
 }
 
-export const createContact = async (formData: Contact): Promise<Contact> => {
+export const createContact = async (formData: CreateContactFormData): Promise<Contact> => {
   const { data, error } = await supabase
     .from('contacts')
     .insert([formData])
@@ -50,3 +50,13 @@ export const deleteContact = async (id: number): Promise<Contact | null> => {
   if (error) throw new Error(error.message);
   return data as Contact | null;
 };
+
+export const findContact = async (contact: Contact): Promise<Contact | null> => {
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('*')
+    .match({ wa_id: contact.wa_id });
+
+  if (error) throw new Error(error.message);
+  return data ? data[0] : null;
+}

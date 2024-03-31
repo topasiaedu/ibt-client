@@ -54,6 +54,7 @@ const App = () => (
           <Route path="/whatsapp/campaigns" element={<CampaignListPage />} />
           <Route path="/whatsapp/templates" element={<TemplateListPage />} />
           <Route path="/whatsapp/contact-list" element={<WhatsAppContactListPage />} />
+          {/* <Route path="/whatsapp/contact-list-members" element={<WhatsAppContactListPage />} /> */}
           <Route path="/users/profile" element={<UserProfilePage />} />
           <Route path="/users/settings" element={<UserSettingsPage />} />
         </Route>

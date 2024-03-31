@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as contactService from '../services/contactServices'
-import { Contact } from '../types/contactTypes';
+import { Contact, CreateContactFormData } from '../types/contactTypes';
 
 export const useContacts = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -30,11 +30,12 @@ export const useContacts = () => {
     }
   };
 
-  const addContact = async (formData: Contact) => {
+  const addContact = async (formData: CreateContactFormData) => {
     console.log("Form Data: ", formData);
     try {
       const newContact = await contactService.createContact(formData);
       setContacts(prev => [...prev, newContact]);
+      return newContact;
     } catch (error) {
       console.error('Failed to add contact:', error);
     } finally {
@@ -66,9 +67,21 @@ export const useContacts = () => {
     }
   };
 
+  const findContact = async (contact: Contact) => {
+    setIsLoading(true);
+    try {
+      const data = await contactService.findContact(contact);
+      return data;
+    } catch (error) {
+      console.error('Failed to find contact:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchContacts();
   }, [fetchContacts]);
 
-  return { contacts, isLoading, addContact, updateContact, deleteContact, fetchContact };
+  return { contacts, isLoading, addContact, updateContact, deleteContact, fetchContact, findContact };
 }

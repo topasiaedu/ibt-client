@@ -11,7 +11,7 @@ import {
   HiPlus,
 } from "react-icons/hi";
 import { useContacts } from "../../hooks/useContact";
-import { Contact } from "../../types/contactTypes";
+import { CreateContactFormData } from "../../types/contactTypes";
 
 const AddContactModal: FC = function () {
   const [isOpen, setOpen] = useState(false);
@@ -23,7 +23,7 @@ const AddContactModal: FC = function () {
   });
 
   const handleAddContact = async () => {
-    await addContact(contactData as Contact);
+    await addContact(contactData as CreateContactFormData);
     setOpen(false);
     // Refresh the page to show the new contact
     window.location.reload();

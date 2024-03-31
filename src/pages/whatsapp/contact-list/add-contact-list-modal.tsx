@@ -10,87 +10,67 @@ import React, { useState } from "react";
 import {
   HiPlus,
 } from "react-icons/hi";
+import { useContactLists } from "../../../hooks/whatsapp/useContactList";
+import { ContactList } from "../../../types/contactListTypes";
 
 const AddContactListModal: FC = function () {
   const [isOpen, setOpen] = useState(false);
+  const { addContactList } = useContactLists();
+  const [contactListData, setContactListData] = useState({
+    name: "",
+    description: "",
+  });
+
+  const handleAddContactList = async () => {
+    await addContactList(contactListData as ContactList);
+    setOpen(false);
+    // Refresh the page to show the new contact
+    window.location.reload();
+  };
 
   return (
     <>
       <Button color="primary" onClick={() => setOpen(true)}>
         <div className="flex items-center gap-x-3">
           <HiPlus className="text-xl" />
-          Add ContactList
+          Add Contact List
         </div>
       </Button>
-      <Modal onClose={() => setOpen(false)} show={isOpen}>
+      <Modal onClose={() => setOpen(false)} show={isOpen} >
         <Modal.Header className="border-b border-gray-200 !p-6 dark:border-gray-700">
-          <strong>Add new user</strong>
+          <strong>Add new Contact List</strong>
         </Modal.Header>
         <Modal.Body>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
-              <Label htmlFor="firstName">First name</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="firstName"
-                  name="firstName"
-                  placeholder="Bonnie"
-                />
-              </div>
+              <Label htmlFor="name">
+                Name
+              </Label>
+              <TextInput
+                id="name"
+                name="name"
+                placeholder="Enter name"
+                value={contactListData.name}
+                onChange={(e) => setContactListData({ ...contactListData, name: e.target.value })}
+              />
             </div>
             <div>
-              <Label htmlFor="lastName">Last name</Label>
-              <div className="mt-1">
-                <TextInput id="lastName" name="lastName" placeholder="Green" />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="email"
-                  name="email"
-                  placeholder="example@company.com"
-                  type="email"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone number</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="phone"
-                  name="phone"
-                  placeholder="e.g., +(12)3456 789"
-                  type="tel"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="department">Department</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="department"
-                  name="department"
-                  placeholder="Development"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="company">Company</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="company"
-                  name="company"
-                  placeholder="Somewhere"
-                />
-              </div>
+              <Label htmlFor="description">
+                Description
+              </Label>
+              <TextInput
+                id="description"
+                name="description"
+                placeholder="Enter description"
+                value={contactListData.description}
+                onChange={(e) => setContactListData({ ...contactListData, description: e.target.value })}
+              />
             </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button color="primary" onClick={() => setOpen(false)}>
-            Add user
+          <Button color="primary" onClick={handleAddContactList}>
+            Add Contact List
           </Button>
         </Modal.Footer>
       </Modal>

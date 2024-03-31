@@ -19,6 +19,7 @@ import LoadingPage from "../pages/loading";
 
 const ContactListPage: FC = function () {
   const { contacts, isLoading } = useContacts();
+  const [searchValue, setSearchValue] = React.useState("");
 
   if (isLoading) {
     return <LoadingPage />;
@@ -53,7 +54,9 @@ const ContactListPage: FC = function () {
                   <TextInput
                     id="users-search"
                     name="users-search"
-                    placeholder="Search for users"
+                    placeholder="Search for Contacts"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
                   />
                 </div>
               </form>             
@@ -69,7 +72,8 @@ const ContactListPage: FC = function () {
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-hidden shadow">
               {contacts.length > 0 ? (
-                <ContactsTable contacts={contacts} />
+                <ContactsTable contacts={contacts.filter((contact) => contact.name.toLowerCase().includes(searchValue.toLowerCase()) || contact.wa_id.toLowerCase().includes(searchValue.toLowerCase()))} />
+
               ) : (
                 <div className="p-4 text-center">No contacts found</div>
               )}

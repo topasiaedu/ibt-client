@@ -14,13 +14,15 @@ export interface ListOfContacts {
 
 export interface CreateContactFormData{
   name: string
-  phone: string
-  email: string
+  phone: string | null
+  email: string | null
+  wa_id: string
 }
 
 export interface UpdateContactFormData{
   name: string
   phone: string
   email: string
+  wa_id: string
 }
 
