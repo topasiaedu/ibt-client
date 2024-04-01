@@ -11,8 +11,8 @@ const SignInPage: FC = function () {
   const { signIn } = useSupabaseAuth(); // Use signIn from useSupabaseAuth
 
   // Assume you've defined a state htmlFor email and password to capture form inputs
-  const [email, setEmail] = React.useState('stanley121499@gmail.com');
-  const [password, setPassword] = React.useState('12345678');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent default form submission behavior

@@ -21,6 +21,7 @@ import {
 } from "react-icons/hi";
 import { useSidebarContext } from "../context/SidebarContext";
 import React from "react";
+import  useSupabaseAuth from "../hooks/supabase/useSupabaseAuth";
 
 const ExampleNavbar: React.FC = function () {
   const { isOpenOnSmallScreens, setOpenOnSmallScreens } =
@@ -195,6 +196,8 @@ const AppDrawerDropdown: FC = function () {
 };
 
 const UserDropdown: FC = function () {
+  const { user, signOut } = useSupabaseAuth();
+
   return (
     <Dropdown
       arrowIcon={false}
@@ -221,7 +224,9 @@ const UserDropdown: FC = function () {
       <Dropdown.Item>Settings</Dropdown.Item>
       <Dropdown.Item>Earnings</Dropdown.Item>
       <Dropdown.Divider />
-      <Dropdown.Item>Sign out</Dropdown.Item>
+      <Dropdown.Item
+      onClick={() => signOut()}
+      >Sign out</Dropdown.Item>
     </Dropdown>
   );
 };
