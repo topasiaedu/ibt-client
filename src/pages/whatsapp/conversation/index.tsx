@@ -4,54 +4,25 @@ import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
 import ChatList from "./chat-list";
 import ChatWindow from "./chat-window";
 import ContactProfile from "./contact-profile";
-
-// Example conversation data
-const conversations = [
-  {
-    id: "1",
-    name: "Bonnie Green",
-    last_message: "Hey, how are you?",
-    lastSeen: "1 min ago",
-    avatarUrl: "../../images/users/bonnie-green.png",
-  },
-  {
-    id: "2",
-    name: "Bonnie Green",
-    last_message: "Hey, how are you?",
-    lastSeen: "1 min ago",
-    avatarUrl: "../../images/users/bonnie-green.png",
-  },
-  {
-    id: "3",
-    name: "Bonnie Green",
-    last_message: "Hey, how are you?",
-    lastSeen: "1 min ago",
-    avatarUrl: "../../images/users/bonnie-green.png",
-  },
-  {
-    id: "4",
-    name: "Bonnie Green",
-    last_message: "Hey, how are you?",
-    lastSeen: "1 min ago",
-    avatarUrl: "../../images/users/bonnie-green.png",
-  },
-  {
-    id: "5",
-    name: "Bonnie Green",
-    last_message: "Hey, how are you?",
-    lastSeen: "1 min ago",
-    avatarUrl: "../../images/users/bonnie-green.png",
-  },
-  // Add more conversations here
-];
+import { useMessages } from "../../../hooks/whatsapp/useMessages";
+import { Conversation } from "../../../types/messagesTypes";
+import LoadingPage from "../../pages/loading";
 
 const ConversationPage: React.FC = function () {
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const { conversations, isLoading } = useMessages();
 
-  const handleSelectConversation = (conversationId: string) => {
-    console.log("Selected conversation ID:", conversationId);
-    setSelectedConversationId(conversationId);
+  const handleSelectConversation = (index: number) => {
+    setSelectedIndex(index);
   };
+
+  if (isLoading) {
+    return (
+      <LoadingPage />
+    );
+  }
+  console.log(conversations);
+  
 
   return (
     <NavbarSidebarLayout>
@@ -59,10 +30,10 @@ const ConversationPage: React.FC = function () {
         <ChatList
           conversations={conversations}
           onSelect={handleSelectConversation}
-          selectedConversationId={selectedConversationId}
+          selectedIndex={selectedIndex}
         />
-        <ChatWindow />
-        <ContactProfile />
+        <ChatWindow conversation={conversations[selectedIndex]} />
+        {/* <ContactProfile /> */}
       </div>
     </NavbarSidebarLayout>
   );

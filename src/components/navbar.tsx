@@ -196,7 +196,7 @@ const AppDrawerDropdown: FC = function () {
 };
 
 const UserDropdown: FC = function () {
-  const { user, signOut } = useSupabaseAuth();
+  const { signOut } = useSupabaseAuth();
 
   return (
     <Dropdown
