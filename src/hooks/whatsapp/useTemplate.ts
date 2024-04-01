@@ -18,10 +18,10 @@ export const useTemplates = () => {
     }
   }, []);
 
-  const fetchTemplate = async (id: number) => {
+  const fetchTemplate = async (template_id: number) => {
     setIsLoading(true);
     try {
-      const data = await templateService.getTemplate(id);
+      const data = await templateService.getTemplate(template_id);
       return data;
     } catch (error) {
       console.error('Failed to fetch template:', error);
@@ -41,11 +41,11 @@ export const useTemplates = () => {
     }
   };
 
-  const updateTemplate = async (id: number, formData: TemplateFormData) => {
+  const updateTemplate = async (template_id: number, formData: TemplateFormData) => {
     setIsLoading(true);
     try {
-      const updatedTemplate = await templateService.updateTemplate(id, formData);
-      setTemplates(prev => prev.map(template => template.id === id ? updatedTemplate : template).filter(Boolean) as Template[]);
+      const updatedTemplate = await templateService.updateTemplate(template_id, formData);
+      setTemplates(prev => prev.map(template => template.template_id === template_id ? updatedTemplate : template).filter(Boolean) as Template[]);
     } catch (error) {
       console.error('Failed to update template:', error);
     } finally {
@@ -53,11 +53,11 @@ export const useTemplates = () => {
     }
   };
 
-  const deleteTemplate = async (id: number) => {
+  const deleteTemplate = async (template_id: number) => {
     setIsLoading(true);
     try {
-      await templateService.deleteTemplate(id);
-      setTemplates(prev => prev.filter(template => template.id !== id));
+      await templateService.deleteTemplate(template_id);
+      setTemplates(prev => prev.filter(template => template.template_id !== template_id));
     } catch (error) {
       console.error('Failed to delete template:', error);
     } finally {

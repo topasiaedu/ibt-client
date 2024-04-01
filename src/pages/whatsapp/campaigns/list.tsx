@@ -14,7 +14,7 @@ import {
 } from "react-icons/hi";
 import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
 import AddCampaignModal from "./add-campaign-modal";
-import EditCampaignModal from "./edit-campaign-modal";
+// import EditCampaignModal from "./edit-campaign-modal";
 
 const CampaignListPage: FC = function () {
   return (
@@ -111,7 +111,7 @@ const campaigns = [
   {
     id: 1,
     name: 'Spring Promo',
-    template: 'Promotional',
+    template: 'Marketing',
     status: 'Completed',
     totalContacts: 150, // Example statistic
     totalSent: 145, // Example statistic
@@ -136,7 +136,7 @@ const CampaignsTable: FC = function () {
         <Table.HeadCell className="text-center">Total Contacts</Table.HeadCell>
         <Table.HeadCell className="text-center">Total Sent</Table.HeadCell>
         <Table.HeadCell className="text-center">Total Failed</Table.HeadCell>
-        <Table.HeadCell>Actions</Table.HeadCell> {/* Remove Delete Action */}
+        {/* <Table.HeadCell>Actions</Table.HeadCell>  */}
       </Table.Head>
       <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
         {campaigns.map((campaign) => (
@@ -154,12 +154,11 @@ const CampaignsTable: FC = function () {
             <Table.Cell className="text-center">{campaign.totalContacts}</Table.Cell>
             <Table.Cell className="text-center">{campaign.totalSent}</Table.Cell>
             <Table.Cell className="text-center">{campaign.totalFailed}</Table.Cell>
-            <Table.Cell>
+            {/* <Table.Cell>
               <div className="flex items-center gap-x-3 whitespace-nowrap">
                 <EditCampaignModal campaignId={campaign.id} />
-                {/* Removed DeleteUserModal from Actions */}
               </div>
-            </Table.Cell>
+            </Table.Cell> */}
           </Table.Row>
         ))}
       </Table.Body>

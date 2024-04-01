@@ -1,20 +1,18 @@
 // /types/campaignTypes.ts
 
 export interface Campaign {
-  id: number;
-  campaign_id: number;
-  project_id: number;
-  template_id: number;
-  name: string;
-  description: string;
-  status: 'draft' | 'active' | 'completed';
-  created_at: Date;
-  updated_at: Date;
+  campaign_id: number
+  contact_list_id: number
+  created_at: string | null
+  name: string
+  post_time: string
+  template_id: number | null
+  updated_at: string | null
 }
 
 export interface CampaignFormData {
-  project_id: number;
-  template_id: number;
-  name: string;
-  description: string;
+  name: string
+  template_id: number
+  contact_list_id: number
+  post_time: string
 }

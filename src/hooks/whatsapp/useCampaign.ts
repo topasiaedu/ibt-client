@@ -20,10 +20,10 @@ export const useCampaigns = () => {
     }
   }, []);
 
-  const fetchCampaign = async (id: number) => {
+  const fetchCampaign = async (campaign_id: number) => {
     setIsLoading(true);
     try {
-      const data = await campaignService.getCampaign(id);
+      const data = await campaignService.getCampaign(campaign_id);
       return data;
     } catch (error) {
       console.error('Failed to fetch campaign:', error);
@@ -43,11 +43,11 @@ export const useCampaigns = () => {
     }
   };
 
-  const updateCampaign = async (id: number, formData: CampaignFormData) => {
+  const updateCampaign = async (campaign_id: number, formData: CampaignFormData) => {
     setIsLoading(true);
     try {
-      const updatedCampaign = await campaignService.updateCampaign(id, formData);
-      setCampaigns(prev => prev.map(campaign => campaign.id === id ? updatedCampaign : campaign).filter(Boolean) as Campaign[]);
+      const updatedCampaign = await campaignService.updateCampaign(campaign_id, formData);
+      setCampaigns(prev => prev.map(campaign => campaign.campaign_id === campaign_id ? updatedCampaign : campaign).filter(Boolean) as Campaign[]);
     } catch (error) {
       console.error('Failed to update campaign:', error);
     } finally {

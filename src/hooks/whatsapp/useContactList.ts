@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as contactListService from '../../services/contactListService';
 import { ContactList } from '../../types/contactListTypes';
-import { Contact } from '../../types/contactTypes';
 
 export const useContactLists = () => {
   const [contactLists, setContactLists] = useState<ContactList[]>([]);

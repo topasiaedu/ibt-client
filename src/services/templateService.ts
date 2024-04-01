@@ -1,4 +1,4 @@
-import { Template } from "../types/templateTypes";
+import { Template, TemplateFormData } from "../types/templateTypes";
 import { supabase } from "../utils/supabaseClient";
 
 export const getTemplates = async (): Promise<Template[]> => {
@@ -10,18 +10,18 @@ export const getTemplates = async (): Promise<Template[]> => {
   return templates as Template[];
 };
 
-export const getTemplate = async (id: number): Promise<Template> => {
+export const getTemplate = async (template_id: number): Promise<Template> => {
   let { data: template, error } = await supabase
     .from("templates")
     .select("*")
-    .match({ id })
+    .match({ template_id })
     .single(); // Use .single() if you're fetching one row to get an object instead of an array back
 
   if (error) throw new Error(error.message);
   return template as Template;
 }
 
-export const createTemplate = async (formData: Template): Promise<Template> => {
+export const createTemplate = async (formData: TemplateFormData): Promise<Template> => {
   const { data, error } = await supabase
     .from("templates")
     .insert([formData])
@@ -31,21 +31,21 @@ export const createTemplate = async (formData: Template): Promise<Template> => {
   return data;
 }
 
-export const updateTemplate = async (id: number, formData: Template): Promise<Template | null> => {
+export const updateTemplate = async (template_id: number, formData: TemplateFormData): Promise<Template | null> => {
   const { data, error } = await supabase
     .from("templates")
     .update(formData)
-    .match({ id });
+    .match({ template_id });
 
   if (error) throw new Error(error.message);
   return data as Template | null;
 }
 
-export const deleteTemplate = async (id: number): Promise<Template | null> => {
+export const deleteTemplate = async (template_id: number): Promise<Template | null> => {
   const { data, error } = await supabase
     .from("templates")
     .delete()
-    .match({ id });
+    .match({ template_id });
 
   if (error) throw new Error(error.message);
   return data as Template | null;
