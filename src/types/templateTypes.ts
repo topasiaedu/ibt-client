@@ -16,6 +16,7 @@ export interface TemplateFormData {
   language: string
   name: string
   wa_template_id: string | null
+  status: string  
 }
 
 export interface Component {
@@ -25,6 +26,7 @@ export interface Component {
   template_id: number | null
   text: string | null
   type: string
+  buttons: DatabaseButton[] | null
 }
 
 export interface ComponentFormData {

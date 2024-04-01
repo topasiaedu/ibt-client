@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as templateService from '../../services/templateService';
-import { Template, TemplateFormData } from '../../types/templateTypes';
+import { DatabaseButtonFormData, Template, TemplateFormData, ComponentFormData} from '../../types/templateTypes';
 
 export const useTemplates = () => {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -30,9 +30,9 @@ export const useTemplates = () => {
     }
   };
 
-  const addTemplate = async (formData: TemplateFormData) => {
+  const addTemplate = async (template: TemplateFormData, components: ComponentFormData[], buttons: DatabaseButtonFormData[]) => {
     try {
-      const newTemplate = await templateService.createTemplate(formData);
+      const newTemplate = await templateService.createTemplate(template, components, buttons);
       setTemplates(prev => [...prev, newTemplate]);
     } catch (error) {
       console.error('Failed to add template:', error);

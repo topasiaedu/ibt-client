@@ -1,5 +1,5 @@
 import { ContactList } from "../types/contactListTypes";
-import { ListOfContacts, Contact } from "../types/contactTypes";
+import { Contact } from "../types/contactTypes";
 import { supabase } from "../utils/supabaseClient";
 
 export const getContactLists = async (): Promise<ContactList[]> => {

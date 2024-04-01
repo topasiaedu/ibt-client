@@ -8,7 +8,6 @@ import {
   FileInput,
   Textarea
 } from "flowbite-react";
-import type { FC } from "react";
 import React, { useState } from "react";
 import {
   HiPlus,
@@ -16,7 +15,7 @@ import {
 import { useTemplates } from "../../../hooks/whatsapp/useTemplate";
 import { useWhatsappBusinessAccounts } from "../../../hooks/whatsapp/useWhatsappBusinessAccounts";
 import { WhatsAppBusinessAccount } from "../../../types/whatsappBusinessAccountsTypes";
-import { Template, TemplateFormData, ComponentFormData, DatabaseButtonFormData } from "../../../types/templateTypes";
+import { TemplateFormData, ComponentFormData, DatabaseButtonFormData } from "../../../types/templateTypes";
 
 // What we're trying to create:
 // {
@@ -56,7 +55,7 @@ import { Template, TemplateFormData, ComponentFormData, DatabaseButtonFormData }
 //   "id": "772825330634813"
 // },
 
-const AddTemplateModal: FC = function () {
+const AddTemplateModal: React.FC = function () {
   const [isOpen, setOpen] = useState(false);
   const { addTemplate } = useTemplates();
   const { whatsappBusinessAccounts } = useWhatsappBusinessAccounts();
@@ -65,8 +64,50 @@ const AddTemplateModal: FC = function () {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [buttons, setButtons] = useState<DatabaseButtonFormData[]>([]);
   const [headerType, setHeaderType] = useState<string>("");
-  const [components, setComponents] = useState<ComponentFormData[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [headerData, setHeaderData] = useState<string>("");
+  const [bodyData, setBodyData] = useState<string>("");
+  const [footerData, setFooterData] = useState<string>("");
+  const [selectedButtonType, setSelectedButtonType] = useState<string>("QUICK_REPLY");
+
+
+  const handleAddTemplate = async () => {
+    const template: TemplateFormData = {
+      account_id: selectedWhatsappBusinessAccount?.account_id || null,
+      category: selectedCategory,
+      language: selectedLanguage,
+      name: templateName,
+      wa_template_id: null,
+      status: "PENDING",
+    };
+
+    const components: ComponentFormData[] = [
+      {
+        type: "HEADER",
+        format: headerType,
+        example: null,
+        text: headerData,
+      },
+      {
+        type: "BODY",
+        text: bodyData,
+        example: null,
+        format: null,
+      },
+      {
+        type: "FOOTER",
+        text: footerData,
+        example: null,
+        format: null,
+      }
+    ];
+
+    const newTemplate = await addTemplate(template, components, buttons);
+
+    console.log(newTemplate);
+
+    setOpen(false);    
+  };
 
   return (
     <>
@@ -135,7 +176,7 @@ const AddTemplateModal: FC = function () {
                 <Select
                   id="language"
                   name="language"
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
                 >
                   <option value="">Select Language</option>
                   <option value="zh_CN">Chinese</option>
@@ -153,9 +194,10 @@ const AddTemplateModal: FC = function () {
                   name="headerType"
                   onChange={(e) => setHeaderType(e.target.value)}
                 >
-                  <option value="">Select Header Type</option>
+                  <option value="">None</option>
                   <option value="IMAGE">Image</option>
                   <option value="TEXT">Text</option>
+
                 </Select>
               </div>
             </div>
@@ -168,7 +210,7 @@ const AddTemplateModal: FC = function () {
                   <FileInput
                     id="headerImage"
                     name="headerImage"
-                    onChange={(e) => console.log(e.target.value)}
+                    onChange={(e) => setHeaderData(e.target.value)}
                   />
                 </div>
               </div>
@@ -182,7 +224,7 @@ const AddTemplateModal: FC = function () {
                     id="headerText"
                     name="headerText"
                     placeholder="Header Text"
-                    onChange={(e) => console.log(e.target.value)}
+                    onChange={(e) => setHeaderData(e.target.value)}
                   />
                 </div>
               </div>
@@ -196,7 +238,7 @@ const AddTemplateModal: FC = function () {
                   id="body"
                   name="body"
                   placeholder="Body"
-                  onChange={(e) => console.log(e.target.value)}
+                  onChange={(e) => setBodyData(e.target.value)}
                 />
               </div>
             </div>
@@ -209,7 +251,7 @@ const AddTemplateModal: FC = function () {
                   id="footer"
                   name="footer"
                   placeholder="Footer"
-                  onChange={(e) => console.log(e.target.value)}
+                  onChange={(e) => setFooterData(e.target.value)}
                 />
               </div>
             </div>
@@ -224,7 +266,7 @@ const AddTemplateModal: FC = function () {
                 <Select
                   id="buttonType"
                   name="buttonType"
-                  onChange={(e) => console.log(e.target.value)}
+                  onChange={(e) => setSelectedButtonType(e.target.value)}
                 >
                   <option value="">Select Button Type</option>
                   <option value="QUICK_REPLY">Quick Reply</option>
@@ -235,7 +277,13 @@ const AddTemplateModal: FC = function () {
 
             {/* Add Button */}
             <div>
-              <Button color="primary" onClick={() => setButtons([...buttons, { text: "", type: "", url: "" }])}>
+              <Button color="primary" onClick={() => {
+                // Check button type selected 
+                // Add button to the list only if the button type is selected an length of buttons is less than 2
+                if (selectedButtonType && buttons.length < 2) {
+                  setButtons([...buttons, { type: selectedButtonType, text: "", url: "" }]);
+                }
+              }}>
                 Add Button
               </Button>
             </div>
@@ -243,13 +291,15 @@ const AddTemplateModal: FC = function () {
             {/* Render Button Fields */}
             {buttons.map((button, index) => (
               <div key={index}>
+                {/* Button Index */}
+                <p>Button {index + 1}</p>
                 <Label htmlFor="buttonText">Button Text</Label>
                 <div className="mt-1">
                   <TextInput
                     id="buttonText"
                     name="buttonText"
                     placeholder="Button Text"
-                    onChange={(e) => console.log(e.target.value)}
+                    onChange={(e) => setButtons(prev => prev.map((button, i) => i === index ? { ...button, text: e.target.value } : button))}
                   />
                 </div>
                 <Label htmlFor="buttonUrl">Button URL</Label>
@@ -258,7 +308,7 @@ const AddTemplateModal: FC = function () {
                     id="buttonUrl"
                     name="buttonUrl"
                     placeholder="Button URL"
-                    onChange={(e) => console.log(e.target.value)}
+                    onChange={(e) => setButtons(prev => prev.map((button, i) => i === index ? { ...button, url: e.target.value } : button))}
                   />
                 </div>
               </div>
@@ -266,8 +316,8 @@ const AddTemplateModal: FC = function () {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button color="primary" onClick={() => setOpen(false)}>
-            Add user
+          <Button color="primary" onClick={handleAddTemplate}>
+            Add Template
           </Button>
         </Modal.Footer>
       </Modal>
