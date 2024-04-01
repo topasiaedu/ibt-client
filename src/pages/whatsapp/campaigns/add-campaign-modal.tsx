@@ -38,13 +38,15 @@ const AddCampaignModal: React.FC = function () {
     console.log("Post DateTime: ", combinedDateTime)
 
     const formData: CampaignFormData = {
-      name: "",
+      name: campaignName,
       template_id: selectedTemplate?.template_id || 0,
       contact_list_id: selectedContactList?.contact_list_id || 0,
       post_time: combinedDateTime
     };
     await addCampaign(formData);
-    setOpen(false);
+    // setOpen(false);
+    // Reload the page to reflect the changes
+    window.location.reload(); 
   };
 
   return (

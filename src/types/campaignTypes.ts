@@ -8,6 +8,13 @@ export interface Campaign {
   post_time: string
   template_id: number | null
   updated_at: string | null
+  template: {
+    name: string
+  }
+  total_contacts: number
+  sent: number
+  failed: number
+  status: string
 }
 
 export interface CampaignFormData {
@@ -15,4 +22,8 @@ export interface CampaignFormData {
   template_id: number
   contact_list_id: number
   post_time: string
+}
+
+export interface CampaignList {
+  campaigns: Campaign[]
 }

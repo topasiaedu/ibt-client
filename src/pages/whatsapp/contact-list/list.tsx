@@ -74,7 +74,7 @@ const WhatsAppContactListPage: React.FC = function () {
             <div className="overflow-hidden shadow">
               <ContactListsTable contact_lists={contactLists.filter((contactList) => contactList.name.toLowerCase().includes(searchValue.toLowerCase()))} />
             </div>
-          </div>
+        </div>
         </div>
       </div>
       {/* <Pagination /> */}

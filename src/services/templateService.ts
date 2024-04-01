@@ -26,15 +26,16 @@ export const createTemplate = async (template: TemplateFormData, components: Com
   // Then use the component id to create the button
   const { data, error } = await supabase
     .from("templates")
-    .insert([template])
-    .single() ;
-
-  const createdTemplate = data as unknown as Template;
+    .insert(template)
+    .select();
 
   if (error) throw new Error(error.message);
 
+  const createdTemplate = data[0] as Template;
+
   // Create components
-  const componentsWithTemplateId = components.map(component => ({...component, template_id: createdTemplate.template_id}));
+  const componentsWithTemplateId = components.map(component => ({ ...component, template_id: createdTemplate.template_id }));
+  console.log(componentsWithTemplateId);
   const { error: componentsError } = await supabase
     .from("components")
     .insert(componentsWithTemplateId);
@@ -46,33 +47,33 @@ export const createTemplate = async (template: TemplateFormData, components: Com
   if (buttons.length > 0) {
     buttons.forEach(async (button) => {
       const newComponent = {
-        type: 'button',
+        type: 'BUTTON',
         template_id: createdTemplate.template_id,
         text: null,
         format: null,
         example: null,
-  
+
       } as ComponentFormData;
-  
+
       const { data: createdComponent, error: componentError } = await supabase
         .from("components")
-        .insert([newComponent])
-        .single();
-  
-        const component = createdComponent as unknown as Component;
-  
+        .insert(newComponent)
+        .select();
+
       if (componentError) throw new Error(componentError.message);
-  
-      const buttonsWithComponentId = buttons.map(button => ({...button, component_id: component.component_id}));
-  
+
+      const component = createdComponent[0] as Component;
+
+      const buttonsWithComponentId = buttons.map(button => ({ ...button, component_id: component.component_id }));
+
       const { error: buttonsError } = await supabase
         .from("buttons")
         .insert(buttonsWithComponentId);
-  
+
       if (buttonsError) throw new Error(buttonsError.message);
     }
     )
-  } 
+  }
 
   return createdTemplate;
 }

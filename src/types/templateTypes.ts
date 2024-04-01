@@ -10,6 +10,10 @@ export interface Template {
   wa_template_id: string | null
 }
 
+export interface TemplateList {
+  templates: Template[]
+}
+
 export interface TemplateFormData {
   account_id: number | null
   category: string

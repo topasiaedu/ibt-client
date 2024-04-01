@@ -103,10 +103,9 @@ const AddTemplateModal: React.FC = function () {
     ];
 
     const newTemplate = await addTemplate(template, components, buttons);
-
     console.log(newTemplate);
-
-    setOpen(false);    
+    
+    // setOpen(false);    
   };
 
   return (
