@@ -5,13 +5,11 @@ import {
   Table,
 } from "flowbite-react";
 import React, { useState, useEffect } from "react";
-import {
-  HiPlus,
-} from "react-icons/hi";
 import { useContactLists } from "../../../hooks/whatsapp/useContactList";
 import { ContactList } from "../../../types/contactListTypes";
 import { Contact } from "../../../types/contactTypes";
 import { MdDelete } from "react-icons/md";
+import { CiViewTable } from "react-icons/ci";
 
 interface ContactListMemberModalProps {
   contact_list: ContactList;
@@ -37,13 +35,13 @@ const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function (
     };
 
     fetchData();
-  }, [fetchContactListMembers, contact_list.contact_list_id]);
+  },[]);
 
   return (
     <>
       <Button color="primary" onClick={() => setOpen(true)}>
         <div className="flex items-center gap-x-3">
-          <HiPlus className="text-xl" />
+          <CiViewTable className="text-xs" />
           View Members
         </div>
       </Button>

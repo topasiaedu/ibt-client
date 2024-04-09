@@ -9,18 +9,18 @@ interface ChatWindowProps {
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
+
+  console.log("Conversation", conversation)
   return (
     <>
-      <div className="col-span-3 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full">
+      <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full">
         {/* Chat Messages */}
         <div className="flex flex-col gap-4 xl:h-[calc(100vh-15rem)] overflow-y-auto">
-          <TextMessage direction="inbound" datetime="11:46" content="Hey, how are you doing?" status="Delivered" />
-          <TextMessage direction="outbound" datetime="11:47" content="I'm doing great, thanks for asking!" status="Read" />
-          <ImageMessage direction="inbound" datetime="11:48" content="Check out this new office" status="Delivered" image="../../images/users/jese-leos-2x.png" />
-          <ImageMessage direction="outbound" datetime="11:49" content="Wow, that looks amazing!" status="Read" image="../../images/users/jese-leos-2x.png" />
-          {/* <VoiceMessage />
-          <FileMessage />
-          <MultipleImagesMessage /> */}
+          {conversation.messages.map((message, index) => (
+            <div key={index}>
+              {generateMessage(message)}
+            </div>
+          ))}
         </div>
         {/* Chatroom Input */}
         <form>
@@ -54,41 +54,88 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
   );
 };
 
+const generateMessage = (message: any) => {
+  console.log("Message", message)
+  const { message_type, ...rest } = message;
+  switch (message_type) {
+    case "text":
+      return <TextMessage {...rest} />;
+    case "image":
+      return <ImageMessage {...rest} />;
+    // case "voice":
+    //   return <VoiceMessage />;
+    // case "file":
+    //   return <FileMessage />;
+    // case "multiple_images":
+    //   return <MultipleImagesMessage />;
+    default:
+      return null;
+  }
+}
+
 interface MessageProps {
   direction?: string;
-  datetime?: string;
+  created_at?: string;
   content?: string;
   status?: string;
   image?: string;
 }
-const TextMessage: React.FC<MessageProps> = ({ direction, datetime, content, status }) => {
+
+const TextMessage: React.FC<MessageProps> = ({ direction, created_at, content, status }) => {
   const isInbound = direction === "inbound";
-
-  return (
-    <div className={`flex items-start gap-2.5 ${isInbound ? "" : "flex-row-reverse"}`}>
-      <div className="flex flex-col gap-1 w-full max-w-[320px]">
-        <div className="flex items-center space-x-2 rtl:space-x-reverse">
-          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{
-            datetime
-          }</span>
+  if (created_at) {
+    const date = new Date(created_at);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // Months are zero-indexed
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    // Format date as MM/DD/YYYY
+    const formattedDate = `${month < 10 ? `0${month}` : month}/${day < 10 ? `0${day}` : day}/${year}`;
+    // Format time as HH:MM
+    const time = `${hours}:${minutes < 10 ? `0${minutes}` : minutes}`;
+    const dateTime = `${formattedDate} ${time}`;
+    
+    return (
+      <div className={`flex items-start gap-2.5 ${isInbound ? "" : "flex-row-reverse"}`}>
+        <div className="flex flex-col gap-1 w-full max-w-[320px]">
+          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{dateTime}</span>
+          </div>
+          <div className={`flex flex-col leading-1.5 p-4 border-gray-200  rounded-e-xl rounded-es-xl ${isInbound ? "bg-gray-100" : "bg-blue-100"} ${            isInbound ? "dark:bg-gray-700" : "dark:bg-blue-700" }`}>
+            <p className="text-sm font-normal text-gray-900 dark:text-white">{content}</p>
+          </div>
+          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status}</span>
         </div>
-        <div className="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-e-xl rounded-es-xl dark:bg-gray-700">
-          <p className="text-sm font-normal text-gray-900 dark:text-white"> {content}</p>
-        </div>
-        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status}</span>
       </div>
-    </div>
-  );
-};
+    );
+  } else {
+    return (
+      <div className={`flex items-start gap-2.5 ${isInbound ? "" : "flex-row-reverse"}`}>
+        <div className="flex flex-col gap-1 w-full max-w-[320px]">
+          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <span className="text-sm font-normal text-gray-500 dark:text-gray-400">Sending...</span>
+          </div>
+          <div className={`flex flex-col leading-1.5 p-4 border-gray-200  rounded-e-xl rounded-es-xl ${isInbound ? "bg-gray-100" : "bg-blue-200"} ${
+            isInbound ? "dark:bg-gray-700" : "dark:bg-blue-700" }`}>
+            <p className="text-sm font-normal text-gray-900 dark:text-white">{content}</p>
+          </div>
+          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">Sending...</span>
+        </div>
+      </div>
+    )
+  }
+}
 
 
-const ImageMessage: React.FC<MessageProps> = ({ direction, datetime, content, status, image }) => {
+
+const ImageMessage: React.FC<MessageProps> = ({ direction, created_at, content, status, image }) => {
   const isInbound = direction === "inbound";
   return (
     <div className={`flex items-start gap-2.5 ${isInbound ? "" : "flex-row-reverse"}`}>
       <div className="flex flex-col gap-1">
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
-          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{datetime}</span>
+          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{created_at}</span>
         </div>
         <div className="flex flex-col w-full max-w-[320px] leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-e-xl rounded-es-xl dark:bg-gray-700">
           <p className="text-sm font-normal text-gray-900 dark:text-white">{content}</p>

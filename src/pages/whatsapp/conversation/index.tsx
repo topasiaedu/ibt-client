@@ -5,7 +5,6 @@ import ChatList from "./chat-list";
 import ChatWindow from "./chat-window";
 import ContactProfile from "./contact-profile";
 import { useMessages } from "../../../hooks/whatsapp/useMessages";
-import { Conversation } from "../../../types/messagesTypes";
 import LoadingPage from "../../pages/loading";
 
 const ConversationPage: React.FC = function () {
@@ -21,7 +20,17 @@ const ConversationPage: React.FC = function () {
       <LoadingPage />
     );
   }
-  console.log(conversations);
+  if (!conversations.length) {
+    return (
+      <NavbarSidebarLayout>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold dark:text-white">No conversations found</h1>
+          </div>
+        </div>
+      </NavbarSidebarLayout>
+    );
+  }
   
 
   return (
@@ -33,7 +42,7 @@ const ConversationPage: React.FC = function () {
           selectedIndex={selectedIndex}
         />
         <ChatWindow conversation={conversations[selectedIndex]} />
-        {/* <ContactProfile /> */}
+        <ContactProfile wa_id={conversations[selectedIndex].contact.wa_id} />
       </div>
     </NavbarSidebarLayout>
   );

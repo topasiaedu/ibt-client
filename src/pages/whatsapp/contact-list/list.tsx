@@ -17,6 +17,7 @@ import AddContactListModal from "./add-contact-list-modal";
 import CSVImportModal from "./csv-import-modal";
 import EditContactListModal from "./edit-contact-list-modal";
 import ContactListMemberModal from "./contact-list-member-modal";
+import AddContactModal from "./add-contact-modal";
 
 const WhatsAppContactListPage: React.FC = function () {
   const { contactLists, isLoading } = useContactLists();
@@ -103,6 +104,7 @@ const ContactListsTable: React.FC<ListOfContactList> = function ({contact_lists}
                 {/* Import through CSV modal */}
                 <CSVImportModal contact_list={contactList} />
                 <ContactListMemberModal contact_list={contactList} />
+                <AddContactModal contact_list={contactList} />
               </div>
             </Table.Cell>
           </Table.Row>

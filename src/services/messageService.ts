@@ -1,12 +1,12 @@
 import { supabase } from "../utils/supabaseClient";
 import { Message } from "../types/messagesTypes";
-import { Conversation } from "../types/messagesTypes";
 
 export const getMessages = async (): Promise<Message[]> => {
   let { data: messages, error } = await supabase.from("messages").select("*,phone:phone_numbers(number),contact:contacts(wa_id)").order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
 
+  console.log("Inside getMessages", messages)
   return messages as Message[];
 }
 

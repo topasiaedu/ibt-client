@@ -31,6 +31,7 @@ export const useContactLists = () => {
   };
 
   const addContactList = async (formData: ContactList) => {
+    console.log("This ran with form data: ", formData);
     try {
       const newContactList = await contactListService.createContactList(formData);
       setContactLists(prev => [...prev, newContactList]);
