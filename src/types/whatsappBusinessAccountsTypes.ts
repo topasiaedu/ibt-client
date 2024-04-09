@@ -19,4 +19,5 @@ export interface WhatsAppBusinessAccountPhoneNumber {
   quality_rating: string | null
   whatsapp_business_accounts: WhatsAppBusinessAccount
   name: string | null
+  wa_id: string | null
 }

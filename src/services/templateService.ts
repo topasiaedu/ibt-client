@@ -4,7 +4,14 @@ import { supabase } from "../utils/supabaseClient";
 export const getTemplates = async (): Promise<Template[]> => {
   let { data: templates, error } = await supabase
     .from("templates")
-    .select("*");
+    .select(`
+      *,
+      components (
+        *,
+        buttons (*)
+      )
+    `)
+    
 
   if (error) throw new Error(error.message);
   return templates as Template[];
@@ -35,7 +42,7 @@ export const createTemplate = async (template: TemplateFormData, components: Com
 
   // Create components
   const componentsWithTemplateId = components.map(component => ({ ...component, template_id: createdTemplate.template_id }));
-  console.log(componentsWithTemplateId);
+
   const { error: componentsError } = await supabase
     .from("components")
     .insert(componentsWithTemplateId);

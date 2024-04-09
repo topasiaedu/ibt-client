@@ -1,6 +1,7 @@
-import {useState, useCallback, useEffect} from 'react';
-import {Conversation, Message} from '../../types/messagesTypes';
+import { useState, useCallback, useEffect } from 'react';
+import { Conversation, Message, MessagesFormData } from '../../types/messagesTypes';
 import * as messageService from '../../services/messageService';
+import { supabase } from '../../utils/supabaseClient';
 
 export const useMessages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -18,7 +19,7 @@ export const useMessages = () => {
       setIsLoading(false);
     }
   }
-  , []);
+    , []);
 
   const fetchMessage = async (message_id: number) => {
     setIsLoading(true);
@@ -32,7 +33,7 @@ export const useMessages = () => {
     }
   }
 
-  const addMessage = async (formData: Message) => {
+  const addMessage = async (formData: MessagesFormData) => {
     try {
       const newMessage = await messageService.createMessage(formData);
       setMessages(prev => [...prev, newMessage]);
@@ -72,7 +73,7 @@ export const useMessages = () => {
     try {
       // Fetch all messages
       const messages = await messageService.getMessages();
-      
+
       // Group messages by contact_id
       const groupedMessages = messages.reduce((acc, message) => {
         if (!acc[message.contact_id]) {
@@ -84,7 +85,6 @@ export const useMessages = () => {
 
       // Create conversations
       const conversations = Object.entries(groupedMessages).map(([contact_id, messages]) => {
-        console.log("messages", messages);
         return {
           contact_id: +contact_id,
           last_message: messages[0].content,
@@ -95,6 +95,7 @@ export const useMessages = () => {
           contact: messages[0].contact,
           phone_numbers: {
             number: messages[0].phone_numbers.number,
+            wa_id: messages[0].phone_numbers.wa_id,
             whatsapp_business_accounts: {
               waba_id: messages[0].phone_numbers.whatsapp_business_accounts.waba_id,
               name: messages[0].phone_numbers.name
@@ -112,8 +113,39 @@ export const useMessages = () => {
   }, []);
 
   useEffect(() => {
+    const subscription = supabase
+      .channel('messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+        // Insert new message to messages and conversations appropriately
+        const newMessage = payload.new as Message;
+        setMessages(prev => [...prev, newMessage]);
+
+        // Update conversations
+        setConversations(prev => {
+          const contact_id = newMessage.contact_id;
+          const conversationIndex = prev.findIndex(conversation => conversation.contact_id === contact_id);
+          if (conversationIndex === -1) {
+            return prev;
+          }
+
+          const updatedConversations = [...prev];
+          updatedConversations[conversationIndex] = {
+            ...updatedConversations[conversationIndex],
+            last_message: newMessage.content,
+            unread_messages: updatedConversations[conversationIndex].unread_messages + 1,
+            messages: [newMessage, ...updatedConversations[conversationIndex].messages]
+          };
+          return updatedConversations;
+        });
+      }).subscribe();
+
     fetchMessages();
     getConversations();
+
+    return () => {
+      subscription.unsubscribe();
+    }
+
   }, [fetchMessages, getConversations]);
 
   return {

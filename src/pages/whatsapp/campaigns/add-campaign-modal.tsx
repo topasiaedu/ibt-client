@@ -35,18 +35,45 @@ const AddCampaignModal: React.FC = function () {
     // Time example format: 09:00
     // Post date and time example format: 2024-04-11 09:00
     const combinedDateTime = postDate.toISOString().split("T")[0] + " " + postTime;
-    console.log("Post DateTime: ", combinedDateTime)
+
+    let template_payload = {
+      "name": selectedTemplate?.name,
+      "language": {
+        "code": selectedTemplate?.language
+      },
+      "components": []
+    } as any;
+
+    selectedTemplate?.components.forEach((component) => {
+      if (component.example) {
+        const componentValue = (document.getElementById(component.component_id.toString()) as HTMLInputElement).value;
+        
+        if (component.type === "HEADER" && component.format === "IMAGE") {
+          template_payload.components.push({
+            "type": component.type,
+            "format": component.format,
+            "text": componentValue
+          });
+        } else {
+          template_payload.components.push({
+            "type": component.type,
+            "text": componentValue
+          });
+        }
+      }
+    });
 
     const formData: CampaignFormData = {
       name: campaignName,
       template_id: selectedTemplate?.template_id || 0,
       contact_list_id: selectedContactList?.contact_list_id || 0,
-      post_time: combinedDateTime
+      post_time: combinedDateTime,
+      template_payload: template_payload
     };
     await addCampaign(formData);
     // setOpen(false);
     // Reload the page to reflect the changes
-    window.location.reload(); 
+    window.location.reload();
   };
 
   return (
@@ -130,6 +157,31 @@ const AddCampaignModal: React.FC = function () {
                 />
               </div>
             </div>
+            {selectedTemplate && selectedTemplate.components.map((component) => {
+              if (component.example) {
+                let placeholder = "";
+
+                if (component.type === "HEADER" && component.format === "IMAGE") {
+                  placeholder = component.example.header_handle || "";
+                } else {
+                  placeholder = component.example.body_text || "";
+                }
+                return (
+                  <div key={component.component_id}>
+                    <Label htmlFor={component.component_id.toString()}>{component.type}</Label>
+                    <div className="mt-1">
+                      <TextInput
+                        id={component.component_id.toString()}
+                        name={component.component_id.toString()}   
+                        placeholder={placeholder}                    
+                      />
+                    </div>
+                  </div>
+                )
+              } else {
+                return null;
+              }
+            })}
           </div>
         </Modal.Body>
         <Modal.Footer>

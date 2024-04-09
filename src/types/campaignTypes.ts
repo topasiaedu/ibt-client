@@ -8,6 +8,7 @@ export interface Campaign {
   post_time: string
   template_id: number | null
   updated_at: string | null
+  template_payload: JSON | null
   template: {
     name: string
   }
@@ -22,6 +23,7 @@ export interface CampaignFormData {
   template_id: number
   contact_list_id: number
   post_time: string
+  template_payload: JSON
 }
 
 export interface CampaignList {

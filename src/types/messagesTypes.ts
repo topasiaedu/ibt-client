@@ -4,6 +4,7 @@ import { WhatsAppBusinessAccountPhoneNumber } from "./whatsappBusinessAccountsTy
 export interface Message {
   contact_id: number
   content: string
+  direction: string | null
   created_at: string | null
   message_id: number
   message_type: string
@@ -19,6 +20,10 @@ export interface MessagesFormData {
   content: string
   message_type: string
   phone_number_id: number
+  status: string | null
+  wa_message_id: string | null
+  direction: string | null
+  created_at: string | null
 }
 
 export interface Conversation {

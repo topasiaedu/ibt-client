@@ -84,7 +84,7 @@ const ExampleSidebar: FC = function () {
                   <Sidebar.Item
                     href="/whatsapp/conversation"
                     icon={HiInboxIn}
-                    label="3"
+                    // label="3"
                     className={
                       "/whatsapp/conversation" === currentPage
                         ? "bg-gray-100 dark:bg-gray-700"

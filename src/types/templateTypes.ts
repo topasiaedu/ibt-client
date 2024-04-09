@@ -8,6 +8,7 @@ export interface Template {
   status: string
   template_id: number
   wa_template_id: string | null
+  components: Component[]
 }
 
 export interface TemplateList {
@@ -25,7 +26,7 @@ export interface TemplateFormData {
 
 export interface Component {
   component_id: number
-  example: JSON | null
+  example: ComponentExample | null
   format: string | null
   template_id: number | null
   text: string | null
@@ -52,4 +53,9 @@ export interface DatabaseButtonFormData {
   text: string
   type: string
   url: string | null
+}
+
+export interface ComponentExample {
+  header_handle: string | null
+  body_text: string | null
 }

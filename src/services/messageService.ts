@@ -1,5 +1,5 @@
 import { supabase } from "../utils/supabaseClient";
-import { Message } from "../types/messagesTypes";
+import { Message, MessagesFormData } from "../types/messagesTypes";
 
 export const getMessages = async (): Promise<Message[]> => {
   let { data: messages, error } = await supabase
@@ -8,6 +8,7 @@ export const getMessages = async (): Promise<Message[]> => {
       *,
       phone_numbers (
         number,
+        wa_id,
         whatsapp_business_accounts (
           waba_id,
           name
@@ -20,7 +21,6 @@ export const getMessages = async (): Promise<Message[]> => {
     `)
     .order('created_at', { ascending: false });
 
-    console.log("messages", messages);
   if (error) throw new Error(error.message);
 
   return messages as Message[];
@@ -33,7 +33,7 @@ export const getMessage = async (message_id: number): Promise<Message> => {
   return message as Message;
 }
 
-export const createMessage = async (formData: Message): Promise<Message> => {
+export const createMessage = async (formData: MessagesFormData): Promise<Message> => {
   const { data, error } = await supabase.from("messages").insert([formData]).single();
 
   if (error) throw new Error(error.message);

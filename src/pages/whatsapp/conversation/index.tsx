@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
 import ChatList from "./chat-list";
 import ChatWindow from "./chat-window";
@@ -14,14 +14,18 @@ const ConversationPage: React.FC = function () {
   const handleSelectConversation = (index: number) => {
     setSelectedIndex(index);
   };
+  
+  useEffect(() => {
+    if (conversations.length) {
+      setSelectedIndex(0);
+    }
+  }, [conversations]);
 
   if (isLoading) {
     return (
       <LoadingPage />
     );
   }
-
-  console.log("Conversations", conversations);
 
   if (!conversations.length) {
     return (
@@ -34,6 +38,8 @@ const ConversationPage: React.FC = function () {
       </NavbarSidebarLayout>
     );
   }
+
+  
 
   return (
     <NavbarSidebarLayout>
