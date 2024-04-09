@@ -2,14 +2,29 @@ import { supabase } from "../utils/supabaseClient";
 import { Message } from "../types/messagesTypes";
 
 export const getMessages = async (): Promise<Message[]> => {
-  let { data: messages, error } = await supabase.from("messages").select("*,phone:phone_numbers(number),contact:contacts(wa_id)").order("created_at", { ascending: false });
+  let { data: messages, error } = await supabase
+    .from('messages')
+    .select(`
+      *,
+      phone_numbers (
+        number,
+        whatsapp_business_accounts (
+          waba_id,
+          name
+        )
+      ),
+      contact:contacts!contact_id (
+        wa_id,
+        name
+      )
+    `)
+    .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
 
   console.log("Inside getMessages", messages)
   return messages as Message[];
-}
-
+};
 export const getMessage = async (message_id: number): Promise<Message> => {
   let { data: message, error } = await supabase.from("messages").select("*,phone:phone_numbers(number),contact:contacts(wa_id)").match({ message_id }).single();
 

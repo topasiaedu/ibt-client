@@ -10,7 +10,6 @@ interface ChatWindowProps {
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 
-  console.log("Conversation", conversation)
   return (
     <>
       <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full">
@@ -55,7 +54,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 };
 
 const generateMessage = (message: any) => {
-  console.log("Message", message)
   const { message_type, ...rest } = message;
   switch (message_type) {
     case "text":

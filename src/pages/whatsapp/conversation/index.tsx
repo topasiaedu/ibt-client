@@ -31,18 +31,17 @@ const ConversationPage: React.FC = function () {
       </NavbarSidebarLayout>
     );
   }
-  
 
   return (
     <NavbarSidebarLayout>
       <div className="relative grid grid-cols-1 overflow-y-hidden xl:h-[calc(100vh-7rem)] xl:grid-cols-4 xl:gap-4">
         <ChatList
           conversations={conversations}
-          onSelect={handleSelectConversation}
+          onSelectConversation={handleSelectConversation}
           selectedIndex={selectedIndex}
         />
         <ChatWindow conversation={conversations[selectedIndex]} />
-        <ContactProfile wa_id={conversations[selectedIndex].contact.wa_id} />
+        <ContactProfile contact={conversations[selectedIndex].contact} />
       </div>
     </NavbarSidebarLayout>
   );

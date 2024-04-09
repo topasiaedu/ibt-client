@@ -73,7 +73,6 @@ export const useMessages = () => {
       // Fetch all messages
       const messages = await messageService.getMessages();
       
-      console.log("messages", messages)
       // Group messages by contact_id
       const groupedMessages = messages.reduce((acc, message) => {
         if (!acc[message.contact_id]) {

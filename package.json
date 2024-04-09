@@ -27,6 +27,7 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@welldone-software/why-did-you-render": "^8.0.1",
     "eslint": "^8.0.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-react": "^7.28.0",

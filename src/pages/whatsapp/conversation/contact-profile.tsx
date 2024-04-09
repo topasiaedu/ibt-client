@@ -5,23 +5,10 @@ import { Contact } from "../../../types/contactTypes";
 import { Button } from "flowbite-react";
 import { HiChevronLeft } from "react-icons/hi";
 interface ContactProfileProps {
-  wa_id: string;
+  contact: Contact;
 }
 
-const ContactProfile: React.FC<ContactProfileProps> = ({ wa_id }) => {
-  const { findContact } = useContacts();
-  const [contact, setContact] = React.useState<Contact | null>(null);
-  useEffect(() => {
-    findContact({
-      wa_id: wa_id,
-      name: "",
-      email: "",
-      phone: "",
-    } as Contact).then((data) => {
-      if (!data) return;
-      setContact(data);
-    });
-  }, [findContact, wa_id]);
+const ContactProfile: React.FC<ContactProfileProps> = ({ contact }) => {
 
   if (!contact) {
     return <div>
