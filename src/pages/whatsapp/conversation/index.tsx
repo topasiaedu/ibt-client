@@ -20,6 +20,9 @@ const ConversationPage: React.FC = function () {
       <LoadingPage />
     );
   }
+
+  console.log("Conversations", conversations);
+
   if (!conversations.length) {
     return (
       <NavbarSidebarLayout>

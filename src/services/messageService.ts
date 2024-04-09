@@ -20,9 +20,9 @@ export const getMessages = async (): Promise<Message[]> => {
     `)
     .order('created_at', { ascending: false });
 
+    console.log("messages", messages);
   if (error) throw new Error(error.message);
 
-  console.log("Inside getMessages", messages)
   return messages as Message[];
 };
 export const getMessage = async (message_id: number): Promise<Message> => {

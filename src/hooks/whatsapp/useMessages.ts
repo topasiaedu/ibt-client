@@ -84,6 +84,7 @@ export const useMessages = () => {
 
       // Create conversations
       const conversations = Object.entries(groupedMessages).map(([contact_id, messages]) => {
+        console.log("messages", messages);
         return {
           contact_id: +contact_id,
           last_message: messages[0].content,
@@ -92,7 +93,13 @@ export const useMessages = () => {
           unread_messages: messages.filter(message => !message.status).length,
           messages,
           contact: messages[0].contact,
-          phone_number: messages[0].phone,
+          phone_numbers: {
+            number: messages[0].phone_numbers.number,
+            whatsapp_business_accounts: {
+              waba_id: messages[0].phone_numbers.whatsapp_business_accounts.waba_id,
+              name: messages[0].phone_numbers.name
+            }
+          }
         };
       });
 

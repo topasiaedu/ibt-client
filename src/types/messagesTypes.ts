@@ -11,7 +11,7 @@ export interface Message {
   status: string | null
   wa_message_id: string | null
   contact: Contact
-  phone: WhatsAppBusinessAccountPhoneNumber
+  phone_numbers: WhatsAppBusinessAccountPhoneNumber
 }
 
 export interface MessagesFormData {
@@ -29,6 +29,6 @@ export interface Conversation {
   unread_messages: number
   messages: Message[]
   contact: Contact
-  phone_number: WhatsAppBusinessAccountPhoneNumber
+  phone_numbers: WhatsAppBusinessAccountPhoneNumber
 }
 

@@ -17,5 +17,6 @@ export interface WhatsAppBusinessAccountPhoneNumber {
   number: string
   phone_number_id: number
   quality_rating: string | null
-  waba_id: number | null
+  whatsapp_business_accounts: WhatsAppBusinessAccount
+  name: string | null
 }

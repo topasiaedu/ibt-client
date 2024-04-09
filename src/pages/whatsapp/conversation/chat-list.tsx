@@ -17,8 +17,9 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
 
   // Get all unique phone numbers
   conversations.forEach((conversation) => {
-    if (!phoneNumbers.includes(conversation.phone_number.number)) {
-      setPhoneNumbers(prev => [...prev, conversation.phone_number.number]);
+    console.log("conversation", conversation);
+    if (!phoneNumbers.includes(conversation.phone_numbers.number)) {
+      setPhoneNumbers(prev => [...prev, conversation.phone_numbers.number]);
     }
   });
 
