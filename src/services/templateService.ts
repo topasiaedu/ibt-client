@@ -4,14 +4,7 @@ import { supabase } from "../utils/supabaseClient";
 export const getTemplates = async (): Promise<Template[]> => {
   let { data: templates, error } = await supabase
     .from("templates")
-    .select(`
-      *,
-      components (
-        *,
-        buttons (*)
-      )
-    `)
-    
+    .select(`*,whatsapp_business_accounts (*)`)
 
   if (error) throw new Error(error.message);
   return templates as Template[];

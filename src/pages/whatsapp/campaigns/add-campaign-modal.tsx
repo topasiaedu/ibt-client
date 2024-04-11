@@ -17,12 +17,16 @@ import { useTemplates } from "../../../hooks/whatsapp/useTemplate";
 import { useContactLists } from "../../../hooks/whatsapp/useContactList";
 import { ContactList } from "../../../types/contactListTypes";
 import { Template } from "../../../types/templateTypes";
+import { WhatsAppBusinessAccount } from "../../../types/whatsappBusinessAccountsTypes";
+import { useWhatsappBusinessAccounts } from "../../../hooks/whatsapp/useWhatsappBusinessAccounts";
 
 const AddCampaignModal: React.FC = function () {
   const [isOpen, setOpen] = useState(false);
   const { addCampaign } = useCampaigns();
   const { templates } = useTemplates();
   const { contactLists } = useContactLists();
+  const { whatsappBusinessAccounts } = useWhatsappBusinessAccounts();
+  const [selectedWABA, setSelectedWABA] = useState<WhatsAppBusinessAccount>();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [selectedContactList, setSelectedContactList] = useState<ContactList | null>(null);
   const [campaignName, setCampaignName] = useState<string>("");
@@ -30,6 +34,13 @@ const AddCampaignModal: React.FC = function () {
   const [postTime, setPostTime] = useState<string>("");
 
   const handleAddCampaign = async () => {
+
+    // Check if all fields are filled
+    if (!selectedWABA || !selectedTemplate || !selectedContactList || !campaignName || !postTime) {
+      alert("Please fill in all fields");
+      return;
+    }
+
     // Combine post date and time to become a single string
     // Date example format: Thu Apr 11 2024 00:00:00 GMT+0800 (Singapore Standard Time)
     // Time example format: 09:00
@@ -44,20 +55,27 @@ const AddCampaignModal: React.FC = function () {
       "components": []
     } as any;
 
-    selectedTemplate?.components.forEach((component) => {
+    selectedTemplate?.components.data.forEach((component: any, index:number) => {
       if (component.example) {
-        const componentValue = (document.getElementById(component.component_id.toString()) as HTMLInputElement).value;
-        
+        const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
+
         if (component.type === "HEADER" && component.format === "IMAGE") {
           template_payload.components.push({
             "type": component.type,
-            "format": component.format,
-            "text": componentValue
+            "parameters": [{
+              type: "image",
+              "image": {
+                "link": componentValue
+              }
+            }]
           });
         } else {
           template_payload.components.push({
             "type": component.type,
-            "text": componentValue
+            "parameters": [{
+              type: "text",
+              "text": componentValue
+            }]
           });
         }
       }
@@ -68,7 +86,8 @@ const AddCampaignModal: React.FC = function () {
       template_id: selectedTemplate?.template_id || 0,
       contact_list_id: selectedContactList?.contact_list_id || 0,
       post_time: combinedDateTime,
-      template_payload: template_payload
+      template_payload: template_payload,
+      status: "PENDING"
     };
     await addCampaign(formData);
     // setOpen(false);
@@ -103,6 +122,24 @@ const AddCampaignModal: React.FC = function () {
               </div>
             </div>
             <div>
+              <Label htmlFor="waba">WhatsApp Business Account</Label>
+              <div className="mt-1">
+                <Select
+                  id="waba"
+                  name="waba"
+                  onChange={(e) => setSelectedWABA(whatsappBusinessAccounts.find((waba) => waba.account_id === parseInt(e.target.value)) || undefined)}
+                >
+                  <option value="">Select WhatsApp Business Account</option>
+                  {whatsappBusinessAccounts.map((waba) => (
+                    <option key={waba.account_id} value={waba.account_id}>
+                      {waba.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            <div>
               <Label htmlFor="template">Template</Label>
               <div className="mt-1">
                 <Select
@@ -111,11 +148,13 @@ const AddCampaignModal: React.FC = function () {
                   onChange={(e) => setSelectedTemplate(templates.find((template) => template.template_id === parseInt(e.target.value)) || null)}
                 >
                   <option value="">Select template</option>
-                  {templates.map((template) => (
-                    <option key={template.template_id} value={template.template_id}>
-                      {template.name}
-                    </option>
-                  ))}
+                  {templates
+                    .filter(template => template.whatsapp_business_accounts.account_id === selectedWABA?.account_id)
+                    .map((template) => (
+                      <option key={template.template_id} value={template.template_id}>
+                        {template.name}
+                      </option>
+                    ))}
                 </Select>
               </div>
             </div>
@@ -157,7 +196,7 @@ const AddCampaignModal: React.FC = function () {
                 />
               </div>
             </div>
-            {selectedTemplate && selectedTemplate.components.map((component) => {
+            {selectedTemplate && selectedTemplate.components.data.map((component: any, index: number) => {
               if (component.example) {
                 let placeholder = "";
 
@@ -167,13 +206,13 @@ const AddCampaignModal: React.FC = function () {
                   placeholder = component.example.body_text || "";
                 }
                 return (
-                  <div key={component.component_id}>
-                    <Label htmlFor={component.component_id.toString()}>{component.type}</Label>
+                  <div key={selectedTemplate.template_id.toString() + index}>
+                    <Label htmlFor={selectedTemplate.template_id.toString() + index}>{component.type}</Label>
                     <div className="mt-1">
                       <TextInput
-                        id={component.component_id.toString()}
-                        name={component.component_id.toString()}   
-                        placeholder={placeholder}                    
+                        id={selectedTemplate.template_id.toString() + index}
+                        name={selectedTemplate.template_id.toString() + index}
+                        placeholder={placeholder}
                       />
                     </div>
                   </div>

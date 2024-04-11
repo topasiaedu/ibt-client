@@ -23,6 +23,7 @@ export interface CampaignFormData {
   template_id: number
   contact_list_id: number
   post_time: string
+  status: string
   template_payload: JSON
 }
 

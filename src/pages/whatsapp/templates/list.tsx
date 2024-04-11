@@ -91,6 +91,7 @@ const TemplatesTable: React.FC<TemplateList> = function ({ templates }) {
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
       <Table.Head className="bg-gray-100 dark:bg-gray-700">
         <Table.HeadCell>Name</Table.HeadCell>
+        <Table.HeadCell>WABA</Table.HeadCell>
         <Table.HeadCell>Category</Table.HeadCell>
         <Table.HeadCell>Status</Table.HeadCell>
       </Table.Head>
@@ -98,6 +99,7 @@ const TemplatesTable: React.FC<TemplateList> = function ({ templates }) {
         {templates.map((template) => (
           <Table.Row key={template.template_id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Table.Cell>{template.name}</Table.Cell>
+            <Table.Cell>{template.whatsapp_business_accounts.name}</Table.Cell>
             <Table.Cell>{template.category}</Table.Cell>
             <Table.Cell>
               <div className="flex items-center">

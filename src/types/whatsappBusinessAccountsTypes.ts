@@ -1,7 +1,10 @@
 export interface WhatsAppBusinessAccount {
   account_id: number
   created_at: string | null
+  currency: string | null
+  message_template_namespace: string | null
   name: string | null
+  timezone_id: string | null
   updated_at: string | null
   waba_id: string
 }

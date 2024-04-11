@@ -76,10 +76,10 @@ export const useMessages = () => {
 
       // Group messages by contact_id
       const groupedMessages = messages.reduce((acc, message) => {
-        if (!acc[message.contact_id]) {
-          acc[message.contact_id] = [];
+        if (!acc[(message.contact_id, message.phone_number_id)]) {
+          acc[(message.contact_id, message.phone_number_id)] = [];
         }
-        acc[message.contact_id].push(message);
+        acc[(message.contact_id, message.phone_number_id)].push(message);
         return acc;
       }, {} as Record<number, Message[]>);
 

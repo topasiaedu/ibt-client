@@ -1,14 +1,17 @@
+import { WhatsAppBusinessAccount } from "./whatsappBusinessAccountsTypes"
+
 export interface Template {
-  account_id: number | null
+  whatsapp_business_accounts: WhatsAppBusinessAccount
   category: string
+  components: {
+    data: Array<JSON>
+  }
   created_at: string | null
   language: string
   name: string
-  rejection_reason: string | null
   status: string
   template_id: number
   wa_template_id: string | null
-  components: Component[]
 }
 
 export interface TemplateList {
