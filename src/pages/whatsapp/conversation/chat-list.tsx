@@ -1,7 +1,8 @@
 import React from "react";
 import { Conversation } from "../../../types/messagesTypes";
 import {
-  Dropdown
+  Dropdown,
+  Badge
 } from "flowbite-react";
 
 interface ChatListProps {
@@ -20,12 +21,15 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
     if (!phoneNumbers.includes(conversation.phone_numbers.number)) {
       setPhoneNumbers(prev => [...prev, conversation.phone_numbers.number]);
     }
-  });
+  });  
 
   return (
     <div className="overflow-y-auto h-full divide-gray-200 dark:divide-gray-700">
       <div className="p-4 bg-white dark:bg-gray-800">
         <Dropdown label={selectedPhoneNumber||"All"} dismissOnClick={true}>
+          <Dropdown.Item onClick={() => setSelectedPhoneNumber("")}>
+            All
+          </Dropdown.Item>
           {phoneNumbers.map((phoneNumber, index) => (
             <Dropdown.Item key={index} onClick={() => setSelectedPhoneNumber(phoneNumber)}>
               {phoneNumber}
@@ -34,7 +38,10 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
         </Dropdown>
       </div>
       <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-        {conversations.map((conversation, index) => (
+        {conversations
+        .sort((a, b) => new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime())
+        .filter((conversation) => selectedPhoneNumber === "" || conversation.phone_numbers.number === selectedPhoneNumber)
+        .map((conversation, index) => (
           <li
             key={index}
             className={`p-4 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 ${selectedIndex === index ? "bg-gray-200 dark:bg-gray-700" : ""}`}
@@ -43,8 +50,8 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
             <div className="flex justify-between xl:block 2xl:flex 2xl:space-x-4">
               <div className="flex space-x-4 xl:mb-4 2xl:mb-0">
                 <div className="min-w-0 flex-1">
-                  <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white">
-                    {conversation.contact.wa_id}
+                  <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
+                    {conversation.contact.wa_id} <Badge color="primary">{conversation.phone_numbers.whatsapp_business_accounts.name}</Badge>
                   </p>
                   <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
                     {conversation.last_message}

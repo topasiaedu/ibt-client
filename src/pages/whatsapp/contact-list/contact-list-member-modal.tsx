@@ -26,7 +26,7 @@ const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function (
     window.location.reload();
   }
 
-  useEffect(() => {
+  useEffect(() => { 
     const fetchData = async () => {
       const members = await fetchContactListMembers(contact_list.contact_list_id);
       if (members) {
@@ -35,7 +35,7 @@ const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function (
     };
 
     fetchData();
-  },[]);
+  });
 
   return (
     <>

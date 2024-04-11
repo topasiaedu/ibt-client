@@ -98,11 +98,11 @@ export const useMessages = () => {
             wa_id: messages[0].phone_numbers.wa_id,
             whatsapp_business_accounts: {
               waba_id: messages[0].phone_numbers.whatsapp_business_accounts.waba_id,
-              name: messages[0].phone_numbers.name
+              name: messages[0].phone_numbers.whatsapp_business_accounts.name
             }
           }
         };
-      });
+      });     
 
       setConversations(conversations as Conversation[]);
     } catch (error) {
