@@ -25,6 +25,7 @@ export interface CampaignFormData {
   post_time: string
   status: string
   template_payload: JSON
+  phone_number_id: number
 }
 
 export interface CampaignList {

@@ -19,15 +19,19 @@ import { ContactList } from "../../../types/contactListTypes";
 import { Template } from "../../../types/templateTypes";
 import { WhatsAppBusinessAccount } from "../../../types/whatsappBusinessAccountsTypes";
 import { useWhatsappBusinessAccounts } from "../../../hooks/whatsapp/useWhatsappBusinessAccounts";
+import { usePhoneNumbers } from "../../../hooks/whatsapp/usePhoneNumber";
+import { PhoneNumber } from "../../../types/phoneNumberTypes";
 
 const AddCampaignModal: React.FC = function () {
   const [isOpen, setOpen] = useState(false);
   const { addCampaign } = useCampaigns();
   const { templates } = useTemplates();
   const { contactLists } = useContactLists();
+  const { phoneNumbers } = usePhoneNumbers();
   const { whatsappBusinessAccounts } = useWhatsappBusinessAccounts();
   const [selectedWABA, setSelectedWABA] = useState<WhatsAppBusinessAccount>();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber | null>(null);
   const [selectedContactList, setSelectedContactList] = useState<ContactList | null>(null);
   const [campaignName, setCampaignName] = useState<string>("");
   const [postDate, setPostDate] = useState<Date>(new Date());
@@ -55,7 +59,7 @@ const AddCampaignModal: React.FC = function () {
       "components": []
     } as any;
 
-    selectedTemplate?.components.data.forEach((component: any, index:number) => {
+    selectedTemplate?.components.data.forEach((component: any, index: number) => {
       if (component.example) {
         const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
 
@@ -87,7 +91,8 @@ const AddCampaignModal: React.FC = function () {
       contact_list_id: selectedContactList?.contact_list_id || 0,
       post_time: combinedDateTime,
       template_payload: template_payload,
-      status: "PENDING"
+      status: "PENDING",
+      phone_number_id: selectedPhoneNumber?.phone_number_id || 0
     };
     await addCampaign(formData);
     // setOpen(false);
@@ -108,7 +113,7 @@ const AddCampaignModal: React.FC = function () {
           <strong>Add new campaign</strong>
         </Modal.Header>
         <Modal.Body>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-1">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <Label htmlFor="name">Name</Label>
               <div className="mt-1">
@@ -135,6 +140,26 @@ const AddCampaignModal: React.FC = function () {
                       {waba.name}
                     </option>
                   ))}
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <div className="mt-1">
+                <Select
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  onChange={(e) => setSelectedPhoneNumber(phoneNumbers.find((phoneNumber) => phoneNumber.phone_number_id === parseInt(e.target.value)) || null)}
+                >
+                  <option value="">Select phone number</option>
+                  {phoneNumbers
+                    .filter(phoneNumber => phoneNumber.whatsapp_business_accounts.account_id === selectedWABA?.account_id)
+                    .map((phoneNumber) => (
+                      <option key={phoneNumber.phone_number_id} value={phoneNumber.phone_number_id}>
+                        {phoneNumber.number}
+                      </option>
+                    ))}
                 </Select>
               </div>
             </div>
