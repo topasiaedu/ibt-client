@@ -39,7 +39,7 @@ const ConversationPage: React.FC = function () {
     );
   }
 
-  
+  console.log('conversations:', conversations || 'No conversations yet! 😢');  
 
   return (
     <NavbarSidebarLayout>

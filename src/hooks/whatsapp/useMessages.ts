@@ -74,22 +74,24 @@ export const useMessages = () => {
       // Fetch all messages
       const messages = await messageService.getMessages();
 
-      // Group messages by contact_id
-      const groupedMessages = messages.reduce((acc, message) => {
-        if (!acc[(message.contact_id, message.phone_number_id)]) {
-          acc[(message.contact_id, message.phone_number_id)] = [];
+      // Group messages by contact_id and phone_number_id
+      const groupedMessages = messages.reduce<Record<string, Message[]>>((acc, message) => {
+        const key = `${message.contact_id}-${message.phone_number_id}`;
+        if (!acc[key]) {
+          acc[key] = [];
         }
-        acc[(message.contact_id, message.phone_number_id)].push(message);
+        acc[key].push(message);
         return acc;
-      }, {} as Record<number, Message[]>);
+      }, {});
 
       // Create conversations
-      const conversations = Object.entries(groupedMessages).map(([contact_id, messages]) => {
+      const conversations = Object.entries(groupedMessages).map(([key, messages]) => {
+        const [contact_id, phone_number_id] = key.split('-').map(Number);
         return {
-          contact_id: +contact_id,
+          contact_id: contact_id,
+          phone_number_id: phone_number_id,
           last_message: messages[0].content,
           last_message_time: messages[0].created_at,
-          phone_number_id: messages[0].phone_number_id,
           unread_messages: messages.filter(message => !message.status).length,
           messages,
           contact: messages[0].contact,
@@ -102,7 +104,7 @@ export const useMessages = () => {
             }
           }
         };
-      });     
+      });
 
       setConversations(conversations as Conversation[]);
     } catch (error) {
@@ -113,6 +115,7 @@ export const useMessages = () => {
   }, []);
 
   useEffect(() => {
+    console.log('Subscribing to messages channel');
     const subscription = supabase
       .channel('messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
@@ -123,7 +126,12 @@ export const useMessages = () => {
         // Update conversations
         setConversations(prev => {
           const contact_id = newMessage.contact_id;
-          const conversationIndex = prev.findIndex(conversation => conversation.contact_id === contact_id);
+          const conversationIndex = prev.findIndex(conversation => {
+            const condition1 = conversation.contact_id === contact_id;
+            const condition2 = conversation.phone_number_id === newMessage.phone_number_id;
+            return condition1 && condition2;
+          });
+
           if (conversationIndex === -1) {
             return prev;
           }
@@ -135,18 +143,21 @@ export const useMessages = () => {
             unread_messages: updatedConversations[conversationIndex].unread_messages + 1,
             messages: [newMessage, ...updatedConversations[conversationIndex].messages]
           };
+
           return updatedConversations;
         });
       }).subscribe();
 
+    
+
     fetchMessages();
     getConversations();
 
-    return () => {
-      subscription.unsubscribe();
-    }
-
   }, [fetchMessages, getConversations]);
+
+  useEffect(() => {
+    console.log('conversations:', conversations);
+  }, [conversations]);
 
   return {
     conversations,
