@@ -71,13 +71,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     });
   }
 
+  
+
   useEffect(() => {
     // Scroll to the bottom of the chat window
     const chatWindow = document.querySelector(".scrollToBottom");
     if (chatWindow) {
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
-  }, [conversation.messages]);
+  }, [conversation]);
 
 
   return (
@@ -149,7 +151,7 @@ interface MessageProps {
   created_at?: string;
   content?: string;
   status?: string;
-  image?: string;
+  media_url?: string;
 }
 
 const TextMessage: React.FC<MessageProps> = ({ direction, created_at, content, status }) => {
@@ -197,8 +199,7 @@ const TextMessage: React.FC<MessageProps> = ({ direction, created_at, content, s
   }
 }
 
-
-const ImageMessage: React.FC<MessageProps> = ({ direction, created_at, content, status, image }) => {
+const ImageMessage: React.FC<MessageProps> = ({ direction, created_at, content, status, media_url }) => {
   const isInbound = direction === "inbound";
   if (created_at) {
     const date = new Date(created_at);
@@ -223,7 +224,7 @@ const ImageMessage: React.FC<MessageProps> = ({ direction, created_at, content, 
             <p className="text-sm font-normal text-gray-900 dark:text-white">{content}</p>
             <div className="group relative my-2.5">
               {/* Image and Download Button */}
-              <img src={image} className="rounded-lg" alt="" />
+              <img src='' className="rounded-lg" alt="" />
             </div>
           </div>
           <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status}</span>

@@ -115,49 +115,10 @@ export const useMessages = () => {
   }, []);
 
   useEffect(() => {
-    console.log('Subscribing to messages channel');
-    const subscription = supabase
-      .channel('messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-        // Insert new message to messages and conversations appropriately
-        const newMessage = payload.new as Message;
-        setMessages(prev => [...prev, newMessage]);
-
-        // Update conversations
-        setConversations(prev => {
-          const contact_id = newMessage.contact_id;
-          const conversationIndex = prev.findIndex(conversation => {
-            const condition1 = conversation.contact_id === contact_id;
-            const condition2 = conversation.phone_number_id === newMessage.phone_number_id;
-            return condition1 && condition2;
-          });
-
-          if (conversationIndex === -1) {
-            return prev;
-          }
-
-          const updatedConversations = [...prev];
-          updatedConversations[conversationIndex] = {
-            ...updatedConversations[conversationIndex],
-            last_message: newMessage.content,
-            unread_messages: updatedConversations[conversationIndex].unread_messages + 1,
-            messages: [newMessage, ...updatedConversations[conversationIndex].messages]
-          };
-
-          return updatedConversations;
-        });
-      }).subscribe();
-
-    
-
     fetchMessages();
     getConversations();
-
   }, [fetchMessages, getConversations]);
 
-  useEffect(() => {
-    console.log('conversations:', conversations);
-  }, [conversations]);
 
   return {
     conversations,
