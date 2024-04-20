@@ -57,7 +57,7 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
               className={`p-4 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 ${selectedConversation === conversation ? "bg-gray-200 dark:bg-gray-700" : ""}`}
               onClick={() => onSelectConversation(conversation)}
             >
-              <div className="flex justify-between xl:block 2xl:flex 2xl:space-x-4">
+              <div className="flex justify-between xl:block 2xl:block 2xl:space-x-4">
                 <div className="flex space-x-4 xl:mb-4 2xl:mb-0">
                   <div className="min-w-0 flex-1">
                     <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">

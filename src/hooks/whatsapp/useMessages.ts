@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Conversation, Message, MessagesFormData } from '../../types/messagesTypes';
 import * as messageService from '../../services/messageService';
-import { supabase } from '../../utils/supabaseClient';
 
 export const useMessages = () => {
   const [messages, setMessages] = useState<Message[]>([]);

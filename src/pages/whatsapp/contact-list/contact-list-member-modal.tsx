@@ -35,7 +35,7 @@ const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function (
     };
 
     fetchData();
-  });
+  }, [contact_list.contact_list_id, fetchContactListMembers]);
 
   return (
     <>

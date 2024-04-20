@@ -78,12 +78,14 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
         // window.location.reload();
       };
     } else {
+
+      // Split the form input by new line and comma
       const contacts = formInput;
       const contactsArray = contacts.split('\n').map((contact) => {
         const parts = contact.split(',');
         // Check if contact has both name and phone or just phone
-        const phone = parts.length === 2 ? parts[1].trim() : parts[0].trim();
-        const name = parts.length === 2 ? parts[0].trim() : undefined; // or '' if you prefer an empty string over undefined
+        const phone = parts[0].trim();
+        const name = parts.length === 2 ? parts[1].trim() : undefined; // or '' if you prefer an empty string over undefined
         return { name, phone };
       });
 
@@ -115,7 +117,6 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
             });
           }
         });
-
       });
       // Refresh the page to show the new contact
       // window.location.reload();
@@ -171,9 +172,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
               <Tabs.Item title="Form" icon={BsTextareaResize}>
                 <div className="flex items-center justify-center w-full">
                   <Textarea
-                    placeholder='Phone Number, Name
-                    1234567890, John Doe
-                    0987654321, Jane Doe'
+                    placeholder='Phone Number, Name (optional), ...'
                     value={formInput}
                     onChange={(e) => setFormInput(e.target.value)}
                     className="w-full h-64"

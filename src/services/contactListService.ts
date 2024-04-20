@@ -14,7 +14,8 @@ export const getContactLists = async (): Promise<ContactList[]> => {
 export const getContactList = async (contact_list_id: number): Promise<ContactList> => {
   let { data: contactList, error } = await supabase
     .from("contact_lists")
-    .select("*")
+    .select(`*,
+      contact_list_members (*)`)
     .match({ contact_list_id })
     .single(); // Use .single() if you're fetching one row to get an object instead of an array back
 
@@ -70,7 +71,7 @@ export const fetchContactListMembers = async (contact_list_id: number): Promise<
   if (error) throw new Error(error.message);
 
   // Populate the contact list members
-  if (!contactListMembers) return  [] ;
+  if (!contactListMembers) return [];
   const contacts = await Promise.all(contactListMembers.map(async (contactListMember) => {
     const { data: contact, error } = await supabase
       .from("contacts")
