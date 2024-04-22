@@ -1,10 +1,10 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import useSupabaseAuth from '../hooks/supabase/useSupabaseAuth';
 import LoadingPage from '../pages/pages/loading';
+import { useAuthContext } from '../context/AuthContext';
 
 const ProtectedRoute: React.FC = () => {
-  const { user, loading } = useSupabaseAuth();
+  const { user, loading } = useAuthContext();
 
   if (loading) {
     return (
@@ -12,13 +12,7 @@ const ProtectedRoute: React.FC = () => {
     )
   }
 
-  if (!user) {
-    // Redirect to the sign-in page if the user is not authenticated
-    return <Navigate to="/authentication/sign-in" replace />;
-  }
-
-  // Render children routes if the user is authenticated
-  return <Outlet />;
+  return user ? <Outlet /> : <Navigate to="/authentication/sign-in" replace />;
 };
 
 export default ProtectedRoute;

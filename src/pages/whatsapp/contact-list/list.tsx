@@ -9,21 +9,20 @@ import React from "react";
 import {
   HiHome,
 } from "react-icons/hi";
-import { useContactLists } from "../../../hooks/whatsapp/useContactList";
 import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
-import { ListOfContactList } from "../../../types/contactListTypes";
 import LoadingPage from "../../pages/loading";
 import AddContactListModal from "./add-contact-list-modal";
 import CSVImportModal from "./csv-import-modal";
 import EditContactListModal from "./edit-contact-list-modal";
 import ContactListMemberModal from "./contact-list-member-modal";
 import AddContactModal from "./add-contact-modal";
+import { useContactListContext, ContactList, ContactLists } from "../../../context/ContactListContext";
 
 const WhatsAppContactListPage: React.FC = function () {
-  const { contactLists, isLoading } = useContactLists();
+  const { contactLists, loading } = useContactListContext();
   const [searchValue, setSearchValue] = React.useState("");
 
-  if (isLoading) {
+  if (loading) {
     return <LoadingPage />;
   }
 
@@ -82,7 +81,7 @@ const WhatsAppContactListPage: React.FC = function () {
     </NavbarSidebarLayout>
   );
 };
-const ContactListsTable: React.FC<ListOfContactList> = function ({contact_lists}) {
+const ContactListsTable: React.FC<ContactLists> = function ({contact_lists}) {
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
       <Table.Head className="bg-gray-100 dark:bg-gray-700">

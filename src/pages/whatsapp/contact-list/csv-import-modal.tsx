@@ -4,11 +4,11 @@ import { Button, Modal, Tabs } from 'flowbite-react';
 import React, { ChangeEvent, useState } from 'react';
 import { BsFiletypeCsv, BsTextareaResize } from "react-icons/bs";
 import { MdCloudUpload } from "react-icons/md";
-import { useContacts } from '../../../hooks/useContact';
 import { useContactLists } from '../../../hooks/whatsapp/useContactList';
 import { ContactList } from '../../../types/contactListTypes';
 import { Contact, CreateContactFormData } from '../../../types/contactTypes';
 import { Textarea } from 'flowbite-react';
+import { useContactContext } from '../../../context/ContactContext';
 
 // Defining props type
 interface EditContactListModalProps {
@@ -18,7 +18,7 @@ interface EditContactListModalProps {
 const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) => {
   const [isOpen, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const { addContact, findContact } = useContacts();
+  const { addContact, findContact } = useContactContext();
   const { addContactToContactList } = useContactLists();
   const [formInput, setFormInput] = useState('');
 
@@ -41,86 +41,86 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
 
   // Handler for import button click
   const handleImport = async () => {
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsText(file);
-      reader.onload = async () => {
-        const contacts = reader.result as string;
-        // Skip the first line (header)
+    // if (file) {
+    //   const reader = new FileReader();
+    //   reader.readAsText(file);
+    //   reader.onload = async () => {
+    //     const contacts = reader.result as string;
+    //     // Skip the first line (header)
 
-        const contactsArray = contacts.split('\n').slice(1).map((contact) => {
-          const [name, phone] = contact.split(',');
-          return { name, phone };
-        });
+    //     const contactsArray = contacts.split('\n').slice(1).map((contact) => {
+    //       const [name, phone] = contact.split(',');
+    //       return { name, phone };
+    //     });
 
-        contactsArray.forEach((contact) => {
-          const tempContact = { name: contact.name, wa_id: contact.phone } as Contact;
-          // Check if the contact already exists
-          findContact(tempContact).then((data) => {
-            if (data) {
-              // Add the contact to the contact list
-              addContactToContactList(contact_list.contact_list_id, data.contact_id).catch((error) => {
-                console.error('Failed to add contact to contact list:', error);
-              });
-            } else {
-              // Add the contact to the contacts table
-              addContact({ name: contact.name, wa_id: contact.phone } as CreateContactFormData).then((newContact) => {
-                if (!newContact) return;
-                addContactToContactList(contact_list.contact_list_id, newContact.contact_id);
-              }).catch((error) => {
-                console.error('Failed to add contact:', error);
-              });
-            }
-          });
+    //     contactsArray.forEach((contact) => {
+    //       const tempContact = { name: contact.name, wa_id: contact.phone } as Contact;
+    //       // Check if the contact already exists
+    //       findContact(tempContact).then((data) => {
+    //         if (data) {
+    //           // Add the contact to the contact list
+    //           addContactToContactList(contact_list.contact_list_id, data.contact_id).catch((error) => {
+    //             console.error('Failed to add contact to contact list:', error);
+    //           });
+    //         } else {
+    //           // Add the contact to the contacts table
+    //           addContact({ name: contact.name, wa_id: contact.phone } as CreateContactFormData).then((newContact) => {
+    //             if (!newContact) return;
+    //             addContactToContactList(contact_list.contact_list_id, newContact.contact_id);
+    //           }).catch((error) => {
+    //             console.error('Failed to add contact:', error);
+    //           });
+    //         }
+    //       });
 
-        });
-        // Refresh the page to show the new contact
-        // window.location.reload();
-      };
-    } else {
+    //     });
+    //     // Refresh the page to show the new contact
+    //     // window.location.reload();
+    //   };
+    // } else {
 
-      // Split the form input by new line and comma
-      const contacts = formInput;
-      const contactsArray = contacts.split('\n').map((contact) => {
-        const parts = contact.split(',');
-        // Check if contact has both name and phone or just phone
-        const phone = parts[0].trim();
-        const name = parts.length === 2 ? parts[1].trim() : undefined; // or '' if you prefer an empty string over undefined
-        return { name, phone };
-      });
+    //   // Split the form input by new line and comma
+    //   const contacts = formInput;
+    //   const contactsArray = contacts.split('\n').map((contact) => {
+    //     const parts = contact.split(',');
+    //     // Check if contact has both name and phone or just phone
+    //     const phone = parts[0].trim();
+    //     const name = parts.length === 2 ? parts[1].trim() : undefined; // or '' if you prefer an empty string over undefined
+    //     return { name, phone };
+    //   });
 
-      contactsArray.forEach((contact) => {
-        const tempContact = { name: contact.name || 'Unknown', wa_id: contact.phone } as Contact;
-        // Check if the contact already exists
-        findContact(tempContact).then((data) => {
-          if (data) {
-            // Add the contact to the contact list
-            addContactToContactList(contact_list.contact_list_id, data.contact_id).catch((error) => {
-              console.error('Failed to add contact to contact list:', error);
-            });
-          } else {
-            // Adjust here for potentially undefined name
-            const createContactData: CreateContactFormData = {
-              wa_id: contact.phone,
-              name: '',
-              phone: null,
-              email: null
-            };
-            if (contact.name) createContactData.name = contact.name;
+    //   contactsArray.forEach((contact) => {
+    //     const tempContact = { name: contact.name || 'Unknown', wa_id: contact.phone } as Contact;
+    //     // Check if the contact already exists
+    //     findContact(tempContact).then((data) => {
+    //       if (data) {
+    //         // Add the contact to the contact list
+    //         addContactToContactList(contact_list.contact_list_id, data.contact_id).catch((error) => {
+    //           console.error('Failed to add contact to contact list:', error);
+    //         });
+    //       } else {
+    //         // Adjust here for potentially undefined name
+    //         const createContactData: CreateContactFormData = {
+    //           wa_id: contact.phone,
+    //           name: '',
+    //           phone: null,
+    //           email: null
+    //         };
+    //         if (contact.name) createContactData.name = contact.name;
 
-            // Add the contact to the contacts table
-            addContact(createContactData).then((newContact) => {
-              if (!newContact) return;
-              addContactToContactList(contact_list.contact_list_id, newContact.contact_id);
-            }).catch((error) => {
-              console.error('Failed to add contact:', error);
-            });
-          }
-        });
-      });
-      // Refresh the page to show the new contact
-      // window.location.reload();
-    }
+    //         // Add the contact to the contacts table
+    //         addContact(createContactData).then((newContact) => {
+    //           if (!newContact) return;
+    //           addContactToContactList(contact_list.contact_list_id, newContact.contact_id);
+    //         }).catch((error) => {
+    //           console.error('Failed to add contact:', error);
+    //         });
+    //       }
+    //     });
+    //   });
+    //   // Refresh the page to show the new contact
+    //   // window.location.reload();
+    // }
   };
 
   return (

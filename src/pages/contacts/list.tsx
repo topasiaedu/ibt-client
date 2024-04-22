@@ -13,15 +13,15 @@ import {
 import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
 import AddContactModal from "./add-contact-modal";
 import EditContactModal from "./edit-contact-modal";
-import { useContacts } from "../../hooks/useContact";
-import { ListOfContacts } from "../../types/contactTypes";
 import LoadingPage from "../pages/loading";
+import { Contact, useContactContext, Contacts } from "../../context/ContactContext";
 
 const ContactListPage: FC = function () {
-  const { contacts, isLoading } = useContacts();
+  const { contacts, loading } = useContactContext();
+
   const [searchValue, setSearchValue] = React.useState("");
 
-  if (isLoading) {
+  if (loading) {
     return <LoadingPage />;
   }
 
@@ -59,7 +59,7 @@ const ContactListPage: FC = function () {
                     onChange={(e) => setSearchValue(e.target.value)}
                   />
                 </div>
-              </form>             
+              </form>
             </div>
             <div className="ml-auto flex items-center space-x-2 sm:space-x-3">
               <AddContactModal />
@@ -86,7 +86,7 @@ const ContactListPage: FC = function () {
   );
 };
 
-const ContactsTable: React.FC<ListOfContacts> = function ({ contacts }) {
+const ContactsTable: React.FC<Contacts> = function ({ contacts }) {
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
       <Table.Head className="bg-gray-100 dark:bg-gray-700">

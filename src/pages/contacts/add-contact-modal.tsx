@@ -5,28 +5,27 @@ import {
   Modal,
   TextInput,
 } from "flowbite-react";
-import type { FC } from "react";
 import React, { useState } from "react";
 import {
   HiPlus,
 } from "react-icons/hi";
-import { useContacts } from "../../hooks/useContact";
-import { CreateContactFormData } from "../../types/contactTypes";
+import { Contact, useContactContext } from "../../context/ContactContext";
+import { useProjectContext } from "../../context/ProjectContext";
 
-const AddContactModal: FC = function () {
+const AddContactModal: React.FC = function () {
   const [isOpen, setOpen] = useState(false);
-  const { addContact } = useContacts();
+  const { addContact } = useContactContext();
+  const { currentProject } = useProjectContext();
   const [contactData, setContactData] = useState({
     name: "",
     email: "",
     wa_id: "",
+    project_id: currentProject?.project_id
   });
 
   const handleAddContact = async () => {
-    await addContact(contactData as CreateContactFormData);
+    await addContact(contactData as Contact);
     setOpen(false);
-    // Refresh the page to show the new contact
-    window.location.reload();
   };
 
   return (
@@ -54,7 +53,7 @@ const AddContactModal: FC = function () {
                   onChange={(e) => setContactData({ ...contactData, name: e.target.value })}
                 />
               </div>
-            </div>           
+            </div>
             <div>
               <Label htmlFor="email">Email</Label>
               <div className="mt-1">
@@ -80,7 +79,7 @@ const AddContactModal: FC = function () {
                   onChange={(e) => setContactData({ ...contactData, wa_id: e.target.value })}
                 />
               </div>
-            </div>          
+            </div>
           </div>
         </Modal.Body>
         <Modal.Footer>

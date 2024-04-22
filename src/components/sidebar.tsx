@@ -1,14 +1,12 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import classNames from "classnames";
-import { Sidebar, TextInput, Tooltip } from "flowbite-react";
-import type { FC } from "react";
+import { Sidebar, Tooltip } from "flowbite-react";
 import React, { useEffect, useState } from "react";
 import {
   HiChartPie,
   HiCog,
   HiInboxIn,
   HiInformationCircle,
-  HiSearch,
 } from "react-icons/hi";
 import { IoLogoWhatsapp } from "react-icons/io";
 import { TbBrandCampaignmonitor } from "react-icons/tb";
@@ -17,13 +15,14 @@ import isSmallScreen from "../helpers/is-small-screen";
 import { IoMdContact } from "react-icons/io";
 import { HiTemplate } from "react-icons/hi";
 import { FaListUl } from "react-icons/fa6";
+import ProjectDropdown from "./ProjectDropdown";
 
-const ExampleSidebar: FC = function () {
+const ExampleSidebar: React.FC = function () {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
     useSidebarContext();
-
   const [currentPage, setCurrentPage] = useState("");
   const [isWhatsAppOpen, setWhatsAppOpen] = useState(true);
+
 
   useEffect(() => {
     const newPage = window.location.pathname;
@@ -44,7 +43,7 @@ const ExampleSidebar: FC = function () {
       >
         <div className="flex h-full flex-col justify-between py-2">
           <div>
-            <form className="pb-3 md:hidden">
+            {/* <form className="pb-3 ">
               <TextInput
                 icon={HiSearch}
                 type="search"
@@ -52,7 +51,10 @@ const ExampleSidebar: FC = function () {
                 required
                 size={32}
               />
-            </form>
+            </form> */}
+
+            <ProjectDropdown />
+            
             <Sidebar.Items>
               <Sidebar.ItemGroup>
                 <Sidebar.Item
@@ -159,13 +161,13 @@ const ExampleSidebar: FC = function () {
               </Sidebar.ItemGroup>
               <Sidebar.ItemGroup>
                 {/* <Sidebar.Item
-                  href="https://github.com/themesberg/flowbite-react/"
+                  href="https://github.com/themesberg/flowbiteReact/"
                   icon={HiClipboard}
                 >
                   Docs
                 </Sidebar.Item>
                 <Sidebar.Item
-                  href="https://flowbite-react.com/"
+                  href="https://flowbiteReact.com/"
                   icon={HiCollection}
                 >
                   Components
@@ -187,13 +189,14 @@ const ExampleSidebar: FC = function () {
   );
 };
 
-const BottomMenu: FC = function () {
+const BottomMenu: React.FC = function () {
   return (
     <div className="flex items-center justify-center gap-x-5">
       {/* <button className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
         <span className="sr-only">Tweaks</span>
         <HiAdjustments className="text-2xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white " />
       </button> */}
+
       <div>
         <Tooltip content="Settings page">
           <a

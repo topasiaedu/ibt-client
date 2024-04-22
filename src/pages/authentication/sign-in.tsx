@@ -2,13 +2,14 @@
 import { Button, Card, Checkbox, Label, TextInput } from "flowbite-react";
 import type { FC } from "react";
 import React from "react";
-import useSupabaseAuth from "../../hooks/supabase/useSupabaseAuth";
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../context/AuthContext";
+import LoadingPage from "../pages/loading";
 
 
 const SignInPage: FC = function () {
   const navigate = useNavigate(); // Use useNavigate from react-router-dom
-  const { signIn } = useSupabaseAuth(); // Use signIn from useSupabaseAuth
+  const { user, signIn, loading } = useAuthContext(); // Use signIn from useSupabaseAuth
 
   // Assume you've defined a state htmlFor email and password to capture form inputs
   const [email, setEmail] = React.useState('');
@@ -26,6 +27,12 @@ const SignInPage: FC = function () {
       console.log('Signed in successfully');
       navigate('/'); // Redirect to dashboard after successful sign-in
     }
+  }
+
+  if (loading) {
+    return <LoadingPage />;
+  } else if (user) {
+    navigate('/'); // Redirect to dashboard if user is already authenticated
   }
   
   return (

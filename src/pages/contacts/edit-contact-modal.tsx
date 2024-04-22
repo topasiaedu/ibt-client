@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import type { FC } from 'react';
 import { Button, Label, Modal, TextInput } from 'flowbite-react';
 import { HiOutlinePencilAlt } from 'react-icons/hi';
-import { Contact } from '../../types/contactTypes';
-import { useContacts } from '../../hooks/useContact';
+import { useContactContext, Contact } from '../../context/ContactContext';
 
 // Defining props type
 interface EditContactModalProps {
@@ -13,19 +12,12 @@ interface EditContactModalProps {
 
 const EditContactModal: FC<EditContactModalProps> = ({ contact }) => {
   const [isOpen, setOpen] = useState(false);
-  const { updateContact } = useContacts();
-  const [contactData, setContactData] = useState({
-    contact_id: contact.contact_id,
-    name: contact.name,
-    email: contact.email,
-    wa_id: contact.wa_id
-});
+  const { updateContact } = useContactContext();
+  const [contactData, setContactData] = useState<Contact>(contact);
 
-  const handleUpdateContact = async (contact_id: number, formData: Contact) => {
-    await updateContact(contact_id, formData);
+  const handleUpdateContact = async (formData: Contact) => {
+    await updateContact(formData);
     setOpen(false);
-    // Refresh the page to show the new contact
-    window.location.reload();
   }  
 
   return (
@@ -84,13 +76,7 @@ const EditContactModal: FC<EditContactModalProps> = ({ contact }) => {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button color="primary" onClick={() => {
-            handleUpdateContact(contactData.contact_id, {
-              ...contactData,
-              created_at: contact.created_at,
-              phone: contact.phone
-            });
-          }}>
+          <Button color="primary" onClick={() => handleUpdateContact(contactData)}>
             Save all
           </Button>
         </Modal.Footer>

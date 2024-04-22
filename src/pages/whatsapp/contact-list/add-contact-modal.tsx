@@ -12,8 +12,8 @@ import {
   HiPlus,
 } from "react-icons/hi";
 import { ContactList } from "../../../types/contactListTypes";
-import { useContacts } from "../../../hooks/useContact";
 import { useContactLists } from "../../../hooks/whatsapp/useContactList";
+import { useContactContext } from "../../../context/ContactContext";
 
 interface AddContactModalProps {
   // Define the props type here
@@ -22,7 +22,7 @@ interface AddContactModalProps {
 
 const AddContactModal: React.FC<AddContactModalProps> = function ({ contact_list }) {
   const [isOpen, setOpen] = useState(false);
-  const { contacts } = useContacts();
+  const { contacts } = useContactContext();
   const [searchValue, setSearchValue] = React.useState("");
   const [selectedContacts, setSelectedContacts] = React.useState<number[]>([]);
   const { addContactToContactList } = useContactLists();

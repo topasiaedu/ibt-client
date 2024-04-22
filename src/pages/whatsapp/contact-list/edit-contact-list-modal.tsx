@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import type { FC } from 'react';
 import { Button, Label, Modal, TextInput } from 'flowbite-react';
 import { HiOutlinePencilAlt } from 'react-icons/hi';
-import { ContactList } from '../../../types/contactListTypes';
-import { useContactLists } from '../../../hooks/whatsapp/useContactList';
+import { useContactListContext, ContactList } from "../../../context/ContactListContext";
 
 // Defining props type
 interface EditContactListModalProps {
@@ -13,19 +12,12 @@ interface EditContactListModalProps {
 
 const EditContactListModal: FC<EditContactListModalProps> = ({ contact_list }) => {
   const [isOpen, setOpen] = useState(false);
-  const { updateContactList } = useContactLists();
-  const [contactListData, setContactListData] = useState({
-    contact_list_id: contact_list.contact_list_id,
-    name: contact_list.name,
-    description: contact_list.description,
-    created_at: contact_list.created_at,
-  });
+  const { updateContactList } = useContactListContext();
+  const [contactListData, setContactListData] = useState<ContactList>(contact_list);
 
-  const handleUpdateContactList = async (contact_list_id: number, formData: ContactList) => {
-    await updateContactList(contact_list_id, formData);
+  const handleUpdateContactList = async ( formData: ContactList) => {
+    await updateContactList(formData);
     setOpen(false);
-    // Refresh the page to show the new contact
-    window.location.reload();
   }
 
   return (
@@ -69,11 +61,7 @@ const EditContactListModal: FC<EditContactListModalProps> = ({ contact_list }) =
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button color="primary" onClick={() => handleUpdateContactList(contactListData.contact_list_id, {
-            ...contactListData,
-            name: contactListData.name,
-            description: contactListData.description,
-          })}>
+          <Button color="primary" onClick={() => handleUpdateContactList(contactListData)}>
             Save all
           </Button>
         </Modal.Footer>

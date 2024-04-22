@@ -10,12 +10,11 @@ import React, { useState } from "react";
 import {
   HiPlus,
 } from "react-icons/hi";
-import { useContactLists } from "../../../hooks/whatsapp/useContactList";
-import { ContactList } from "../../../types/contactListTypes";
+import { useContactListContext, ContactList } from "../../../context/ContactListContext";
 
 const AddContactListModal: FC = function () {
   const [isOpen, setOpen] = useState(false);
-  const { addContactList } = useContactLists();
+  const { addContactList } = useContactListContext();
   const [contactListData, setContactListData] = useState({
     name: "",
     description: "",
