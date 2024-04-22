@@ -17,8 +17,11 @@ interface ProjectContextProps {
 const ProjectContext = createContext<ProjectContextProps>(undefined!);
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
+  const storage = window.localStorage.getItem('currentProject');
   const [projects, setProjects] = useState<Project[]>([]);
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [currentProject, setCurrentProject] = useState<Project | null>(
+    storage ? JSON.parse(storage) : null
+  );
   const { user } = useAuthContext();
 
   useEffect(() => {
@@ -47,8 +50,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       }
 
       setProjects(projects!);
-      setCurrentProject(projects?.[0] || null);
-    };
+      if (!currentProject && projects!.length > 0) {
+        setCurrentProject(projects![0]);
+      }
+    };    
 
     fetchProjects();
 
@@ -64,6 +69,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user?.id]);
 
+  //Save the latest state into localStorage
+  useEffect(() => {
+    window.localStorage.setItem('currentProject', JSON.stringify(currentProject));
+  }, [currentProject]);
 
 
   const addProject = async (project: Project) => {
