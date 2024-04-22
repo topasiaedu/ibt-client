@@ -26,11 +26,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const fetchProjects = async () => {
-
+      if (!user) return;
+      
       const { data: projectPermissions, error: projectPermissionsError } = await supabase
         .from('project_permission')
         .select('project_id')
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (projectPermissionsError) {
         console.error('Error fetching project permissions:', projectPermissionsError);
@@ -57,6 +58,16 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
     fetchProjects();
 
+    const handleChanges = (payload: any) => {
+      if (payload.eventType === 'INSERT') {
+        setProjects(prev => [...prev, payload.new]);
+      } else if (payload.eventType === 'UPDATE') {
+        setProjects(prev => prev.map(project => project.project_id === payload.new.project_id ? payload.new : project));
+      } else if (payload.eventType === 'DELETE') {
+        setProjects(prev => prev.filter(project => project.project_id !== payload.old.project_id));
+      }
+    }
+
     const subscription = supabase
       .channel('project')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'project' }, payload => {
@@ -67,7 +78,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     }
-  }, [user?.id]);
+  }, [currentProject, user?.id]);
 
   //Save the latest state into localStorage
   useEffect(() => {
@@ -113,15 +124,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleChanges = (payload: any) => {
-    if (payload.eventType === 'INSERT') {
-      setProjects(prev => [...prev, payload.new]);
-    } else if (payload.eventType === 'UPDATE') {
-      setProjects(prev => prev.map(project => project.project_id === payload.new.project_id ? payload.new : project));
-    } else if (payload.eventType === 'DELETE') {
-      setProjects(prev => prev.filter(project => project.project_id !== payload.old.project_id));
-    }
-  }
+  
 
   return (
     <ProjectContext.Provider value={{ projects, addProject, updateProject, deleteProject, currentProject, setCurrentProject }}>

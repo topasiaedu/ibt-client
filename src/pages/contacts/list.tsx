@@ -14,7 +14,7 @@ import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
 import AddContactModal from "./add-contact-modal";
 import EditContactModal from "./edit-contact-modal";
 import LoadingPage from "../pages/loading";
-import { Contact, useContactContext, Contacts } from "../../context/ContactContext";
+import { useContactContext, Contacts } from "../../context/ContactContext";
 
 const ContactListPage: FC = function () {
   const { contacts, loading } = useContactContext();

@@ -15,8 +15,8 @@ import AddContactListModal from "./add-contact-list-modal";
 import CSVImportModal from "./csv-import-modal";
 import EditContactListModal from "./edit-contact-list-modal";
 import ContactListMemberModal from "./contact-list-member-modal";
-import AddContactModal from "./add-contact-modal";
-import { useContactListContext, ContactList, ContactLists } from "../../../context/ContactListContext";
+import AddContactModal from "./add-contact-to-contact-list-modal";
+import { useContactListContext, ContactLists } from "../../../context/ContactListContext";
 
 const WhatsAppContactListPage: React.FC = function () {
   const { contactLists, loading } = useContactListContext();

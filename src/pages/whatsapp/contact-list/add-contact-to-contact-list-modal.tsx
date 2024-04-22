@@ -34,8 +34,7 @@ const AddContactModal: React.FC<AddContactModalProps> = function ({ contact_list
     });
     
     // Close the modal
-    // setOpen(false);
-    window.location.reload();
+    setOpen(false);
   };
 
   return (

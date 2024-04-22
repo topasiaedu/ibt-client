@@ -8,7 +8,7 @@ export type Contacts = { contacts: Contact[]; };
 
 interface ContactContextProps {
   contacts: Contact[];
-  addContact: (contact: Contact) => void;
+  addContact: (contact: Contact) => Promise<Contact | null>;
   updateContact: (contact: Contact) => void;
   deleteContact: (contactId: number) => void;
   findContact: (contact: Contact) => Promise<Contact | null>;
@@ -59,17 +59,15 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
 
   const addContact = async (contact: Contact) => {
     setLoading(true)
-    try {
-      await supabase
-        .from('contacts')
-        .insert(contact)
-        .single();
-
-    } catch (error) {
-      console.error('Failed to add contact:', error);
-    } finally {
-      setLoading(false)
+    const { data, error } = await supabase
+      .from('contacts')
+      .insert([{ ...contact, project_id: currentProject?.project_id }]);
+    if (error) {
+      console.error('Error adding contact:', error);
+      return null;
     }
+    setLoading(false)
+    return data?.[0] || null;
   };
 
   const updateContact = async (contact: Contact) => {

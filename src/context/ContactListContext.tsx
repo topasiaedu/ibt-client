@@ -2,8 +2,18 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
+import { Contact } from "./ContactContext";
 
-export type ContactList = Database['public']['Tables']['contact_lists']['Row'];
+// Define a type for contact list members that includes the contact details
+export type ContactListMember = Database['public']['Tables']['contact_list_members']['Row'] & {
+  contact: Contact;
+};
+
+// Modify the ContactList type to include an array of ContactListMember
+export type ContactList = Database['public']['Tables']['contact_lists']['Row'] & {
+  contact_list_members: ContactListMember[];
+};
+
 export type ContactLists = { contact_lists: ContactList[]; };
 
 interface ContactListContextProps {
@@ -11,6 +21,8 @@ interface ContactListContextProps {
   addContactList: (contactList: ContactList) => void;
   updateContactList: (contactList: ContactList) => void;
   deleteContactList: (contactListId: number) => void;
+  removeContactFromContactList: (contactListId: number, contactId: number) => void;
+  addContactToContactList: (contactListId: number, contactId: number) => void;
   loading: boolean;
 }
 
@@ -39,11 +51,24 @@ export function ContactListProvider({ children }: { children: React.ReactNode })
         console.error('Error fetching contactLists:', error);
         return;
       }
-      console.log(contactLists)
       setContactLists(contactLists!);
     };
 
     fetchContactLists();
+
+    const handleChanges = (payload: any) => {
+      switch (payload.event) {
+        case 'INSERT':
+          setContactLists([payload.record, ...contactLists]);
+          break;
+        case 'UPDATE':
+          setContactLists(contactLists.map(c => c.contact_list_id === payload.record.contact_list_id ? payload.record : c));
+          break;
+        case 'DELETE':
+          setContactLists(contactLists.filter(c => c.contact_list_id !== payload.record.contact_list_id));
+          break;
+      }
+    };
 
     const subscription = supabase
       .channel('contact_lists')
@@ -53,11 +78,12 @@ export function ContactListProvider({ children }: { children: React.ReactNode })
       .subscribe()
 
     setLoading(false)
+
     return () => {
       subscription.unsubscribe();
     };
 
-  }, [currentProject]);
+  }, [contactLists, currentProject]);
 
   const addContactList = async (contactList: ContactList) => {
     const { data, error } = await supabase
@@ -73,21 +99,20 @@ export function ContactListProvider({ children }: { children: React.ReactNode })
   };
 
   const updateContactList = async (contactList: ContactList) => {
-    const { data, error } = await supabase
+    const { contact_list_members, ...contactListWithoutMembers } = contactList;    
+    const { error } = await supabase
       .from('contact_lists')
-      .update(contactList)
+      .update(contactListWithoutMembers)
       .eq('contact_list_id', contactList.contact_list_id);
 
     if (error) {
       console.error('Error updating contactList:', error);
       return;
     }
-
-    setContactLists(contactLists.map(c => c.contact_list_id === contactList.contact_list_id ? contactList : c));
   };
 
   const deleteContactList = async (contactListId: number) => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('contact_lists')
       .delete()
       .eq('contact_list_id', contactListId);
@@ -98,22 +123,34 @@ export function ContactListProvider({ children }: { children: React.ReactNode })
     }
   };
 
-  const handleChanges = (payload: any) => {
-    switch (payload.event) {
-      case 'INSERT':
-        setContactLists([payload.record, ...contactLists]);
-        break;
-      case 'UPDATE':
-        setContactLists(contactLists.map(c => c.contact_list_id === payload.record.contact_list_id ? payload.record : c));
-        break;
-      case 'DELETE':
-        setContactLists(contactLists.filter(c => c.contact_list_id !== payload.record.contact_list_id));
-        break;
+  const removeContactFromContactList = async (contactListId: number, contactId: number) => {
+    const { error } = await supabase
+      .from('contact_list_members')
+      .delete()
+      .eq('contact_list_id', contactListId)
+      .eq('contact_id', contactId);
+
+    if (error) {
+      console.error('Error removing contact from contactList:', error);
+      return null;
     }
   };
 
+  const addContactToContactList = async (contactListId: number, contactId: number) => {
+    const { error } = await supabase
+      .from('contact_list_members')
+      .insert({ contact_list_id: contactListId, contact_id: contactId });
+
+    if (error) {
+      console.error('Error adding contact to contactList:', error);
+      return null;
+    }
+  };
+
+
+
   return (
-    <ContactListContext.Provider value={{ contactLists, addContactList, updateContactList, deleteContactList, loading }}>
+    <ContactListContext.Provider value={{ contactLists, addContactList, updateContactList, deleteContactList, removeContactFromContactList, addContactToContactList, loading }}>
       {children}
     </ContactListContext.Provider>
   );

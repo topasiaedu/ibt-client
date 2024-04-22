@@ -4,12 +4,10 @@ import {
   Modal,
   Table,
 } from "flowbite-react";
-import React, { useState, useEffect } from "react";
-import { useContactLists } from "../../../hooks/whatsapp/useContactList";
-import { ContactList } from "../../../types/contactListTypes";
-import { Contact } from "../../../types/contactTypes";
+import React, { useState } from "react";
 import { MdDelete } from "react-icons/md";
 import { CiViewTable } from "react-icons/ci";
+import { useContactListContext, ContactList } from "../../../context/ContactListContext";
 
 interface ContactListMemberModalProps {
   contact_list: ContactList;
@@ -17,25 +15,12 @@ interface ContactListMemberModalProps {
 
 const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function ({ contact_list }) {
   const [isOpen, setOpen] = useState(false);
-  const { fetchContactListMembers, removeContactFromContactList } = useContactLists();
-  const [contactListMembers, setContactListMembers] = useState<Contact[]>([]);
+  const { removeContactFromContactList } = useContactListContext();
 
   const handleRemoveContact = async (contact_id: number) => {
     await removeContactFromContactList(contact_list.contact_list_id, contact_id);
-    // Refresh the page to show the new contact
-    window.location.reload();
   }
 
-  useEffect(() => { 
-    const fetchData = async () => {
-      const members = await fetchContactListMembers(contact_list.contact_list_id);
-      if (members) {
-        setContactListMembers(members);
-      }
-    };
-
-    fetchData();
-  }, [contact_list.contact_list_id, fetchContactListMembers]);
 
   return (
     <>
@@ -62,12 +47,12 @@ const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function (
                       <Table.HeadCell>Actions</Table.HeadCell>
                     </Table.Head>
                     <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                      {contactListMembers.map((contact) => (
-                        <Table.Row key={contact.contact_id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                          <Table.Cell>{contact.name}</Table.Cell>
-                          <Table.Cell>{contact.wa_id}</Table.Cell>
+                      {contact_list.contact_list_members.map((contact_list_member) => (
+                        <Table.Row key={contact_list_member.contact.contact_id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <Table.Cell>{contact_list_member.contact.name}</Table.Cell>
+                          <Table.Cell>{contact_list_member.contact.wa_id}</Table.Cell>
                           <Table.Cell>
-                            <Button color="primary" onClick={() => handleRemoveContact(contact.contact_id)}>
+                            <Button color="primary" onClick={() => handleRemoveContact(contact_list_member.contact.contact_id)}>
                               <div className="flex items-center gap-x-3">
                                 <MdDelete className="text-xs" />
                                 Remove
