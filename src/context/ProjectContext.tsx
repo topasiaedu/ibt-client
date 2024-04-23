@@ -19,15 +19,13 @@ const ProjectContext = createContext<ProjectContextProps>(undefined!);
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const storage = window.localStorage.getItem('currentProject');
   const [projects, setProjects] = useState<Project[]>([]);
-  const [currentProject, setCurrentProject] = useState<Project | null>(
-    storage ? JSON.parse(storage) : null
-  );
+  const [currentProject, setCurrentProject] = useState<Project | null>(storage ? JSON.parse(storage) : null);
   const { user } = useAuthContext();
 
   useEffect(() => {
     const fetchProjects = async () => {
       if (!user) return;
-      
+
       const { data: projectPermissions, error: projectPermissionsError } = await supabase
         .from('project_permission')
         .select('project_id')
@@ -54,7 +52,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       if (!currentProject && projects!.length > 0) {
         setCurrentProject(projects![0]);
       }
-    };    
+    };
 
     fetchProjects();
 
@@ -78,7 +76,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     }
-  }, [currentProject, user?.id]);
+  }, [currentProject, user, user.id]);
 
   //Save the latest state into localStorage
   useEffect(() => {
@@ -124,7 +122,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  
+
 
   return (
     <ProjectContext.Provider value={{ projects, addProject, updateProject, deleteProject, currentProject, setCurrentProject }}>

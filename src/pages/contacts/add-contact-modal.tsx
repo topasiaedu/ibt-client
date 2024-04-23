@@ -11,11 +11,13 @@ import {
 } from "react-icons/hi";
 import { Contact, useContactContext } from "../../context/ContactContext";
 import { useProjectContext } from "../../context/ProjectContext";
+import { useAlertContext } from "../../context/AlertContext";
 
 const AddContactModal: React.FC = function () {
   const [isOpen, setOpen] = useState(false);
   const { addContact } = useContactContext();
   const { currentProject } = useProjectContext();
+  const { showAlert } = useAlertContext();
   const [contactData, setContactData] = useState({
     name: "",
     email: "",
@@ -24,8 +26,12 @@ const AddContactModal: React.FC = function () {
   });
 
   const handleAddContact = async () => {
-    await addContact(contactData as Contact);
-    setOpen(false);
+    await addContact(contactData as Contact).then(() => {
+      setOpen(false);
+      showAlert("Contact added successfully", "success");
+    }).catch((error) => {
+      showAlert(error.message, "error");
+    });
   };
 
   return (

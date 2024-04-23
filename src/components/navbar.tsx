@@ -21,7 +21,7 @@ import {
 } from "react-icons/hi";
 import { useSidebarContext } from "../context/SidebarContext";
 import React from "react";
-import  useSupabaseAuth from "../hooks/supabase/useSupabaseAuth";
+import { useAuthContext } from "../context/AuthContext";
 
 const ExampleNavbar: React.FC = function () {
   const { isOpenOnSmallScreens, setOpenOnSmallScreens } =
@@ -196,7 +196,7 @@ const AppDrawerDropdown: FC = function () {
 };
 
 const UserDropdown: FC = function () {
-  const { signOut } = useSupabaseAuth();
+  const { signOut } = useAuthContext();
 
   return (
     <Dropdown
