@@ -1,9 +1,9 @@
-import React from "react";
-import { Conversation } from "../../../types/messagesTypes";
 import {
-  Dropdown,
-  Badge
+  Badge,
+  Dropdown
 } from "flowbite-react";
+import React from "react";
+import { Conversation } from "../../../context/MessagesContext";
 
 interface ChatListProps {
   conversations: Conversation[];
@@ -19,13 +19,13 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
   // Get all unique phone numbers
   conversations.forEach((conversation) => {
     // This checks if the phone number is already in the list.
-    if (!phoneNumbers.includes(conversation.phone_numbers.number)) {
+    if (!phoneNumbers.includes(conversation.phone_number.number)) {
       // Use the callback form of setPhoneNumbers to ensure the phoneNumbers array is current at the time of the update.
       setPhoneNumbers(prevPhoneNumbers => {
         // Further check inside the updater function to avoid race conditions
-        if (!prevPhoneNumbers.includes(conversation.phone_numbers.number)) {
+        if (!prevPhoneNumbers.includes(conversation.phone_number.number)) {
           // Return a new array with the new number added
-          return [...prevPhoneNumbers, conversation.phone_numbers.number];
+          return [...prevPhoneNumbers, conversation.phone_number.number];
         }
         // If the number is already included, return the previous state
         return prevPhoneNumbers;
@@ -50,7 +50,7 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
       <ul className="divide-y divide-gray-200 dark:divide-gray-700">
         {conversations
           .sort((a, b) => new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime())
-          .filter((conversation) => selectedPhoneNumber === "" || conversation.phone_numbers.number === selectedPhoneNumber)
+          .filter((conversation) => selectedPhoneNumber === "" || conversation.phone_number.number === selectedPhoneNumber)
           .map((conversation, index) => (
             <li
               key={index}
@@ -61,7 +61,7 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
                 <div className="flex space-x-4 xl:mb-4 2xl:mb-0">
                   <div className="min-w-0 flex-1">
                     <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
-                      {conversation.contact.wa_id} <Badge color="primary">{conversation.phone_numbers.whatsapp_business_accounts.name}</Badge>
+                      {conversation.contact.wa_id} <Badge color="primary">{conversation.whatsapp_business_account.name}</Badge>
                     </p>
                     <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
                       {conversation.last_message}

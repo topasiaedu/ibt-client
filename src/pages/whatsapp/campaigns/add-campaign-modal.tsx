@@ -11,24 +11,19 @@ import React, { useState } from "react";
 import {
   HiPlus,
 } from "react-icons/hi";
-import { CampaignFormData } from "../../../types/campaignTypes";
-import { useCampaigns } from "../../../hooks/whatsapp/useCampaign";
-import { useTemplates } from "../../../hooks/whatsapp/useTemplate";
-import { useContactLists } from "../../../hooks/whatsapp/useContactList";
-import { ContactList } from "../../../types/contactListTypes";
-import { Template } from "../../../types/templateTypes";
-import { WhatsAppBusinessAccount } from "../../../types/whatsappBusinessAccountsTypes";
-import { useWhatsappBusinessAccounts } from "../../../hooks/whatsapp/useWhatsappBusinessAccounts";
-import { usePhoneNumbers } from "../../../hooks/whatsapp/usePhoneNumber";
-import { PhoneNumber } from "../../../types/phoneNumberTypes";
+import { useCampaignContext, CampaignInsert } from "../../../context/CampaignContext";
+import { useTemplateContext, Template } from "../../../context/TemplateContext";
+import { useContactListContext, ContactList } from "../../../context/ContactListContext";
+import { useWhatsAppBusinessAccountContext, WhatsAppBusinessAccount } from "../../../context/WhatsAppBusinessAccountContext";
+import { usePhoneNumberContext, PhoneNumber } from "../../../context/PhoneNumberContext";
 
 const AddCampaignModal: React.FC = function () {
   const [isOpen, setOpen] = useState(false);
-  const { addCampaign } = useCampaigns();
-  const { templates } = useTemplates();
-  const { contactLists } = useContactLists();
-  const { phoneNumbers } = usePhoneNumbers();
-  const { whatsappBusinessAccounts } = useWhatsappBusinessAccounts();
+  const { addCampaign } = useCampaignContext();
+  const { templates } = useTemplateContext();
+  const { contactLists } = useContactListContext();
+  const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
+  const { phoneNumbers } = usePhoneNumberContext();
   const [selectedWABA, setSelectedWABA] = useState<WhatsAppBusinessAccount>();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber | null>(null);
@@ -59,33 +54,33 @@ const AddCampaignModal: React.FC = function () {
       "components": []
     } as any;
 
-    selectedTemplate?.components.data.forEach((component: any, index: number) => {
-      if (component.example) {
-        const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
+    // selectedTemplate?.components.data.forEach((component: any, index: number) => {
+    //   if (component.example) {
+    //     const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
 
-        if (component.type === "HEADER" && component.format === "IMAGE") {
-          template_payload.components.push({
-            "type": component.type,
-            "parameters": [{
-              type: "image",
-              "image": {
-                "link": componentValue
-              }
-            }]
-          });
-        } else {
-          template_payload.components.push({
-            "type": component.type,
-            "parameters": [{
-              type: "text",
-              "text": componentValue
-            }]
-          });
-        }
-      }
-    });
+    //     if (component.type === "HEADER" && component.format === "IMAGE") {
+    //       template_payload.components.push({
+    //         "type": component.type,
+    //         "parameters": [{
+    //           type: "image",
+    //           "image": {
+    //             "link": componentValue
+    //           }
+    //         }]
+    //       });
+    //     } else {
+    //       template_payload.components.push({
+    //         "type": component.type,
+    //         "parameters": [{
+    //           type: "text",
+    //           "text": componentValue
+    //         }]
+    //       });
+    //     }
+    //   }
+    // });
 
-    const formData: CampaignFormData = {
+    const formData: CampaignInsert = {
       name: campaignName,
       template_id: selectedTemplate?.template_id || 0,
       contact_list_id: selectedContactList?.contact_list_id || 0,
@@ -132,10 +127,10 @@ const AddCampaignModal: React.FC = function () {
                 <Select
                   id="waba"
                   name="waba"
-                  onChange={(e) => setSelectedWABA(whatsappBusinessAccounts.find((waba) => waba.account_id === parseInt(e.target.value)) || undefined)}
+                  onChange={(e) => setSelectedWABA(whatsAppBusinessAccounts.find((waba) => waba.account_id === parseInt(e.target.value)) || undefined)}
                 >
                   <option value="">Select WhatsApp Business Account</option>
-                  {whatsappBusinessAccounts.map((waba) => (
+                  {whatsAppBusinessAccounts.map((waba) => (
                     <option key={waba.account_id} value={waba.account_id}>
                       {waba.name}
                     </option>
@@ -154,7 +149,7 @@ const AddCampaignModal: React.FC = function () {
                 >
                   <option value="">Select phone number</option>
                   {phoneNumbers
-                    .filter(phoneNumber => phoneNumber.whatsapp_business_accounts.account_id === selectedWABA?.account_id)
+                    .filter(phoneNumber => phoneNumber.waba_id === selectedWABA?.account_id)
                     .map((phoneNumber) => (
                       <option key={phoneNumber.phone_number_id} value={phoneNumber.phone_number_id}>
                         {phoneNumber.number}
@@ -174,7 +169,7 @@ const AddCampaignModal: React.FC = function () {
                 >
                   <option value="">Select template</option>
                   {templates
-                    .filter(template => template.whatsapp_business_accounts.account_id === selectedWABA?.account_id)
+                    .filter(template => template.account_id === selectedWABA?.account_id)
                     .map((template) => (
                       <option key={template.template_id} value={template.template_id}>
                         {template.name}
@@ -221,7 +216,7 @@ const AddCampaignModal: React.FC = function () {
                 />
               </div>
             </div>
-            {selectedTemplate && selectedTemplate.components.data.map((component: any, index: number) => {
+            {/* {selectedTemplate && selectedTemplate.components.data.map((component: any, index: number) => {
               if (component.example) {
                 let placeholder = "";
 
@@ -245,7 +240,7 @@ const AddCampaignModal: React.FC = function () {
               } else {
                 return null;
               }
-            })}
+            })} */}
           </div>
         </Modal.Body>
         <Modal.Footer>

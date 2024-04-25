@@ -4,17 +4,15 @@ import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
 import { Contact } from "./ContactContext";
 
-// Define a type for contact list members that includes the contact details
 export type ContactListMember = Database['public']['Tables']['contact_list_members']['Row'] & {
   contact: Contact;
 };
 
-// Modify the ContactList type to include an array of ContactListMember
 export type ContactList = Database['public']['Tables']['contact_lists']['Row'] & {
   contact_list_members: ContactListMember[];
 };
-
 export type ContactLists = { contact_lists: ContactList[]; };
+export type ContactListInsert = Database['public']['Tables']['contact_lists']['Insert'];
 
 interface ContactListContextProps {
   contactLists: ContactList[];

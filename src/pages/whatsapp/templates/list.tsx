@@ -11,21 +11,25 @@ import {
 } from "react-icons/hi";
 import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
 import AddTemplateModal from "./add-template-modal";
-import { useTemplates } from "../../../hooks/whatsapp/useTemplate";
-import { TemplateList } from "../../../types/templateTypes";
+import { useTemplateContext, Templates } from "../../../context/TemplateContext";
+import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusinessAccountContext";
+import { useProjectContext } from "../../../context/ProjectContext";
 import LoadingPage from "../../pages/loading";
 
 const TemplateListPage: React.FC = function () {
-  const { templates, isLoading } = useTemplates();
+  const { templates,  loading } = useTemplateContext();
   const [searchValue, setSearchValue] = React.useState("");
+  const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
+  const { currentProject } = useProjectContext();
+  const projectWabaIds = whatsAppBusinessAccounts.filter((waba) => waba.project_id === currentProject?.project_id).map((waba) => waba.account_id);
 
-  const resultingTemplates: TemplateList = {
+  const resultingTemplates: Templates = {
     templates: templates.filter((template) =>
-      template.name.toLowerCase().includes(searchValue.toLowerCase())
+      template.name.toLowerCase().includes(searchValue.toLowerCase()) && projectWabaIds.includes(template.account_id ?? 0)
     ),
   };
 
-  if (isLoading) {
+  if (loading) {
     return <LoadingPage />
   }
 
@@ -86,7 +90,8 @@ const TemplateListPage: React.FC = function () {
   );
 };
 
-const TemplatesTable: React.FC<TemplateList> = function ({ templates }) {
+const TemplatesTable: React.FC<Templates> = function ({ templates }) {
+  const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
       <Table.Head className="bg-gray-100 dark:bg-gray-700">
@@ -99,7 +104,7 @@ const TemplatesTable: React.FC<TemplateList> = function ({ templates }) {
         {templates.map((template) => (
           <Table.Row key={template.template_id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Table.Cell>{template.name}</Table.Cell>
-            <Table.Cell>{template.whatsapp_business_accounts.name}</Table.Cell>
+            <Table.Cell>{whatsAppBusinessAccounts.find((waba) => waba.account_id === template.account_id)?.name}</Table.Cell>
             <Table.Cell>{template.category}</Table.Cell>
             <Table.Cell>
               <div className="flex items-center">

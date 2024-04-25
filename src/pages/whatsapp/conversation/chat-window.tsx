@@ -1,8 +1,7 @@
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { useEffect } from "react";
-import { Conversation, MessagesFormData } from "../../../types/messagesTypes";
-import { useMessages } from "../../../hooks/whatsapp/useMessages";
+import { useMessagesContext, MessageInsert, Conversation } from "../../../context/MessagesContext";
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -10,9 +9,9 @@ interface ChatWindowProps {
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
   const [input, setInput] = React.useState("")
-  const waba_id = conversation.phone_numbers.wa_id;
+  const waba_id = conversation.whatsapp_business_account.waba_id;
   const to = conversation.contact.wa_id;
-  const { addMessage } = useMessages();
+  const { addMessage } = useMessagesContext();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -54,21 +53,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     
 
     // Add message to conversation
-    const data: MessagesFormData = {
-      contact_id: conversation.contact_id,
+    const data: MessageInsert = {
+      contact_id: conversation.contact.contact_id,
       direction: "outbound",
       content: input,
       created_at: new Date().toISOString(),
       message_type: "text",
-      phone_number_id: conversation.phone_number_id,
+      phone_number_id: conversation.phone_number.phone_number_id,
       status: "delivered",
       wa_message_id: null,
     };
 
     
-    addMessage(data).then(() => {
-      setInput("");
-    });
+    addMessage(data)
   }
 
   

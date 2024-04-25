@@ -12,10 +12,8 @@ import React, { useState } from "react";
 import {
   HiPlus,
 } from "react-icons/hi";
-import { useTemplates } from "../../../hooks/whatsapp/useTemplate";
-import { useWhatsappBusinessAccounts } from "../../../hooks/whatsapp/useWhatsappBusinessAccounts";
-import { WhatsAppBusinessAccount } from "../../../types/whatsappBusinessAccountsTypes";
-import { TemplateFormData, ComponentFormData, DatabaseButtonFormData } from "../../../types/templateTypes";
+import { useWhatsAppBusinessAccountContext, WhatsAppBusinessAccount } from "../../../context/WhatsAppBusinessAccountContext";
+import { useTemplateContext, TemplateInsert, Component, TemplateButton  } from "../../../context/TemplateContext";
 
 // What we're trying to create:
 // {
@@ -57,12 +55,12 @@ import { TemplateFormData, ComponentFormData, DatabaseButtonFormData } from "../
 
 const AddTemplateModal: React.FC = function () {
   const [isOpen, setOpen] = useState(false);
-  const { addTemplate } = useTemplates();
-  const { whatsappBusinessAccounts } = useWhatsappBusinessAccounts();
+  const { addTemplate } = useTemplateContext();
+  const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
   const [selectedWhatsappBusinessAccount, setSelectedWhatsappBusinessAccount] = useState<WhatsAppBusinessAccount | null>(null);
   const [templateName, setTemplateName] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [buttons, setButtons] = useState<DatabaseButtonFormData[]>([]);
+  const [buttons, setButtons] = useState<TemplateButton[]>([]);
   const [headerType, setHeaderType] = useState<string>("");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
   const [headerData, setHeaderData] = useState<string>("");
@@ -72,37 +70,44 @@ const AddTemplateModal: React.FC = function () {
 
 
   const handleAddTemplate = async () => {
-    const template: TemplateFormData = {
+    const template: TemplateInsert = {
       account_id: selectedWhatsappBusinessAccount?.account_id || null,
       category: selectedCategory,
       language: selectedLanguage,
       name: templateName,
       wa_template_id: null,
       status: "PENDING",
+
     };
 
-    const components: ComponentFormData[] = [
+    const components: Component[] = [
       {
         type: "HEADER",
         format: headerType,
         example: null,
         text: headerData,
+        parameters: null,
+        buttons: null,
       },
       {
         type: "BODY",
         text: bodyData,
         example: null,
         format: null,
+        parameters: null,
+        buttons: null,
       },
       {
         type: "FOOTER",
         text: footerData,
         example: null,
         format: null,
+        parameters: null,
+        buttons: null,
       }
     ];
 
-    await addTemplate(template, components, buttons);
+    await addTemplate(template, components);
   
     // Refresh the page
     window.location.reload();
@@ -137,17 +142,17 @@ const AddTemplateModal: React.FC = function () {
               </div>
             </div>
             <div>
-              <Label htmlFor="whatsappBusinessAccount">WhatsApp Business Account</Label>
+              <Label htmlFor="whatsAppBusinessAccount">WhatsApp Business Account</Label>
               <div className="mt-1">
                 <Select
-                  id="whatsappBusinessAccount"
-                  name="whatsappBusinessAccount"
-                  onChange={(e) => setSelectedWhatsappBusinessAccount(whatsappBusinessAccounts.find((whatsappBusinessAccount) => whatsappBusinessAccount.account_id === parseInt(e.target.value)) || null)}
+                  id="whatsAppBusinessAccount"
+                  name="whatsAppBusinessAccount"
+                  onChange={(e) => setSelectedWhatsappBusinessAccount(whatsAppBusinessAccounts.find((whatsAppBusinessAccount) => whatsAppBusinessAccount.account_id === parseInt(e.target.value)) || null)}
                 >
                   <option value="">Select WhatsApp Business Account</option>
-                  {whatsappBusinessAccounts.map((whatsappBusinessAccount) => (
-                    <option key={whatsappBusinessAccount.account_id} value={whatsappBusinessAccount.account_id}>
-                      {whatsappBusinessAccount.name}
+                  {whatsAppBusinessAccounts.map((whatsAppBusinessAccount) => (
+                    <option key={whatsAppBusinessAccount.account_id} value={whatsAppBusinessAccount.account_id}>
+                      {whatsAppBusinessAccount.name}
                     </option>
                   ))}
                 </Select>
@@ -282,7 +287,7 @@ const AddTemplateModal: React.FC = function () {
                 // Check button type selected 
                 // Add button to the list only if the button type is selected an length of buttons is less than 2
                 if (selectedButtonType && buttons.length < 2) {
-                  setButtons([...buttons, { type: selectedButtonType, text: "", url: "" }]);
+                  setButtons([...buttons, { type: selectedButtonType, text: "", url: "", phone_number: "" }]);
                 }
               }}>
                 Add Button

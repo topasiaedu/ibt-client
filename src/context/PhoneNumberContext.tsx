@@ -6,6 +6,7 @@ import { useAlertContext } from './AlertContext';
 
 export type PhoneNumber = Database['public']['Tables']['phone_numbers']['Row'];
 export type PhoneNumbers = { phone_numbers: PhoneNumber[] };
+export type PhoneNumberInsert = Database['public']['Tables']['phone_numbers']['Insert'];
 
 interface PhoneNumberContextType {
   phoneNumbers: PhoneNumber[];
@@ -31,7 +32,7 @@ export const PhoneNumberProvider: React.FC<PropsWithChildren<{}>> = ({ children 
       const { data: phoneNumbers, error } = await supabase
         .from('phone_numbers')
         .select('*')
-        .eq('account_id', selectedWhatsAppBusinessAccount.account_id)
+        .eq('waba_id', selectedWhatsAppBusinessAccount.account_id)
         .order('phone_number_id', { ascending: false });
 
       if (error) {
@@ -114,7 +115,10 @@ export const PhoneNumberProvider: React.FC<PropsWithChildren<{}>> = ({ children 
 
 export const usePhoneNumberContext = () => {
   const context = useContext(PhoneNumberContext);
+  
   if (!context) {
     throw new Error('usePhoneNumberContext must be used within PhoneNumberProvider');
   }
+
+  return context;
 }

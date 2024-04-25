@@ -12,22 +12,22 @@ import {
 import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
 import AddCampaignModal from "./add-campaign-modal";
 // import EditCampaignModal from "./edit-campaign-modal";
-import { CampaignList } from "../../../types/campaignTypes";
-import { useCampaigns } from "../../../hooks/whatsapp/useCampaign";
 import LoadingPage from "../../pages/loading";
+import { useCampaignContext, Campaigns } from "../../../context/CampaignContext";
+import { useTemplateContext } from "../../../context/TemplateContext";
 
 
 const CampaignListPage: React.FC = function () {
-  const { campaigns, isLoading } = useCampaigns();
+  const { campaigns, loading } = useCampaignContext();
   const [searchValue, setSearchValue] = React.useState("");
 
-  const resultingCampaigns: CampaignList = {
+  const resultingCampaigns: Campaigns = {
     campaigns: campaigns.filter((campaign) =>
       campaign.name.toLowerCase().includes(searchValue.toLowerCase())
     ),
   };
 
-  if (isLoading) {
+  if (loading) {
     return <LoadingPage />
   }
 
@@ -88,7 +88,9 @@ const CampaignListPage: React.FC = function () {
   );
 };
 
-const CampaignsTable: React.FC<CampaignList> = function ({ campaigns }) {
+const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
+  const { templates } = useTemplateContext();
+
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
       <Table.Head className="bg-gray-100 dark:bg-gray-700">
@@ -111,7 +113,7 @@ const CampaignsTable: React.FC<CampaignList> = function ({ campaigns }) {
         {campaigns.map((campaign) => (
           <Table.Row key={campaign.campaign_id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Table.Cell>{campaign.name}</Table.Cell>
-            <Table.Cell>{campaign.template.name}</Table.Cell>
+            <Table.Cell>{templates.find(template => template.template_id === campaign.template_id)?.name}</Table.Cell>
             <Table.Cell>{new Date(campaign.post_time).toLocaleString()}</Table.Cell>
             <Table.Cell>
               <div className="flex items-center gap-x-3">
@@ -134,7 +136,7 @@ const CampaignsTable: React.FC<CampaignList> = function ({ campaigns }) {
   );
 };
 
-const getStatusIndicator = (status: string) => {
+const getStatusIndicator = (status: string | null) => {
   switch (status) {
     case 'RUNNING':
       return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-green-400" />;

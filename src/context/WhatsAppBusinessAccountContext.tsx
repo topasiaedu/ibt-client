@@ -6,6 +6,7 @@ import { useAlertContext } from './AlertContext';
 
 export type WhatsAppBusinessAccount = Database['public']['Tables']['whatsapp_business_accounts']['Row'];
 export type WhatsAppBusinessAccounts = { whatsapp_business_accounts: WhatsAppBusinessAccount[] };
+export type WhatsAppBusinessAccountInsert = Database['public']['Tables']['whatsapp_business_accounts']['Insert'];
 
 interface WhatsAppBusinessAccountContextType {
   whatsAppBusinessAccounts: WhatsAppBusinessAccount[];

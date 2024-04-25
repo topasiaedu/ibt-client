@@ -1,8 +1,8 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import React from "react";
-import { Contact } from "../../../types/contactTypes";
 import { Button } from "flowbite-react";
+import React from "react";
 import { HiChevronLeft } from "react-icons/hi";
+import { Contact } from "../../../context/ContactContext";
 interface ContactProfileProps {
   contact: Contact;
 }

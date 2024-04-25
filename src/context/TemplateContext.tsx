@@ -6,10 +6,28 @@ import { useAlertContext } from './AlertContext';
 
 export type Template = Database['public']['Tables']['templates']['Row'];
 export type Templates = { templates: Template[] };
+export type TemplateInsert = Database['public']['Tables']['templates']['Insert'];
+
+export type Component = {
+  type: string;
+  format: string | null;
+  example: JSON | null;
+  text: string | null;
+  parameters: string[] | null;
+  buttons: TemplateButton[] | null;
+}
+
+export type TemplateButton = {
+  type: string;
+  text: string | null;
+  url: string | null;
+  phone_number: string | null;
+}
+
 
 interface TemplateContextType {
   templates: Template[];
-  addTemplate: (template: Template) => void;
+  addTemplate: (template: TemplateInsert, components: Component[]) => void;
   updateTemplate: (template: Template) => void;
   deleteTemplate: (templateId: number) => void;
   loading: boolean;
@@ -67,7 +85,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
     };
   }, [selectedWhatsAppBusinessAccount]);
 
-  const addTemplate = async (template: Template) =>  {
+  const addTemplate = async (template: TemplateInsert, components: Component[]) =>  {
     const {error} = await supabase
       .from('templates')
       .insert([{ ...template, account_id: selectedWhatsAppBusinessAccount?.account_id }]);

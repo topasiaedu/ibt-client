@@ -3,8 +3,9 @@ import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useAuthContext } from "./AuthContext";
 
-type Project = Database['public']['Tables']['project']['Row'];
-
+export type Project = Database['public']['Tables']['project']['Row'];
+export type Projects = { projects: Project[] };
+export type ProjectInsert = Database['public']['Tables']['project']['Insert'];
 interface ProjectContextProps {
   projects: Project[];
   addProject: (project: Project) => void;

@@ -5,6 +5,7 @@ import { useProjectContext } from "./ProjectContext";
 
 export type Contact = Database['public']['Tables']['contacts']['Row'];
 export type Contacts = { contacts: Contact[]; };
+export type ContactInsert = Database['public']['Tables']['contacts']['Insert'];
 
 interface ContactContextProps {
   contacts: Contact[];
