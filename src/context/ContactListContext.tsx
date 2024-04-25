@@ -86,7 +86,7 @@ export function ContactListProvider({ children }: { children: React.ReactNode })
   }, [contactLists, currentProject]);
 
   const addContactList = async (contactList: ContactList) => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('contact_lists')
       .insert(contactList);
 
@@ -94,8 +94,6 @@ export function ContactListProvider({ children }: { children: React.ReactNode })
       console.error('Error adding contactList:', error);
       return;
     }
-
-    setContactLists([...contactLists, data![0]]);
   };
 
   const updateContactList = async (contactList: ContactList) => {

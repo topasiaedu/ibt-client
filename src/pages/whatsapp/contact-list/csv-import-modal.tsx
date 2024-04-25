@@ -4,10 +4,11 @@ import { Button, Modal, Tabs } from 'flowbite-react';
 import React, { ChangeEvent, useState } from 'react';
 import { BsFiletypeCsv, BsTextareaResize } from "react-icons/bs";
 import { MdCloudUpload } from "react-icons/md";
-import { useContactLists } from '../../../hooks/whatsapp/useContactList';
-import { ContactList } from '../../../types/contactListTypes';
 import { Textarea } from 'flowbite-react';
 import { useContactContext, Contact } from '../../../context/ContactContext';
+import { useProjectContext } from '../../../context/ProjectContext';
+import { useContactListContext, ContactList } from '../../../context/ContactListContext';
+import { useAlertContext } from '../../../context/AlertContext';
 
 // Defining props type
 interface EditContactListModalProps {
@@ -18,8 +19,11 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
   const [isOpen, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const { addContact, findContact } = useContactContext();
-  const { addContactToContactList } = useContactLists();
+  const { addContactToContactList } = useContactListContext();
+  const { showAlert } = useAlertContext();
   const [formInput, setFormInput] = useState('');
+  const { currentProject } = useProjectContext();
+  const [loading, setLoading] = useState(false);
 
   // Handler for file input change
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -40,6 +44,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
 
   // Handler for import button click
   const handleImport = async () => {
+    setLoading(true);
     if (file) {
       const reader = new FileReader();
       reader.readAsText(file);
@@ -49,18 +54,17 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
 
         const contactsArray = contacts.split('\n').slice(1).map((contact) => {
           const [name, phone] = contact.split(',');
-          return { name, phone };
+          return { name, phone, project_id: currentProject?.project_id };
         });
 
         contactsArray.forEach((contact) => {
+          console.log("Adding contact: ", contact);
           const tempContact = { name: contact.name, wa_id: contact.phone } as Contact;
           // Check if the contact already exists
           findContact(tempContact).then((data) => {
             if (data) {
               // Add the contact to the contact list
-              addContactToContactList(contact_list.contact_list_id, data.contact_id).catch((error) => {
-                console.error('Failed to add contact to contact list:', error);
-              });
+              addContactToContactList(contact_list.contact_list_id, data.contact_id)
             } else {
               // Add the contact to the contacts table
               addContact({ name: contact.name, wa_id: contact.phone } as Contact)
@@ -69,6 +73,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
                   addContactToContactList(contact_list.contact_list_id, response.contact_id);
                 }).catch((error) => {
                   console.error('Failed to add contact:', error);
+                  showAlert('Failed to add contact', 'error');
                 });
             }
           });
@@ -92,9 +97,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
         findContact(tempContact).then((data) => {
           if (data) {
             // Add the contact to the contact list
-            addContactToContactList(contact_list.contact_list_id, data.contact_id).catch((error) => {
-              console.error('Failed to add contact to contact list:', error);
-            });
+            addContactToContactList(contact_list.contact_list_id, data.contact_id)
           } else {
             // Adjust here for potentially undefined name
             const createContactData: Contact = {
@@ -121,6 +124,8 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
         });
       });
     }
+    setOpen(false);
+    setLoading(false);
   };
 
   return (
@@ -185,9 +190,14 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
 
         </Modal.Body>
         <Modal.Footer>
-          <Button color="primary" onClick={handleImport}>
-            Import
-          </Button>
+          {loading ? (
+            <Button color="primary" onClick={handleImport} disabled>
+              Import
+            </Button>) :
+            (
+              <Button color="primary" onClick={handleImport}>
+                Import
+              </Button>)}
         </Modal.Footer>
       </Modal>
     </>

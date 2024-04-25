@@ -76,7 +76,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     }
-  }, [currentProject, user, user.id]);
+  }, [currentProject, user]);
 
   //Save the latest state into localStorage
   useEffect(() => {

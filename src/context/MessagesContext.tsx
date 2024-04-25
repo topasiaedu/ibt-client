@@ -8,6 +8,5 @@ export type Message = Database['public']['Tables']['messages']['Row'];
 export type Messages = { messages: Message[] };
 export type Conversation = {
   contact_id: number;
-  contact: Contact;
   messages: Message[];
 };

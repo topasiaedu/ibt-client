@@ -11,13 +11,16 @@ import {
   HiPlus,
 } from "react-icons/hi";
 import { useContactListContext, ContactList } from "../../../context/ContactListContext";
+import { useProjectContext } from "../../../context/ProjectContext";
 
 const AddContactListModal: FC = function () {
   const [isOpen, setOpen] = useState(false);
+  const { currentProject } = useProjectContext();
   const { addContactList } = useContactListContext();
   const [contactListData, setContactListData] = useState({
     name: "",
     description: "",
+    project_id: currentProject?.project_id!,
   });
 
   const handleAddContactList = async () => {
