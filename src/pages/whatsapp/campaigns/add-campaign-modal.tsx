@@ -16,9 +16,11 @@ import { useTemplateContext, Template } from "../../../context/TemplateContext";
 import { useContactListContext, ContactList } from "../../../context/ContactListContext";
 import { useWhatsAppBusinessAccountContext, WhatsAppBusinessAccount } from "../../../context/WhatsAppBusinessAccountContext";
 import { usePhoneNumberContext, PhoneNumber } from "../../../context/PhoneNumberContext";
+import { useProjectContext } from "../../../context/ProjectContext";
+import { useAlertContext } from "../../../context/AlertContext";
 
 const AddCampaignModal: React.FC = function () {
-  const [isOpen, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { addCampaign } = useCampaignContext();
   const { templates } = useTemplateContext();
   const { contactLists } = useContactListContext();
@@ -26,11 +28,13 @@ const AddCampaignModal: React.FC = function () {
   const { phoneNumbers } = usePhoneNumberContext();
   const [selectedWABA, setSelectedWABA] = useState<WhatsAppBusinessAccount>();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
-  const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber | null>(null);
+  const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber[] >([]);
   const [selectedContactList, setSelectedContactList] = useState<ContactList | null>(null);
   const [campaignName, setCampaignName] = useState<string>("");
   const [postDate, setPostDate] = useState<Date>(new Date());
   const [postTime, setPostTime] = useState<string>("");
+  const { currentProject } = useProjectContext();
+  const { showAlert } = useAlertContext();
 
   const handleAddCampaign = async () => {
 
@@ -54,31 +58,36 @@ const AddCampaignModal: React.FC = function () {
       "components": []
     } as any;
 
-    // selectedTemplate?.components.data.forEach((component: any, index: number) => {
-    //   if (component.example) {
-    //     const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
+    if (!selectedTemplate) { showAlert("Please select a template", "error"); return; }
+    if (!selectedTemplate?.components) { showAlert("Template has no components", "error"); return; }
 
-    //     if (component.type === "HEADER" && component.format === "IMAGE") {
-    //       template_payload.components.push({
-    //         "type": component.type,
-    //         "parameters": [{
-    //           type: "image",
-    //           "image": {
-    //             "link": componentValue
-    //           }
-    //         }]
-    //       });
-    //     } else {
-    //       template_payload.components.push({
-    //         "type": component.type,
-    //         "parameters": [{
-    //           type: "text",
-    //           "text": componentValue
-    //         }]
-    //       });
-    //     }
-    //   }
-    // });
+    const components = selectedTemplate?.components as any
+
+    components.data.forEach((component: any, index: number) => {
+      if (component.example) {
+        const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
+
+        if (component.type === "HEADER" && component.format === "IMAGE") {
+          template_payload.components.push({
+            "type": component.type,
+            "parameters": [{
+              type: "image",
+              "image": {
+                "link": componentValue
+              }
+            }]
+          });
+        } else {
+          template_payload.components.push({
+            "type": component.type,
+            "parameters": [{
+              type: "text",
+              "text": componentValue
+            }]
+          });
+        }
+      }
+    });
 
     const formData: CampaignInsert = {
       name: campaignName,
@@ -87,23 +96,23 @@ const AddCampaignModal: React.FC = function () {
       post_time: combinedDateTime,
       template_payload: template_payload,
       status: "PENDING",
-      phone_number_id: selectedPhoneNumber?.phone_number_id || 0
+      phone_number_id: selectedPhoneNumber[0].phone_number_id ?? 0,
+      project_id: currentProject?.project_id || 5,
     };
-    await addCampaign(formData);
-    // setOpen(false);
-    // Reload the page to reflect the changes
-    window.location.reload();
+
+    addCampaign(formData);
+    setIsOpen(false);
   };
 
   return (
     <>
-      <Button color="primary" onClick={() => setOpen(true)}>
+      <Button color="primary" onClick={() => setIsOpen(true)}>
         <div className="flex items-center gap-x-3">
           <HiPlus className="text-xl" />
           Add Campaign
         </div>
       </Button>
-      <Modal onClose={() => setOpen(false)} show={isOpen}>
+      <Modal onClose={() => setIsOpen(false)} show={isOpen}>
         <Modal.Header className="border-b border-gray-200 !p-6 dark:border-gray-700">
           <strong>Add new campaign</strong>
         </Modal.Header>
@@ -143,9 +152,10 @@ const AddCampaignModal: React.FC = function () {
               <Label htmlFor="phoneNumber">Phone Number</Label>
               <div className="mt-1">
                 <Select
+                  multiple
                   id="phoneNumber"
                   name="phoneNumber"
-                  onChange={(e) => setSelectedPhoneNumber(phoneNumbers.find((phoneNumber) => phoneNumber.phone_number_id === parseInt(e.target.value)) || null)}
+                  onChange={(e) => setSelectedPhoneNumber(phoneNumbers.filter(phoneNumber => phoneNumber.phone_number_id === parseInt(e.target.value)))}
                 >
                   <option value="">Select phone number</option>
                   {phoneNumbers
@@ -184,7 +194,7 @@ const AddCampaignModal: React.FC = function () {
                 <Select
                   id="contactList"
                   name="contactList"
-                  onChange={(e) => setSelectedContactList(contactLists.find((contactList) => contactList.contact_list_id === parseInt(e.target.value)) || null)}
+                  onChange={(e) => setSelectedContactList(contactLists.find((contactList) => contactList.contact_list_id === parseInt(e.target.value)) ?? null)}
                 >
                   <option value="">Select contact list</option>
                   {contactLists.map((contactList) => (
@@ -216,31 +226,7 @@ const AddCampaignModal: React.FC = function () {
                 />
               </div>
             </div>
-            {/* {selectedTemplate && selectedTemplate.components.data.map((component: any, index: number) => {
-              if (component.example) {
-                let placeholder = "";
-
-                if (component.type === "HEADER" && component.format === "IMAGE") {
-                  placeholder = component.example.header_handle || "";
-                } else {
-                  placeholder = component.example.body_text || "";
-                }
-                return (
-                  <div key={selectedTemplate.template_id.toString() + index}>
-                    <Label htmlFor={selectedTemplate.template_id.toString() + index}>{component.type}</Label>
-                    <div className="mt-1">
-                      <TextInput
-                        id={selectedTemplate.template_id.toString() + index}
-                        name={selectedTemplate.template_id.toString() + index}
-                        placeholder={placeholder}
-                      />
-                    </div>
-                  </div>
-                )
-              } else {
-                return null;
-              }
-            })} */}
+            {selectedTemplate && selectedTemplate.components && generateTemplateExampleFields(selectedTemplate, selectedTemplate.components)}
           </div>
         </Modal.Body>
         <Modal.Footer>
@@ -252,5 +238,34 @@ const AddCampaignModal: React.FC = function () {
     </>
   );
 };
+
+function generateTemplateExampleFields(selectedTemplate: Template, components: any) {
+
+  return components.data.map((component: any, index: number) => {
+    if (component?.example) {
+      let placeholder = "";
+
+      if (component.type === "HEADER" && component.format === "IMAGE") {
+        placeholder = component.example.header_handle || "";
+      } else {
+        placeholder = component.example.body_text || "";
+      }
+      return (
+        <div key={selectedTemplate.template_id.toString() + index}>
+          <Label htmlFor={selectedTemplate.template_id.toString() + index}>{component.type}</Label>
+          <div className="mt-1">
+            <TextInput
+              id={selectedTemplate.template_id.toString() + index}
+              name={selectedTemplate.template_id.toString() + index}
+              placeholder={placeholder}
+            />
+          </div>
+        </div>
+      )
+    } else {
+      return null;
+    }
+  });
+}
 
 export default AddCampaignModal;

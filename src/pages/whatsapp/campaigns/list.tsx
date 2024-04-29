@@ -15,12 +15,11 @@ import AddCampaignModal from "./add-campaign-modal";
 import LoadingPage from "../../pages/loading";
 import { useCampaignContext, Campaigns } from "../../../context/CampaignContext";
 import { useTemplateContext } from "../../../context/TemplateContext";
-
+import { useContactListContext } from "../../../context/ContactListContext";
 
 const CampaignListPage: React.FC = function () {
   const { campaigns, loading } = useCampaignContext();
   const [searchValue, setSearchValue] = React.useState("");
-
   const resultingCampaigns: Campaigns = {
     campaigns: campaigns.filter((campaign) =>
       campaign.name.toLowerCase().includes(searchValue.toLowerCase())
@@ -90,6 +89,7 @@ const CampaignListPage: React.FC = function () {
 
 const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
   const { templates } = useTemplateContext();
+  const { contactLists } = useContactListContext();
 
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
@@ -104,7 +104,8 @@ const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
         <Table.HeadCell>Template</Table.HeadCell>
         <Table.HeadCell>Scheduled Time</Table.HeadCell>
         <Table.HeadCell>Status</Table.HeadCell>
-        {/* <Table.HeadCell className="text-center">Total Contacts</Table.HeadCell> */}
+        <Table.HeadCell className="text-center">Total Contacts</Table.HeadCell>
+        <Table.HeadCell className="text-center">Total Read</Table.HeadCell>
         <Table.HeadCell className="text-center">Total Sent</Table.HeadCell>
         <Table.HeadCell className="text-center">Total Failed</Table.HeadCell>
         {/* <Table.HeadCell>Actions</Table.HeadCell>  */}
@@ -121,7 +122,8 @@ const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
                 <span>{campaign.status}</span>
               </div>
             </Table.Cell>
-            {/* <Table.Cell className="text-center">{campaign.totalContacts}</Table.Cell> */}
+            <Table.Cell className="text-center">{contactLists.find(contactList => contactList.contact_list_id === campaign.contact_list_id)?.contact_list_members.length}</Table.Cell>
+            <Table.Cell className="text-center">0</Table.Cell>
             <Table.Cell className="text-center">{campaign.sent}</Table.Cell>
             <Table.Cell className="text-center">{campaign.failed}</Table.Cell>
             {/* <Table.Cell>

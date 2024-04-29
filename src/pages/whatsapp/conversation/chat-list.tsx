@@ -12,7 +12,6 @@ interface ChatListProps {
 }
 
 const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation, selectedConversation }) => {
-
   const [phoneNumbers, setPhoneNumbers] = React.useState<string[]>([]);
   const [selectedPhoneNumber, setSelectedPhoneNumber] = React.useState<string>("");
 
@@ -32,6 +31,8 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
       });
     }
   });
+
+  console.log(conversations)
 
   return (
     <div className="overflow-y-auto h-full divide-gray-200 dark:divide-gray-700">

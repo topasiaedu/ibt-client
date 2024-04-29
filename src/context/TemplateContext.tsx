@@ -3,10 +3,13 @@ import { supabase } from '../utils/supabaseClient';
 import { Database } from '../../database.types';
 import { useWhatsAppBusinessAccountContext } from './WhatsAppBusinessAccountContext';
 import { useAlertContext } from './AlertContext';
+import { useProjectContext } from './ProjectContext';
 
 export type Template = Database['public']['Tables']['templates']['Row'];
 export type Templates = { templates: Template[] };
 export type TemplateInsert = Database['public']['Tables']['templates']['Insert'];
+
+const WHATSAPP_ACCESS_TOKEN = 'Bearer EAAFZCUSsuZBkQBO7vI52BiAVIVDPsZAATo0KbTLYdZBQ7hCq59lPYf5FYz792HlEN13MCPGDaVP93VYZASXz9ZBNXaiATyIToimwDx0tcCB2sz0TwklEoof3K0mZASJtcYugK1hfdnJGJ1pnRXtnTGmlXiIgkyQe0ZC2DOh4qZAeRhJ9nd9hgKKedub4eaCgvZBWrOHBa3NadCqdlZCx0zO'
 
 export type Component = {
   type: string;
@@ -27,7 +30,7 @@ export type TemplateButton = {
 
 interface TemplateContextType {
   templates: Template[];
-  addTemplate: (template: TemplateInsert, components: Component[]) => void;
+  addTemplate: (template: TemplateInsert) => void;
   updateTemplate: (template: Template) => void;
   deleteTemplate: (templateId: number) => void;
   loading: boolean;
@@ -38,18 +41,19 @@ const TemplateContext = createContext<TemplateContextType>(undefined!);
 export function TemplateProvider({ children }: { children: React.ReactNode }) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const { selectedWhatsAppBusinessAccount } = useWhatsAppBusinessAccountContext();
+  const { whatsAppBusinessAccounts, selectedWhatsAppBusinessAccount } = useWhatsAppBusinessAccountContext();
   const { showAlert } = useAlertContext();
+  const { currentProject } = useProjectContext();
 
   useEffect(() => {
     setLoading(true);
     const fetchTemplates = async () => {
-      if (!selectedWhatsAppBusinessAccount) return;
+      const wabaIds = whatsAppBusinessAccounts.map(waba => waba.project_id === currentProject?.project_id ? waba.account_id : null);
 
       const { data: templates, error } = await supabase
         .from('templates')
         .select('*')
-        .eq('account_id', selectedWhatsAppBusinessAccount.account_id)
+        .in('account_id', wabaIds)
         .order('template_id', { ascending: false });
 
       if (error) {
@@ -83,16 +87,66 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [selectedWhatsAppBusinessAccount]);
+  }, [currentProject?.project_id, whatsAppBusinessAccounts]);
 
-  const addTemplate = async (template: TemplateInsert, components: Component[]) =>  {
-    const {error} = await supabase
-      .from('templates')
-      .insert([{ ...template, account_id: selectedWhatsAppBusinessAccount?.account_id }]);
-    if (error) {
+  const addTemplate = async (template: TemplateInsert) =>  {
+    try {
+      // Fetch Waba ID using template.account_id
+      const waba = whatsAppBusinessAccounts.find(waba => waba.account_id === template.account_id);
+
+      if (!waba) {
+        showAlert('WhatsApp Business Account not found', 'error');
+        return;
+      }
+      
+      // Send Request to WhatsApp API to create template https://graph.facebook.com/v19.0/<WHATSAPP_BUSINESS_ACCOUNT_ID>/message_templates
+      // Example request:
+      // {
+      //   "name": "<NAME>",
+      //   "category": "<CATEGORY>",
+      //   "language": "<LANGUAGE>",
+      //   "components": [<COMPONENTS>]
+      // }
+      const components = template.components as any;
+
+      const body = JSON.stringify({
+        name: template.name,
+        category: template.category,
+        language: template.language,
+        components: components?.data
+      })
+
+      console.log('body', body);
+      console.log('waba', waba.waba_id);
+
+      const response = await fetch(`https://graph.facebook.com/v19.0/${waba.waba_id}/message_templates`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': WHATSAPP_ACCESS_TOKEN
+        },
+        body:  body
+      });
+
+      if (!response.ok) {
+        console.error('Error adding template:', response.statusText);
+        showAlert('Error adding template', 'error');
+        return;
+      }
+
+      // Add template to database
+      const { data, error } = await supabase
+        .from('templates')
+        .insert([{ ...template, account_id: waba.account_id,  }]);
+
+      if (error) {
+        console.error('Error adding template:', error);
+        showAlert('Error adding template', 'error');
+      }
+
+    } catch (error) {
       console.error('Error adding template:', error);
       showAlert('Error adding template', 'error');
-      return null;
     }
   };
 

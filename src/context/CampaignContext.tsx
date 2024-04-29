@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, PropsWithChildren, useEffect } from 'react';
-import {supabase} from '../utils/supabaseClient';
-import {Database} from '../../database.types';
+import { supabase } from '../utils/supabaseClient';
+import { Database } from '../../database.types';
 import { useProjectContext } from './ProjectContext';
 import { useAlertContext } from './AlertContext';
 

@@ -87,7 +87,7 @@ const ContactListsTable: React.FC<ContactLists> = function ({contact_lists}) {
       <Table.Head className="bg-gray-100 dark:bg-gray-700">
         <Table.HeadCell>Name</Table.HeadCell>
         <Table.HeadCell>description</Table.HeadCell>
-        {/* <Table.HeadCell>Total Contacts</Table.HeadCell> */}
+        <Table.HeadCell>Total Contacts</Table.HeadCell>
         <Table.HeadCell>Actions</Table.HeadCell> 
       </Table.Head>
       <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
@@ -95,7 +95,7 @@ const ContactListsTable: React.FC<ContactLists> = function ({contact_lists}) {
           <Table.Row key={contactList.contact_list_id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Table.Cell>{contactList.name}</Table.Cell>
             <Table.Cell>{contactList.description}</Table.Cell>
-            {/* <Table.Cell>{contactList.total_contacts}</Table.Cell> */}
+            <Table.Cell>{contactList.contact_list_members.length}</Table.Cell>
             <Table.Cell>
               <div className="flex items-center gap-x-3 whitespace-nowrap">
                 <EditContactListModal contact_list={contactList} />

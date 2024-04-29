@@ -11,6 +11,8 @@ export type Message = Database['public']['Tables']['messages']['Row'];
 export type Messages = { messages: Message[] };
 export type MessageInsert = Database['public']['Tables']['messages']['Insert'];
 
+const WHATSAPP_ACCESS_TOKEN = 'Bearer EAAFZCUSsuZBkQBO7vI52BiAVIVDPsZAATo0KbTLYdZBQ7hCq59lPYf5FYz792HlEN13MCPGDaVP93VYZASXz9ZBNXaiATyIToimwDx0tcCB2sz0TwklEoof3K0mZASJtcYugK1hfdnJGJ1pnRXtnTGmlXiIgkyQe0ZC2DOh4qZAeRhJ9nd9hgKKedub4eaCgvZBWrOHBa3NadCqdlZCx0zO'
+
 export type Conversation = {
   id: string;
   contact: Contact;
@@ -52,7 +54,9 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
       const { data: messages, error } = await supabase
         .from('messages')
         .select(`*`)
+        .eq('project_id', currentProject.project_id)
         .order('message_id', { ascending: false });
+
 
       if (error) {
         console.error('Error fetching conversations:', error);
@@ -81,9 +85,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
         if (existingConversation) {
           existingConversation.messages.push(message);
-          existingConversation.last_message_time = lastMessageTime;
-          existingConversation.last_message = lastMessage;
-          existingConversation.unread_messages += unreadMessages;
         } else {
           initialConversations.push({
             id: conversationId,
@@ -107,7 +108,39 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
     const handleChanges = (payload: any) => {
       switch (payload.eventType) {
         case 'INSERT':
-          setConversations([payload.new, ...conversations]);
+          // Find the conversation with the same contact_id and phone_number_id
+          const existingConversation = conversations.find(conversation => conversation.contact.contact_id === payload.new.contact_id && conversation.phone_number.phone_number_id === payload.new.phone_number_id);
+
+          // If conversation already exists, update the messages
+          if (existingConversation) {
+            setConversations(prev => prev.map(conversation => conversation.contact.contact_id === payload.new.contact_id && conversation.phone_number.phone_number_id === payload.new.phone_number_id ? {
+              ...conversation, messages: [payload.new, ...conversation.messages],
+              last_message_time: payload.new.created_at,
+              last_message: payload.new.content,
+              unread_messages: payload.new.status === 'READ' ? 0 : conversation.unread_messages + 1
+            } : conversation));
+          } else {
+            // If conversation does not exist, create a new conversation
+            const contact = contacts.find(contact => contact.contact_id === payload.new.contact_id);
+            const phoneNumber = phoneNumbers.find(phoneNumber => phoneNumber.phone_number_id === payload.new.phone_number_id);
+            const whatsappBusinessAccount = whatsAppBusinessAccounts.find(whatsappBusinessAccount => whatsappBusinessAccount.account_id === phoneNumber?.waba_id);
+            const lastMessageTime = payload.new.created_at;
+            const lastMessage = payload.new.content;
+            const unreadMessages = payload.new.status === 'READ' ? 0 : 1;
+
+            if (!contact || !phoneNumber || !whatsappBusinessAccount) return;
+
+            setConversations(prev => [{
+              id: `${payload.new.contact_id}-${payload.new.phone_number_id}`,
+              contact,
+              messages: [payload.new],
+              phone_number: phoneNumber,
+              whatsapp_business_account: whatsappBusinessAccount,
+              last_message_time: lastMessageTime,
+              last_message: lastMessage,
+              unread_messages: unreadMessages,
+            }, ...prev]);
+          }
           break;
         case 'UPDATE':
           setConversations(prev => prev.map(conversation => conversation.messages.some(message => message.message_id === payload.new.message_id) ? { ...conversation, messages: conversation.messages.map(message => message.message_id === payload.new.message_id ? payload.new : message) } : conversation));
@@ -139,18 +172,70 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
     setConversations(prev => prev.map(c => c.contact.contact_id === conversation.contact.contact_id ? conversation : c));
   };
 
-  const deleteConversation = (conversationId: number) => {    setConversations(prev => prev.filter(conversation => conversation.contact.contact_id !== conversationId));
+  const deleteConversation = (conversationId: number) => {
+    setConversations(prev => prev.filter(conversation => conversation.contact.contact_id !== conversationId));
   };
 
   const addMessage = async (message: MessageInsert) => {
-    const { error } = await supabase.from('messages').insert({
-      ...message,
-      project_id: currentProject?.project_id,
-    });
+    try {
+      // Send Request to WhatsApp API to create template https://graph.facebook.com/v19.0/<PHONE_NUMBER_ID>/messages
+      // Example request:
+      // { 
+      //   "messaging_product": "whatsapp", 
+      //   "to": "60139968817", 
+      //   "type": "text", 
+      //   "text": {
+      //     "body" : "hi"
+      //   }
+      // }
 
-    if (error) {
-      console.error('Error inserting message:', error);
-      showAlert('Error inserting message', 'error');
+      const phoneNumber = phoneNumbers.find(phoneNumber => phoneNumber.phone_number_id === message.phone_number_id);
+
+      const body = JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: contacts.find(contact => contact.contact_id === message.contact_id)?.wa_id,
+        type: 'text',
+        text: {
+          body: message.content,
+        }
+      });
+
+      console.log('body', body);
+      console.log('phoneNumber', phoneNumber?.wa_id);
+
+      const response = await fetch(`https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': WHATSAPP_ACCESS_TOKEN,
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      });
+
+      const data = await response.json();
+
+      console.log('data', data);
+
+      if (!response.ok) {
+        console.error('Error sending message:', response.statusText);
+        showAlert('Error sending message', 'error');
+        return;
+      }
+
+      // Add message to database
+      const { error } = await supabase.from('messages').insert({
+        ...message,
+        project_id: currentProject?.project_id,
+        wa_message_id: data.messages[0].id,
+      });
+
+      if (error) {
+        console.error('Error sending message:', error);
+        showAlert('Error sending message', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      showAlert('Error sending message', 'error');
     }
   }
 

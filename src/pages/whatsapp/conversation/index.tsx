@@ -1,19 +1,42 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
 import ChatList from "./chat-list";
 import ChatWindow from "./chat-window";
 import ContactProfile from "./contact-profile";
 import LoadingPage from "../../pages/loading";
 import { useMessagesContext, Conversation } from "../../../context/MessagesContext";
+import { useProjectContext } from "../../../context/ProjectContext";
 
 const ConversationPage: React.FC = function () {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | undefined>(undefined);
   const { conversations, loading } = useMessagesContext();
-
+  const { currentProject } = useProjectContext();
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);
   };
+
+  useEffect(() => {
+    // Update selected conversation if it is changed
+    if (!selectedConversation) {
+      setSelectedConversation(conversations[0]);
+    }
+     
+    // Check if conversation is updated
+    if (selectedConversation) {
+      const updatedConversation = conversations.find((conversation) => conversation.id === selectedConversation.id);
+      if (updatedConversation) {
+        setSelectedConversation(updatedConversation);
+      }
+    }
+
+  }, [conversations, selectedConversation]);
+
+
+  // If current project is changed, reset selected conversation
+  useEffect(() => {
+    setSelectedConversation(undefined);
+  }, [currentProject]);
 
   if (loading) {
     return (
@@ -33,8 +56,7 @@ const ConversationPage: React.FC = function () {
     );
   }
 
-  console.log('conversations:', conversations || 'No conversations yet! 😢');
-
+  
 
   return (
     <NavbarSidebarLayout>

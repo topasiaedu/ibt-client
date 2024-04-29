@@ -21,18 +21,15 @@ const PhoneNumberContext = createContext<PhoneNumberContextType>(undefined!);
 export const PhoneNumberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const { selectedWhatsAppBusinessAccount } = useWhatsAppBusinessAccountContext();
   const { showAlert } = useAlertContext();
 
   useEffect(() => {
     setLoading(true);
     const fetchPhoneNumbers = async () => {
-      if (!selectedWhatsAppBusinessAccount) return;
 
       const { data: phoneNumbers, error } = await supabase
         .from('phone_numbers')
         .select('*')
-        .eq('waba_id', selectedWhatsAppBusinessAccount.account_id)
         .order('phone_number_id', { ascending: false });
 
       if (error) {
@@ -68,7 +65,7 @@ export const PhoneNumberProvider: React.FC<PropsWithChildren<{}>> = ({ children 
       subscription.unsubscribe();
     };
 
-  }, [selectedWhatsAppBusinessAccount, showAlert]);
+  }, [showAlert]);
 
   const addPhoneNumber = async (phoneNumber: PhoneNumber) => {
     const { error } = await supabase

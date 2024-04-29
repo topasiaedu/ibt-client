@@ -15,43 +15,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input) return;
-    // Send API request to send message to https://graph.facebook.com/v19.0/{WABA_ID}/messages
-    // Example request body:
-    // { 
-    //   "messaging_product": "whatsapp", 
-    //   "to": "60139968817", 
-    //   "type": "text", 
-    //   "text": {
-    //     "body" : "hi"
-    //   }
-    // }
-
-    const response = await fetch(`https://graph.facebook.com/v19.0/${waba_id}/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${process.env.FACEBOOK_PAGE_ACCESS_TOKEN}`
-        'Authorization': 'Bearer EAAFZCUSsuZBkQBO7vI52BiAVIVDPsZAATo0KbTLYdZBQ7hCq59lPYf5FYz792HlEN13MCPGDaVP93VYZASXz9ZBNXaiATyIToimwDx0tcCB2sz0TwklEoof3K0mZASJtcYugK1hfdnJGJ1pnRXtnTGmlXiIgkyQe0ZC2DOh4qZAeRhJ9nd9hgKKedub4eaCgvZBWrOHBa3NadCqdlZCx0zO'
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to,
-        type: "text",
-        text: {
-          body: input
-        }
-      })
-    });
-
-    if (response.ok) {
-      // console.log("Message sent successfully!");
-    } else {
-      console.error("Failed to send message:", response.statusText);
-    }
-
-    
-
+    if (!input) return; 
     // Add message to conversation
     const data: MessageInsert = {
       contact_id: conversation.contact.contact_id,
@@ -66,6 +30,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 
     
     addMessage(data)
+
+    // Clear input field
+    setInput("");
   }
 
   
@@ -76,17 +43,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     if (chatWindow) {
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
-  }, [conversation]);
+  }, [conversation.messages]);
 
 
   return (
-    <>
-      <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full">
+    <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full">
         {/* Chat Messages */}
         {/* Scroll to the bottom of the chat window */}
         <div className="flex flex-col gap-4 xl:h-[calc(100vh-15rem)] overflow-y-auto scrollToBottom">
           {[...conversation.messages].reverse().map((message, index) => (
-            <div key={index}>
+            <div key={conversation.id + '' + index}>
               {generateMessage(message)}
             </div>
           ))}
@@ -95,7 +61,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
         <form onSubmit={handleSubmit} >
           <label htmlFor="chat" className="sr-only">Your message</label>
           <div className="flex items-center px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700">
-            <button type="button" className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
+            {/* <button type="button" className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
               <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 18">
                 <path fill="currentColor" d="M13 5.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0ZM7.565 7.423 4.5 14h11.518l-2.516-3.71L11 13 7.565 7.423Z" />
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 1H2a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1Z" />
@@ -108,7 +74,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.408 7.5h.01m-6.876 0h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM4.6 11a5.5 5.5 0 0 0 10.81 0H4.6Z" />
               </svg>
               <span className="sr-only">Add emoji</span>
-            </button>
+            </button> */}
             <textarea id="chat" rows={1} className="block mx-4 p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Your message..."
               value={input} onChange={(e) => setInput(e.target.value)}></textarea>
 
@@ -121,7 +87,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
           </div>
         </form>
       </div>
-    </>
   );
 };
 
@@ -168,14 +133,14 @@ const TextMessage: React.FC<MessageProps> = ({ direction, created_at, content, s
 
     return (
       <div className={`flex items-start gap-2.5 ${isInbound ? "" : "flex-row-reverse"}`}>
-        <div className="flex flex-col gap-1 w-full max-w-[320px]">
+        <div className={`flex flex-col gap-1 w-full max-w-[320px] ${isInbound ? "" : "items-end"}`}>
           <div className="flex items-center space-x-2 rtl:space-x-reverse">
             <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{dateTime}</span>
           </div>
           <div className={`flex flex-col leading-1.5 p-4 border-gray-200  rounded-e-xl rounded-es-xl ${isInbound ? "bg-gray-100" : "bg-blue-100"} ${isInbound ? "dark:bg-gray-700" : "dark:bg-blue-700"}`} style={{width: 'fit-content'}}>
             <p className="text-sm font-normal text-gray-900 dark:text-white">{content}</p>
           </div>
-          {isInbound && <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status}</span>}
+          {!isInbound && <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status}</span>}
         </div>
       </div>
     );

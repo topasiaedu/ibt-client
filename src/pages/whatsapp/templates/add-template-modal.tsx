@@ -14,6 +14,8 @@ import {
 } from "react-icons/hi";
 import { useWhatsAppBusinessAccountContext, WhatsAppBusinessAccount } from "../../../context/WhatsAppBusinessAccountContext";
 import { useTemplateContext, TemplateInsert, Component, TemplateButton  } from "../../../context/TemplateContext";
+import { useProjectContext } from "../../../context/ProjectContext";
+import { supabase } from "../../../utils/supabaseClient";
 
 // What we're trying to create:
 // {
@@ -54,7 +56,7 @@ import { useTemplateContext, TemplateInsert, Component, TemplateButton  } from "
 // },
 
 const AddTemplateModal: React.FC = function () {
-  const [isOpen, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { addTemplate } = useTemplateContext();
   const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
   const [selectedWhatsappBusinessAccount, setSelectedWhatsappBusinessAccount] = useState<WhatsAppBusinessAccount | null>(null);
@@ -67,11 +69,13 @@ const AddTemplateModal: React.FC = function () {
   const [bodyData, setBodyData] = useState<string>("");
   const [footerData, setFooterData] = useState<string>("");
   const [selectedButtonType, setSelectedButtonType] = useState<string>("QUICK_REPLY");
+  const { currentProject } = useProjectContext();
+  const [file, setFile] = useState<File | null>(null);
 
 
   const handleAddTemplate = async () => {
     const template: TemplateInsert = {
-      account_id: selectedWhatsappBusinessAccount?.account_id || null,
+      account_id: selectedWhatsappBusinessAccount?.account_id ?? null,
       category: selectedCategory,
       language: selectedLanguage,
       name: templateName,
@@ -80,50 +84,72 @@ const AddTemplateModal: React.FC = function () {
 
     };
 
-    const components: Component[] = [
-      {
-        type: "HEADER",
-        format: headerType,
-        example: null,
-        text: headerData,
-        parameters: null,
-        buttons: null,
-      },
+    let components: any[] = [
       {
         type: "BODY",
         text: bodyData,
-        example: null,
-        format: null,
-        parameters: null,
-        buttons: null,
       },
       {
         type: "FOOTER",
         text: footerData,
-        example: null,
-        format: null,
-        parameters: null,
-        buttons: null,
-      }
+      },
+      {
+        type: "BUTTONS",
+        buttons: buttons,
+      },
     ];
 
-    await addTemplate(template, components);
-  
-    // Refresh the page
-    window.location.reload();
-    
-    // setOpen(false);    
+
+    if (headerType === "IMAGE") {
+      const randomFileName = Math.random().toString(36).substring(7) + file?.name;
+      const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
+      
+      if (error) {
+        console.error("Error uploading file: ", error);
+        return;
+      }
+
+      components = [
+        {
+          type: "HEADER",
+          format: "IMAGE",
+          example: {
+            header_handle: [
+              `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`
+            ]
+          } as any, 
+        },
+        ...components,
+      ];
+    } else if (headerType === "TEXT") {
+      components = [
+        {
+          type: "HEADER",
+          format: "TEXT",
+          text: headerData
+        },
+        ...components,
+      ];
+    }
+
+    // Add components to the template
+    template.components = {
+      data : components
+    } as any;
+
+    addTemplate(template);  
+    setIsOpen(false);
   };
 
   return (
     <>
-      <Button color="primary" onClick={() => setOpen(true)}>
+      <Button color="primary" onClick={() => setIsOpen(true)}>
         <div className="flex items-center gap-x-3">
           <HiPlus className="text-xl" />
           Add Template
         </div>
       </Button>
-      <Modal onClose={() => setOpen(false)} show={isOpen} >
+      <Modal onClose={() => setIsOpen(false)} show={isOpen} >
         <Modal.Header className="border-b border-gray-200 !p-6 dark:border-gray-700">
           <strong>Add new Template</strong>
         </Modal.Header>
@@ -150,7 +176,9 @@ const AddTemplateModal: React.FC = function () {
                   onChange={(e) => setSelectedWhatsappBusinessAccount(whatsAppBusinessAccounts.find((whatsAppBusinessAccount) => whatsAppBusinessAccount.account_id === parseInt(e.target.value)) || null)}
                 >
                   <option value="">Select WhatsApp Business Account</option>
-                  {whatsAppBusinessAccounts.map((whatsAppBusinessAccount) => (
+                  {whatsAppBusinessAccounts
+                  .filter((whatsAppBusinessAccount) => whatsAppBusinessAccount.project_id === currentProject?.project_id)
+                  .map((whatsAppBusinessAccount) => (
                     <option key={whatsAppBusinessAccount.account_id} value={whatsAppBusinessAccount.account_id}>
                       {whatsAppBusinessAccount.name}
                     </option>
@@ -175,7 +203,7 @@ const AddTemplateModal: React.FC = function () {
               </div>
             </div>
 
-            {/* Language Select: zh_CN, us_EN */}
+            {/* Language Select: zh_CN, en_US */}
             <div>
               <Label htmlFor="language">Language</Label>
               <div className="mt-1">
@@ -186,7 +214,7 @@ const AddTemplateModal: React.FC = function () {
                 >
                   <option value="">Select Language</option>
                   <option value="zh_CN">Chinese</option>
-                  <option value="us_EN">English</option>
+                  <option value="en_US">English</option>
                 </Select>
               </div>
             </div>
@@ -216,7 +244,7 @@ const AddTemplateModal: React.FC = function () {
                   <FileInput
                     id="headerImage"
                     name="headerImage"
-                    onChange={(e) => setHeaderData(e.target.value)}
+                    onChange={(e) => setFile(e.target.files?.[0] || null)}
                   />
                 </div>
               </div>

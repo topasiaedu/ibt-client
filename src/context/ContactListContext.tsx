@@ -81,7 +81,7 @@ export function ContactListProvider({ children }: { children: React.ReactNode })
       subscription.unsubscribe();
     };
 
-  }, [contactLists, currentProject]);
+  }, [currentProject]);
 
   const addContactList = async (contactList: ContactList) => {
     const { error } = await supabase
