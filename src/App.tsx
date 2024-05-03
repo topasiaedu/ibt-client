@@ -43,6 +43,8 @@ import CampaignListPage from "./pages/whatsapp/campaigns/list";
 import WhatsAppContactListPage from "./pages/whatsapp/contact-list/list";
 import ConversationPage from "./pages/whatsapp/conversation/index";
 import TemplateListPage from "./pages/whatsapp/templates/list";
+import FlowEditor from "./pages/whatsapp/workflow/editor";
+import WorkflowListPage from "./pages/whatsapp/workflow/list";
 
 const App = () => (
   <AlertProvider>
@@ -76,7 +78,8 @@ const App = () => (
                               <Route path="/whatsapp/campaigns" element={<CampaignListPage />} />
                               <Route path="/whatsapp/templates" element={<TemplateListPage />} />
                               <Route path="/whatsapp/contact-list" element={<WhatsAppContactListPage />} />
-                              {/* <Route path="/whatsapp/contact-list-members" element={<WhatsAppContactListPage />} /> */}
+                              <Route path="/whatsapp/workflow" element={<WorkflowListPage />} />
+                              <Route path="/whatsapp/workflow/editor/:id" element={<FlowEditor />} />
                               <Route path="/users/profile" element={<UserProfilePage />} />
                               <Route path="/users/settings" element={<UserSettingsPage />} />
                             </Route>

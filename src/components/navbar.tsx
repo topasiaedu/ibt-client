@@ -17,7 +17,7 @@ import {
   HiShoppingBag,
   HiUserCircle,
   HiUsers,
-  HiViewGrid,
+  HiViewGrid
 } from "react-icons/hi";
 import { useSidebarContext } from "../context/SidebarContext";
 import React from "react";

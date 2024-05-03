@@ -186,7 +186,7 @@ const ImageMessage: React.FC<MessageProps> = ({ direction, created_at, content, 
             <p className="text-sm font-normal text-gray-900 dark:text-white">{content}</p>
             <div className="group relative my-2.5">
               {/* Image and Download Button */}
-              <img src='' className="rounded-lg" alt="" />
+              <img src={media_url}className="rounded-lg" alt="" />
             </div>
           </div>
           <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status}</span>

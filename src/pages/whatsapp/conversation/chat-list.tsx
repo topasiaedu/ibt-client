@@ -1,6 +1,8 @@
 import {
   Badge,
-  Dropdown
+  Dropdown,
+  Label,
+  TextInput,
 } from "flowbite-react";
 import React from "react";
 import { Conversation } from "../../../context/MessagesContext";
@@ -14,6 +16,7 @@ interface ChatListProps {
 const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation, selectedConversation }) => {
   const [phoneNumbers, setPhoneNumbers] = React.useState<string[]>([]);
   const [selectedPhoneNumber, setSelectedPhoneNumber] = React.useState<string>("");
+  const [search, setSearch] = React.useState<string>("");
 
   // Get all unique phone numbers
   conversations.forEach((conversation) => {
@@ -36,7 +39,21 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
 
   return (
     <div className="overflow-y-auto h-full divide-gray-200 dark:divide-gray-700">
-      <div className="p-4 bg-white dark:bg-gray-800">
+      <div className="p-4 bg-white dark:bg-gray-800 flex justify-between items-center space-x-4">
+        <form className="lg:pr-3">
+          <Label htmlFor="users-search" className="sr-only">
+            Search
+          </Label>
+          <div className="relative mt-1 lg:w-32 xl:w-48">
+            <TextInput
+              id="users-search"
+              name="users-search"
+              placeholder="Search for users"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </form>
         <Dropdown label={selectedPhoneNumber || "All"} dismissOnClick={true}>
           <Dropdown.Item onClick={() => setSelectedPhoneNumber("")}>
             All
@@ -51,7 +68,7 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
       <ul className="divide-y divide-gray-200 dark:divide-gray-700">
         {conversations
           .sort((a, b) => new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime())
-          .filter((conversation) => selectedPhoneNumber === "" || conversation.phone_number.number === selectedPhoneNumber)
+          .filter((conversation) => (conversation.phone_number.number.includes(selectedPhoneNumber) || selectedPhoneNumber === "") && conversation.contact.wa_id.includes(search))
           .map((conversation, index) => (
             <li
               key={index}
@@ -62,7 +79,7 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
                 <div className="flex space-x-4 xl:mb-4 2xl:mb-0">
                   <div className="min-w-0 flex-1">
                     <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
-                      {conversation.contact.wa_id} <Badge color="primary">{conversation.whatsapp_business_account.name}</Badge>
+                      {conversation.contact.wa_id} <Badge color="primary">{conversation.phone_number.number}</Badge>
                     </p>
                     <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
                       {conversation.last_message}

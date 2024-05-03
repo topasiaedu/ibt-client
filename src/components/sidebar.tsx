@@ -2,19 +2,19 @@
 import classNames from "classnames";
 import { Sidebar, Tooltip } from "flowbite-react";
 import React, { useEffect, useState } from "react";
+import { FaListUl } from "react-icons/fa6";
+import { GoWorkflow } from "react-icons/go";
 import {
   HiChartPie,
   HiCog,
   HiInboxIn,
   HiInformationCircle,
+  HiTemplate,
 } from "react-icons/hi";
-import { IoLogoWhatsapp } from "react-icons/io";
+import { IoLogoWhatsapp, IoMdContact } from "react-icons/io";
 import { TbBrandCampaignmonitor } from "react-icons/tb";
 import { useSidebarContext } from "../context/SidebarContext";
 import isSmallScreen from "../helpers/is-small-screen";
-import { IoMdContact } from "react-icons/io";
-import { HiTemplate } from "react-icons/hi";
-import { FaListUl } from "react-icons/fa6";
 import ProjectDropdown from "./ProjectDropdown";
 
 const ExampleSidebar: React.FC = function () {
@@ -130,6 +130,19 @@ const ExampleSidebar: React.FC = function () {
                   >
                     Contact List
                   </Sidebar.Item>
+
+                  {/* Workflow */}
+                  {/* <Sidebar.Item
+                    href="/whatsapp/workflow"
+                    icon={GoWorkflow}
+                    className={
+                      "/whatsapp/workflow" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }
+                  >
+                    Workflow
+                  </Sidebar.Item>                   */}
 
                 </Sidebar.Collapse>
                 {/* <Sidebar.Collapse

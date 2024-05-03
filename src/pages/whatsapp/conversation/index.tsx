@@ -10,8 +10,9 @@ import { useProjectContext } from "../../../context/ProjectContext";
 
 const ConversationPage: React.FC = function () {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | undefined>(undefined);
-  const { conversations, loading } = useMessagesContext();
+const { conversations, loading } = useMessagesContext();
   const { currentProject } = useProjectContext();
+
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);
   };
