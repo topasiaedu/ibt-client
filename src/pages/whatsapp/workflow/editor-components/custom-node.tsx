@@ -1,35 +1,23 @@
-import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
+import { Handle, NodeProps, Position } from 'reactflow';
+import { useState } from 'react';
+import React from 'react';
+import { Button } from 'flowbite-react';
 
-// Define the structure of the data object that CustomNode expects
-type CustomNodeData = {
-  emoji: React.ReactNode;  // Assuming emoji can be any React renderable element
-  name: string;
-  job: string;
+export type CounterData = {
+  initialCount?: number;
 };
-
-// Define the props for the CustomNode component
-type CustomNodeProps = {
-  data: CustomNodeData;
-};
-
-const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
+ 
+export default function CounterNode(props: NodeProps<CounterData>) {
+  const [count, setCount] = useState(props.data?.initialCount ?? 0);
+ 
   return (
-    <div className="px-4 py-2 shadow-md rounded-md bg-white border-2 border-stone-400">
-      <div className="flex">
-        <div className="rounded-full w-12 h-12 flex justify-center items-center bg-gray-100">
-          {data.emoji}
-        </div>
-        <div className="ml-2">
-          <div className="text-lg font-bold">{data.name}</div>
-          <div className="text-gray-500">{data.job}</div>
-        </div>
-      </div>
-
-      <Handle type="target" position={Position.Top} className="w-16 !bg-teal-500" />
-      <Handle type="source" position={Position.Bottom} className="w-16 !bg-teal-500" />
+    <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg">
+      <Handle type="target" position={Position.Top} />
+      <p>Count: {count}</p>
+      <Button className="nodrag" onClick={() => setCount(count + 1)}>
+        Increment
+      </Button>
+      <Handle type="source" position={Position.Bottom} />
     </div>
   );
-};
-
-export default memo(CustomNode);
+}

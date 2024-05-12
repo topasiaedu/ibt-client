@@ -9,14 +9,16 @@ import ReactFlow, {
   BackgroundVariant,
   ReactFlowProvider,
   ReactFlowInstance,
+  Node,
 } from 'reactflow';
 
 import 'reactflow/dist/style.css';
 import NavbarSidebarLayout from '../../../layouts/navbar-sidebar';
 import CustomNode from './editor-components/custom-node';
-import Sidebar from './editor-components/flow-sidebar';
+import FlowSidebar from './editor-components/flow-sidebar';
 
 import './editor.css';
+import CounterNode from './editor-components/custom-node';
 
 const initialNodes = [
   {
@@ -96,11 +98,30 @@ const FlowEditor = () => {
               onDrop={onDrop}
               onDragOver={onDragOver}
               fitView
+              nodeTypes={
+                {
+                  counter: CounterNode
+                }
+              }
             >
+              {/* Style both controls and mini map based on light/dark theme from tailwind */}
               <Controls />
+              
+              <MiniMap className="dark:bg-gray-800 bg-gray-200" nodeColor={(node) => {
+                switch (node.type) {
+                  case 'input':
+                    return 'blue';
+                  case 'default':
+                    return 'red';
+                  case 'output':
+                    return 'green';
+                  default:
+                    return '#eee';
+                }
+              }} pannable zoomable />
             </ReactFlow>
           </div>
-          <Sidebar />
+          <FlowSidebar />
         </ReactFlowProvider>
       </div>
     </NavbarSidebarLayout >

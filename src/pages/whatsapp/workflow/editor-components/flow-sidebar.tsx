@@ -1,6 +1,7 @@
 import React, { DragEvent } from 'react';
+import { Sidebar, Card } from 'flowbite-react';
 
-const Sidebar: React.FC = () => {
+const FlowSidebar: React.FC = () => {
   const onDragStart = (event: DragEvent<HTMLDivElement>, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
@@ -8,19 +9,29 @@ const Sidebar: React.FC = () => {
   
 
   return (
-    <aside>
-      <div className="description">You can drag these nodes to the pane on the right.</div>
-      <div className="dndnode input" onDragStart={(event) => onDragStart(event, 'input')} draggable>
+    <Sidebar>
+      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'input')} draggable>
         Input Node
-      </div>
-      <div className="dndnode" onDragStart={(event) => onDragStart(event, 'default')} draggable>
+      </Card>
+      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'default')} draggable>
         Default Node
-      </div>
-      <div className="dndnode output" onDragStart={(event) => onDragStart(event, 'output')} draggable>
+      </Card>
+      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'output')} draggable>
         Output Node
-      </div>
-    </aside>
+      </Card>
+
+      {/* Triggers */}
+      {/* Webhook */}
+      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'counter')} draggable>
+        Webhook
+      </Card>
+      {/* Contact Tag Added */}
+      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'contact-tag-added')} draggable>
+        Contact Tag Added
+      </Card>
+      
+    </Sidebar>
   );
 };
 
-export default Sidebar;
+export default FlowSidebar;
