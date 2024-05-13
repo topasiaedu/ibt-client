@@ -110,7 +110,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
         const { data: messageWindow, error } = await supabase
           .from('message_window')
           .select('close_at')
-          .eq('project_id', currentProject.project_id)
           .eq('contact_id', conversation.contact.contact_id)
           .eq('phone_number_id', conversation.phone_number.phone_number_id)
           .single();

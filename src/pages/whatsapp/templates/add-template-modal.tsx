@@ -18,6 +18,7 @@ import { useTemplateContext, TemplateInsert, Component, TemplateButton } from ".
 import { useProjectContext } from "../../../context/ProjectContext";
 import { supabase } from "../../../utils/supabaseClient";
 import MessageComponent from "../../../components/MessageComponent";
+import { useAlertContext } from "../../../context/AlertContext";
 
 // What we're trying to create:
 // {
@@ -83,7 +84,7 @@ const AddTemplateModal: React.FC = function () {
   const [selectedButtonType, setSelectedButtonType] = useState<string>("QUICK_REPLY");
   const { currentProject } = useProjectContext();
   const [file, setFile] = useState<File | null>(null);
-
+  const { showAlert } = useAlertContext();
 
   const handleAddTemplate = async () => {
     const template: TemplateInsert = {
@@ -96,24 +97,58 @@ const AddTemplateModal: React.FC = function () {
 
     };
 
-    let components: any[] = [
-      {
+    let components: any[] = [];
+
+    // If footer has data, add it to the components
+    if (footerData) {
+      components.push({
+        type: "FOOTER",
+        text: footerData
+      });
+    }
+
+    if (buttons.length > 0) {
+      components.push({
+        type: "BUTTONS",
+        buttons: buttons
+      });
+    }
+
+    // Check if the body data has any {{1}} or {{2}} or so on, if  so create an example component with this format
+    // Where Student is for {{1}}, Teacher is for {{2}} and Parent is for {{3}}
+    // "example": {
+    //   "body_text": [
+    //     [
+    //       "Student", "Teacher", "Parent"
+    //     ]
+    //   ]
+    // }
+    const bodyDataMatches = bodyData.match(/{{\d+}}/g);
+
+    // We also check for spintax and convert it to {{index}} format, we just use the first one for example
+    const spintaxMatches = bodyData.match(/{([^{}]*)}/g);
+    
+    if (bodyDataMatches) {
+      const example: any = {
+        body_text: [bodyDataMatches.map((match) => match.replace(/[{}]/g, ""))]
+      };
+      components.push({
         type: "BODY",
         text: bodyData,
-      },
-      {
-        type: "FOOTER",
-        text: footerData,
-      },
-      {
-        type: "BUTTONS",
-        buttons: buttons,
-      },
-    ];
+        example
+      });
+    } else {
+      components.push({
+        type: "BODY",
+        text: bodyData
+      });
+    }
+
+
 
 
     if (headerType === "IMAGE" || headerType === "VIDEO") {
-      const randomFileName = Math.random().toString(36).substring(7) + file?.name;
+      const randomFileName = Math.random().toString(36).substring(7);
       const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
 
       if (error) {
@@ -127,7 +162,7 @@ const AddTemplateModal: React.FC = function () {
           format: "IMAGE",
           example: {
             header_handle: [
-              `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`
+              `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`
             ]
           } as any,
         },
@@ -151,18 +186,28 @@ const AddTemplateModal: React.FC = function () {
 
     addTemplate(template);
     setIsOpen(false);
+    showAlert("Template added successfully", "success");
   };
 
   const generatePreview = () => {
+    // Check if the body data has any {{1}} or {{2}} or so on, replace them with the example data with the appropriate value from the input fields
+    const bodyDataMatches = bodyData.match(/{{\d+}}/g);
+    let newBodyData = bodyData;
+    if (bodyDataMatches) {
+      bodyDataMatches.forEach((match) => {
+        const domInputValue = (document.getElementById(`bodyData${parseInt(match.replace(/[{}]/g, "")) - 1}`) as HTMLInputElement)?.value;
+        newBodyData = newBodyData.replace(match, domInputValue || "");
+      });
+    }
     const buttonTexts = buttons.map(button => button.text) || [];
     if (headerType === "IMAGE" && file) {
-      return <MessageComponent message={bodyData} footer={footerData} date={currentDate} media={URL.createObjectURL(file)} buttons={buttonTexts} headerType="IMAGE" />
+      return <MessageComponent message={newBodyData} footer={footerData} date={currentDate} media={URL.createObjectURL(file)} buttons={buttonTexts} headerType="IMAGE" />
     } else if (headerType === "TEXT") {
-      return <MessageComponent header={headerData} message={bodyData} footer={footerData} date={currentDate} buttons={buttonTexts} />
+      return <MessageComponent header={headerData} message={newBodyData} footer={footerData} date={currentDate} buttons={buttonTexts} />
     } else if (headerType === "VIDEO" && file) {
-      return <MessageComponent message={bodyData} footer={footerData} date={currentDate} media={URL.createObjectURL(file)} buttons={buttonTexts} headerType="VIDEO" />
+      return <MessageComponent message={newBodyData} footer={footerData} date={currentDate} media={URL.createObjectURL(file)} buttons={buttonTexts} headerType="VIDEO" />
     } else if (headerType === "DOCUMENT") {
-      return <MessageComponent message={bodyData} footer={footerData} date={currentDate} media={headerData} buttons={buttonTexts} headerType="DOCUMENT" />
+      return <MessageComponent message={newBodyData} footer={footerData} date={currentDate} media={headerData} buttons={buttonTexts} headerType="DOCUMENT" />
     }
   }
   return (
@@ -301,6 +346,20 @@ const AddTemplateModal: React.FC = function () {
                   />
                 </div>
               </div>
+
+              {/* Check body data for {{1}}  or {{2}} and so on and create new Fields for each of them */}
+              {bodyData.match(/{{\d+}}/g)?.map((match, index) => (
+                <div key={index} className="mt-6">
+                  <Label htmlFor={`bodyData${index}`}>{`Body Data ${index + 1}`}</Label>
+                  <div className="mt-1">
+                    <TextInput
+                      id={`bodyData${index}`}
+                      name={`bodyData${index}`}
+                      placeholder={`Body Data ${index + 1}`}
+                    />
+                  </div>
+                </div>
+              ))}
 
               {/* Footer */}
               <div className="mt-6">

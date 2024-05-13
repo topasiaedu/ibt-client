@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import {
   Breadcrumb,
+  Datepicker,
   Label,
   Table,
   TextInput,
@@ -19,10 +20,12 @@ import LoadingPage from "../../pages/loading";
 const CampaignListPage: React.FC = function () {
   const { campaigns, loading } = useCampaignContext();
   const [searchValue, setSearchValue] = React.useState("");
+  const [startDate, setStartDate] = React.useState<Date | null>(null);
+  const [endDate, setEndDate] = React.useState<Date | null>(null);
   const resultingCampaigns: Campaigns = {
     campaigns: campaigns.filter((campaign) =>
-      campaign.name.toLowerCase().includes(searchValue.toLowerCase())
-    ),
+      campaign.name.toLowerCase().includes(searchValue.toLowerCase()) && (!startDate || new Date(campaign.post_time) >= startDate) && (!endDate || new Date(campaign.post_time) <= endDate)
+    )
   };
 
   if (loading) {
@@ -64,6 +67,18 @@ const CampaignListPage: React.FC = function () {
                   />
                 </div>
               </form>
+
+              <Label className="sr-only">Start Date</Label>
+              <Datepicker
+                value={startDate?.toISOString()}
+                onSelectedDateChanged={(date) => setStartDate(date)}
+              />
+
+              <Label className="sr-only">End Date</Label>
+              <Datepicker
+                value={endDate?.toISOString()}
+                onSelectedDateChanged={(date) => setEndDate(date)}
+              />
 
             </div>
             <div className="ml-auto flex items-center space-x-2 sm:space-x-3">
