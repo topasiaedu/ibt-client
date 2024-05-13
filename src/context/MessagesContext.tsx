@@ -129,10 +129,17 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
           // Find the conversation with the same contact_id and phone_number_id
           const existingConversation = conversations.find(conversation => conversation.contact.contact_id === payload.new.contact_id && conversation.phone_number.phone_number_id === payload.new.phone_number_id);
 
+          console.log('existingConversation', existingConversation);
+          console.log('payload.new', payload.new)
           // If conversation already exists, update the messages
           if (existingConversation) {
+            console.log('existingConversation', existingConversation);
+            const newConversation = { ...existingConversation, messages: [payload.new, ...existingConversation.messages], last_message_time: payload.new.created_at, last_message: payload.new.content, unread_messages: payload.new.status === 'READ' ? 0 : existingConversation.unread_messages + 1 };
+
+            console.log('newConversation', newConversation);
             setConversations(prev => prev.map(conversation => conversation.contact.contact_id === payload.new.contact_id && conversation.phone_number.phone_number_id === payload.new.phone_number_id ? {
-              ...conversation, messages: [payload.new, ...conversation.messages],
+              ...conversation, 
+              messages: [payload.new, ...conversation.messages],
               last_message_time: payload.new.created_at,
               last_message: payload.new.content,
               unread_messages: payload.new.status === 'READ' ? 0 : conversation.unread_messages + 1
@@ -208,9 +215,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
         }
       });
 
-      console.log('body', body);
-      console.log('phoneNumber', phoneNumber?.wa_id);
-
       const response = await fetch(`https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/messages`, {
         method: 'POST',
         headers: {
@@ -222,7 +226,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
       const data = await response.json();
 
-      console.log('data', data);
 
       if (!response.ok) {
         console.error('Error sending message:', response.statusText);
