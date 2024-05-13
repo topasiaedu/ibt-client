@@ -105,22 +105,17 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
         }
       });
 
-      // for each conversation lookup message_window table to get the close_at time and append it to the conversation object
-      for (const conversation of initialConversations) {
-        const { data: messageWindow, error } = await supabase
-          .from('message_window')
-          .select('close_at')
-          .eq('contact_id', conversation.contact.contact_id)
-          .eq('phone_number_id', conversation.phone_number.phone_number_id)
-          .single();
+      // // for each conversation lookup message_window table to get the close_at time and append it to the conversation object
+      // for (const conversation of initialConversations) {
+      //   const { data: messageWindow, error } = await supabase
+      //     .from('message_window')
+      //     .select('close_at')
+      //     .eq('contact_id', conversation.contact.contact_id)
+      //     .eq('phone_number_id', conversation.phone_number.phone_number_id)
+      //     .single();
 
-        if (error) {
-          console.error('Error fetching message window:', error);
-          return;
-        }
-
-        conversation.close_at = messageWindow?.close_at || '';
-      }
+      //   conversation.close_at = messageWindow?.close_at || '';
+      // }
 
 
       setConversations(initialConversations!);
