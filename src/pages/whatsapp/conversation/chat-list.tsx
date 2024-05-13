@@ -35,8 +35,6 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
     }
   });
 
-  console.log(conversations)
-
   return (
     <div className="overflow-y-auto h-full divide-gray-200 dark:divide-gray-700">
       <div className="p-4 bg-white dark:bg-gray-800 flex justify-between items-center space-x-4">
@@ -65,7 +63,7 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
           ))}
         </Dropdown>
       </div>
-      <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+      <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto flex-grow">
         {conversations
           .sort((a, b) => new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime())
           .filter((conversation) => (conversation.phone_number.number.includes(selectedPhoneNumber) || selectedPhoneNumber === "") && conversation.contact.wa_id.includes(search))
@@ -75,19 +73,20 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
               className={`p-4 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 ${selectedConversation === conversation ? "bg-gray-200 dark:bg-gray-700" : ""}`}
               onClick={() => onSelectConversation(conversation)}
             >
-              <div className="flex justify-between xl:block 2xl:block 2xl:space-x-4">
-                <div className="flex space-x-4 xl:mb-4 2xl:mb-0">
-                  <div className="min-w-0 flex-1">
+              <div className="flex justify-between 2xl:space-x-4 items-center">
+                <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
+                  <div className="min-w-0 flex-1 w-fit">
                     <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
                       {conversation.contact.wa_id} <Badge color="primary">{conversation.phone_number.number}</Badge>
                     </p>
                     <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
                       {conversation.last_message}
                     </p>
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400"> 
                       Last seen: {new Date(conversation.last_message_time).toLocaleString()}
                     </p>
                   </div>
+                  {conversation.unread_messages > 0 && (<Badge color="primary">{conversation.unread_messages}</Badge>)}
                 </div>
               </div>
             </li>

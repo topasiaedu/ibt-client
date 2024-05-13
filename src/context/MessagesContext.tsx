@@ -22,6 +22,7 @@ export type Conversation = {
   last_message_time: string;
   last_message: string;
   unread_messages: number;
+  close_at: string | null;
 };
 
 interface MessagesContextType {
@@ -48,6 +49,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
   useEffect(() => {
     setLoading(true);
+
     const fetchConversations = async () => {
       if (!currentProject) return;
 
@@ -55,8 +57,8 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
         .from('messages')
         .select(`*`)
         .eq('project_id', currentProject.project_id)
-        .order('message_id', { ascending: false });
-
+        .order('message_id', { ascending: false })
+        .limit(100);
 
       if (error) {
         console.error('Error fetching conversations:', error);
@@ -85,6 +87,8 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
         if (existingConversation) {
           existingConversation.messages.push(message);
+          // Check is status is read, if it not, add 1 to unread_messages
+          existingConversation.unread_messages = message.status === 'READ' ? 0 : existingConversation.unread_messages + 1;
         } else {
           initialConversations.push({
             id: conversationId,
@@ -95,9 +99,28 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
             last_message_time: lastMessageTime,
             last_message: lastMessage,
             unread_messages: unreadMessages,
+            close_at: null,
           });
         }
       });
+
+      // for each conversation lookup message_window table to get the close_at time and append it to the conversation object
+      for (const conversation of initialConversations) {
+        const { data: messageWindow, error } = await supabase
+          .from('message_window')
+          .select('close_at')
+          .eq('project_id', currentProject.project_id)
+          .eq('contact_id', conversation.contact.contact_id)
+          .eq('phone_number_id', conversation.phone_number.phone_number_id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching message window:', error);
+          return;
+        }
+
+        conversation.close_at = messageWindow?.close_at || '';
+      }
 
 
       setConversations(initialConversations!);
@@ -139,6 +162,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
               last_message_time: lastMessageTime,
               last_message: lastMessage,
               unread_messages: unreadMessages,
+              close_at: null,
             }, ...prev]);
           }
           break;
@@ -178,17 +202,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
   const addMessage = async (message: MessageInsert) => {
     try {
-      // Send Request to WhatsApp API to create template https://graph.facebook.com/v19.0/<PHONE_NUMBER_ID>/messages
-      // Example request:
-      // { 
-      //   "messaging_product": "whatsapp", 
-      //   "to": "60139968817", 
-      //   "type": "text", 
-      //   "text": {
-      //     "body" : "hi"
-      //   }
-      // }
-
       const phoneNumber = phoneNumbers.find(phoneNumber => phoneNumber.phone_number_id === message.phone_number_id);
 
       const body = JSON.stringify({

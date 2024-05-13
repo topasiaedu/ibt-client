@@ -6,16 +6,18 @@ import {
   TextInput,
   Select,
   FileInput,
-  Textarea
+  Textarea,
+  Card
 } from "flowbite-react";
 import React, { useState } from "react";
 import {
   HiPlus,
 } from "react-icons/hi";
 import { useWhatsAppBusinessAccountContext, WhatsAppBusinessAccount } from "../../../context/WhatsAppBusinessAccountContext";
-import { useTemplateContext, TemplateInsert, Component, TemplateButton  } from "../../../context/TemplateContext";
+import { useTemplateContext, TemplateInsert, Component, TemplateButton } from "../../../context/TemplateContext";
 import { useProjectContext } from "../../../context/ProjectContext";
 import { supabase } from "../../../utils/supabaseClient";
+import MessageComponent from "../../../components/MessageComponent";
 
 // What we're trying to create:
 // {
@@ -54,6 +56,16 @@ import { supabase } from "../../../utils/supabaseClient";
 //   "category": "MARKETING",        
 //   "id": "772825330634813"
 // },
+
+const currentDate = new Date().toLocaleDateString('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+  hour12: true
+})
 
 const AddTemplateModal: React.FC = function () {
   const [isOpen, setIsOpen] = useState(false);
@@ -100,10 +112,10 @@ const AddTemplateModal: React.FC = function () {
     ];
 
 
-    if (headerType === "IMAGE") {
+    if (headerType === "IMAGE" || headerType === "VIDEO") {
       const randomFileName = Math.random().toString(36).substring(7) + file?.name;
       const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
-      
+
       if (error) {
         console.error("Error uploading file: ", error);
         return;
@@ -117,7 +129,7 @@ const AddTemplateModal: React.FC = function () {
             header_handle: [
               `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`
             ]
-          } as any, 
+          } as any,
         },
         ...components,
       ];
@@ -134,13 +146,25 @@ const AddTemplateModal: React.FC = function () {
 
     // Add components to the template
     template.components = {
-      data : components
+      data: components
     } as any;
 
-    addTemplate(template);  
+    addTemplate(template);
     setIsOpen(false);
   };
 
+  const generatePreview = () => {
+    const buttonTexts = buttons.map(button => button.text) || [];
+    if (headerType === "IMAGE" && file) {
+      return <MessageComponent message={bodyData} footer={footerData} date={currentDate} media={URL.createObjectURL(file)} buttons={buttonTexts} headerType="IMAGE" />
+    } else if (headerType === "TEXT") {
+      return <MessageComponent header={headerData} message={bodyData} footer={footerData} date={currentDate} buttons={buttonTexts} />
+    } else if (headerType === "VIDEO" && file) {
+      return <MessageComponent message={bodyData} footer={footerData} date={currentDate} media={URL.createObjectURL(file)} buttons={buttonTexts} headerType="VIDEO" />
+    } else if (headerType === "DOCUMENT") {
+      return <MessageComponent message={bodyData} footer={footerData} date={currentDate} media={headerData} buttons={buttonTexts} headerType="DOCUMENT" />
+    }
+  }
   return (
     <>
       <Button color="primary" onClick={() => setIsOpen(true)}>
@@ -149,204 +173,232 @@ const AddTemplateModal: React.FC = function () {
           Add Template
         </div>
       </Button>
-      <Modal onClose={() => setIsOpen(false)} show={isOpen} >
+      <Modal onClose={() => setIsOpen(false)} show={isOpen} size={'7xl'}>
         <Modal.Header className="border-b border-gray-200 !p-6 dark:border-gray-700">
           <strong>Add new Template</strong>
         </Modal.Header>
         <Modal.Body className="max-h-[calc(100vh-15rem)]">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-1">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="name"
-                  name="name"
-                  placeholder="Campaign name"
-                  onChange={(e) => setTemplateName(e.target.value)}
-                  value={templateName}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="whatsAppBusinessAccount">WhatsApp Business Account</Label>
-              <div className="mt-1">
-                <Select
-                  id="whatsAppBusinessAccount"
-                  name="whatsAppBusinessAccount"
-                  onChange={(e) => setSelectedWhatsappBusinessAccount(whatsAppBusinessAccounts.find((whatsAppBusinessAccount) => whatsAppBusinessAccount.account_id === parseInt(e.target.value)) || null)}
-                >
-                  <option value="">Select WhatsApp Business Account</option>
-                  {whatsAppBusinessAccounts
-                  .filter((whatsAppBusinessAccount) => whatsAppBusinessAccount.project_id === currentProject?.project_id)
-                  .map((whatsAppBusinessAccount) => (
-                    <option key={whatsAppBusinessAccount.account_id} value={whatsAppBusinessAccount.account_id}>
-                      {whatsAppBusinessAccount.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            {/* Category Select: MARKETING, UTILITY,  */}
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <div className="mt-1">
-                <Select
-                  id="category"
-                  name="category"
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                  <option value="">Select Category</option>
-                  <option value="MARKETING">Marketing</option>
-                  <option value="UTILITY">Utility</option>
-                </Select>
-              </div>
-            </div>
-
-            {/* Language Select: zh_CN, en_US */}
-            <div>
-              <Label htmlFor="language">Language</Label>
-              <div className="mt-1">
-                <Select
-                  id="language"
-                  name="language"
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                >
-                  <option value="">Select Language</option>
-                  <option value="zh_CN">Chinese</option>
-                  <option value="en_US">English</option>
-                </Select>
-              </div>
-            </div>
-
-            {/* Header Type */}
-            <div>
-              <Label htmlFor="headerType">Header Type</Label>
-              <div className="mt-1">
-                <Select
-                  id="headerType"
-                  name="headerType"
-                  onChange={(e) => setHeaderType(e.target.value)}
-                >
-                  <option value="">None</option>
-                  <option value="IMAGE">Image</option>
-                  <option value="TEXT">Text</option>
-
-                </Select>
-              </div>
-            </div>
-
-            {/* Render Different Fields based on Header Type */}
-            {headerType === "IMAGE" && (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="col-span-1">
               <div>
-                <Label htmlFor="headerImage">Header Image</Label>
+                <Label htmlFor="name">Template Name</Label>
                 <div className="mt-1">
-                  <FileInput
-                    id="headerImage"
-                    name="headerImage"
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  <TextInput
+                    id="name"
+                    name="name"
+                    placeholder="Template name"
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    value={templateName}
                   />
+                  {/* Write a small reminder that it cannot have space or capitalized letters */}
+                  <p className="text-sm text-gray-500">Template name should not have spaces or capitalized letters</p>
                 </div>
               </div>
-            )}
+              <div className="mt-6">
+                <Label htmlFor="whatsAppBusinessAccount">WhatsApp Business Account</Label>
+                <div className="mt-1">
+                  <Select
+                    id="whatsAppBusinessAccount"
+                    name="whatsAppBusinessAccount"
+                    onChange={(e) => setSelectedWhatsappBusinessAccount(whatsAppBusinessAccounts.find((whatsAppBusinessAccount) => whatsAppBusinessAccount.account_id === parseInt(e.target.value)) || null)}
+                  >
+                    <option value="">Select WhatsApp Business Account</option>
+                    {whatsAppBusinessAccounts
+                      .filter((whatsAppBusinessAccount) => whatsAppBusinessAccount.project_id === currentProject?.project_id)
+                      .map((whatsAppBusinessAccount) => (
+                        <option key={whatsAppBusinessAccount.account_id} value={whatsAppBusinessAccount.account_id}>
+                          {whatsAppBusinessAccount.name}
+                        </option>
+                      ))}
+                  </Select>
+                </div>
+              </div>
 
-            {headerType === "TEXT" && (
+              {/* Category Select: MARKETING, UTILITY,  */}
+              <div className="mt-6">
+                <Label htmlFor="category">Category</Label>
+                <div className="mt-1">
+                  <Select
+                    id="category"
+                    name="category"
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                  >
+                    <option value="">Select Category</option>
+                    <option value="MARKETING">Marketing</option>
+                    <option value="UTILITY">Utility</option>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Language Select: zh_CN, en_US */}
+              <div className="mt-6">
+                <Label htmlFor="language">Language</Label>
+                <div className="mt-1">
+                  <Select
+                    id="language"
+                    name="language"
+                    onChange={(e) => setSelectedLanguage(e.target.value)}
+                  >
+                    <option value="">Select Language</option>
+                    <option value="zh_CN">Chinese</option>
+                    <option value="en_US">English</option>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <div className="col-span-1">
+              {/* Header Type */}
               <div>
-                <Label htmlFor="headerText">Header Text</Label>
+                <Label htmlFor="headerType">Header Type</Label>
                 <div className="mt-1">
-                  <TextInput
-                    id="headerText"
-                    name="headerText"
-                    placeholder="Header Text"
-                    onChange={(e) => setHeaderData(e.target.value)}
+                  <Select
+                    id="headerType"
+                    name="headerType"
+                    onChange={(e) => setHeaderType(e.target.value)}
+                  >
+                    <option value="">None</option>
+                    <option value="IMAGE">Image</option>
+                    <option value="VIDEO">Video</option>
+                    <option value="DOCUMENT">Document</option>
+                    <option value="TEXT">Text</option>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Render Different Fields based on Header Type */}
+              {headerType && (
+                <div className="mt-6">
+                  <Label htmlFor="headerImage">Header {headerType.toLowerCase()}</Label>
+                  <div className="mt-1">
+                    {headerType !== "TEXT" && headerType && (
+                      <FileInput
+                        id="headerImage"
+                        name="headerImage"
+                        onChange={(e) => setFile(e.target.files?.[0] || null)}
+                      />
+                    )}
+                    {headerType === "TEXT" && (
+                      <TextInput
+                        id="headerText"
+                        name="headerText"
+                        placeholder="Header Text"
+                        onChange={(e) => setHeaderData(e.target.value)}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Body */}
+              <div className="mt-6">
+                <Label htmlFor="body">Body</Label>
+                <div className="mt-1">
+                  <Textarea
+                    id="body"
+                    name="body"
+                    placeholder="Body"
+                    onChange={(e) => setBodyData(e.target.value)}
                   />
                 </div>
               </div>
-            )}
 
-            {/* Body */}
-            <div>
-              <Label htmlFor="body">Body</Label>
-              <div className="mt-1">
-                <Textarea
-                  id="body"
-                  name="body"
-                  placeholder="Body"
-                  onChange={(e) => setBodyData(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div>
-              <Label htmlFor="footer">Footer</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="footer"
-                  name="footer"
-                  placeholder="Footer"
-                  onChange={(e) => setFooterData(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* User can add up to two buttons (Render number of fields based on input)  */}
-            {/* User can choose type for each button (Button Type: QUICK_REPLY, URL)*/}
-
-            {/* Choose Button Type */}
-            <div>
-              <Label htmlFor="buttonType">Button Type</Label>
-              <div className="mt-1">
-                <Select
-                  id="buttonType"
-                  name="buttonType"
-                  onChange={(e) => setSelectedButtonType(e.target.value)}
-                >
-                  <option value="">Select Button Type</option>
-                  <option value="QUICK_REPLY">Quick Reply</option>
-                  <option value="URL">URL</option>
-                </Select>
-              </div>
-            </div>
-
-            {/* Add Button */}
-            <div>
-              <Button color="primary" onClick={() => {
-                // Check button type selected 
-                // Add button to the list only if the button type is selected an length of buttons is less than 2
-                if (selectedButtonType && buttons.length < 2) {
-                  setButtons([...buttons, { type: selectedButtonType, text: "", url: "", phone_number: "" }]);
-                }
-              }}>
-                Add Button
-              </Button>
-            </div>
-
-            {/* Render Button Fields */}
-            {buttons.map((button, index) => (
-              <div key={index}>
-                {/* Button Index */}
-                <p>Button {index + 1}</p>
-                <Label htmlFor="buttonText">Button Text</Label>
+              {/* Footer */}
+              <div className="mt-6">
+                <Label htmlFor="footer">Footer <span className="text-sm text-gray-500">(Optional)</span></Label>
                 <div className="mt-1">
                   <TextInput
-                    id="buttonText"
-                    name="buttonText"
-                    placeholder="Button Text"
-                    onChange={(e) => setButtons(prev => prev.map((button, i) => i === index ? { ...button, text: e.target.value } : button))}
-                  />
-                </div>
-                <Label htmlFor="buttonUrl">Button URL</Label>
-                <div className="mt-1">
-                  <TextInput
-                    id="buttonUrl"
-                    name="buttonUrl"
-                    placeholder="Button URL"
-                    onChange={(e) => setButtons(prev => prev.map((button, i) => i === index ? { ...button, url: e.target.value } : button))}
+                    id="footer"
+                    name="footer"
+                    placeholder="Footer"
+                    onChange={(e) => setFooterData(e.target.value)}
                   />
                 </div>
               </div>
-            ))}
+
+              <div className="mt-6 flex justify-between items-center">
+
+                <div>
+                  <Label htmlFor="buttonType">Button Type</Label>
+                  <div className="mt-1">
+                    <Select
+                      id="buttonType"
+                      name="buttonType"
+                      onChange={(e) => setSelectedButtonType(e.target.value)}
+                    >
+                      <option value="">Select Button Type</option>
+                      <option value="QUICK_REPLY">Quick Reply</option>
+                      <option value="URL">URL</option>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Button color="primary" onClick={() => {
+                    // Check button type selected 
+                    // Add button to the list only if the button type is selected an length of buttons is less than 2
+                    if (selectedButtonType && buttons.length < 2) {
+                      setButtons([...buttons, { type: selectedButtonType, text: "", url: "", phone_number: "" }]);
+                    }
+                  }}>
+                    Add Button
+                  </Button>
+                </div>
+              </div>
+
+              {/* Render Button Fields */}
+              {buttons.map((button, index) => (
+                <Card key={index} className="mt-6">
+                  {/* Button Index */}
+                  <div className="flex justify-between items-center">
+                    <p>Button {index + 1} <span className="text-sm text-gray-500">({button.type})</span></p>
+                    <Button
+                      color="red"
+                      onClick={() => setButtons(prev => prev.filter((_, i) => i !== index))}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                  <Label htmlFor="buttonText">Button Text</Label>
+                  <div className="">
+                    <TextInput
+                      id="buttonText"
+                      name="buttonText"
+                      placeholder="Button Text"
+                      onChange={(e) => setButtons(prev => prev.map((button, i) => i === index ? { ...button, text: e.target.value } : button))}
+                    />
+                  </div>
+                  {button.type === "URL" && (
+                    <>
+                      <Label htmlFor="buttonUrl">Button URL</Label>
+                      <div className="">
+                        <TextInput
+                          id="buttonUrl"
+                          name="buttonUrl"
+                          placeholder="Button URL"
+                          onChange={(e) => setButtons(prev => prev.map((button, i) => i === index ? { ...button, url: e.target.value } : button))}
+                        />
+                      </div>
+                    </>)}
+
+                  {/* Place a delete button on the top right corner */}
+
+                </Card>
+              ))}
+            </div>
+
+            <div className="col-span-1">
+              <div className="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-800 border-[14px] rounded-[2.5rem] h-[600px] w-[300px] shadow-xl">
+                <div className="w-[148px] h-[18px] bg-gray-800 top-0 rounded-b-[1rem] left-1/2 -translate-x-1/2 absolute"></div>
+                <div className="h-[46px] w-[3px] bg-gray-800 absolute -start-[17px] top-[124px] rounded-s-lg"></div>
+                <div className="h-[46px] w-[3px] bg-gray-800 absolute -start-[17px] top-[178px] rounded-s-lg"></div>
+                <div className="h-[64px] w-[3px] bg-gray-800 absolute -end-[17px] top-[142px] rounded-e-lg"></div>
+                <div className="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-white">
+                  <div className="p-6">
+                    {generatePreview()}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </Modal.Body>
         <Modal.Footer>

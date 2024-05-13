@@ -62,7 +62,7 @@ const EditContactListModal: FC<EditContactListModalProps> = ({ contact_list }) =
         </Modal.Body>
         <Modal.Footer>
           <Button color="primary" onClick={() => handleUpdateContactList(contactListData)}>
-            Save all
+            Save
           </Button>
         </Modal.Footer>
       </Modal>

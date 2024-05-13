@@ -9,7 +9,7 @@ const ProjectDropdown: React.FC = () => {
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   return (
-    <div className='mb-3'>
+    <div className='mb-3' style={{ position: 'relative' }}>
       <button id="dropdownUserNameButton" onClick={toggleDropdown}
         className="flex justify-between items-center p-4 w-full rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
         type="button"
@@ -31,7 +31,7 @@ const ProjectDropdown: React.FC = () => {
         </svg>
       </button>
       {/* Dropdown menu */}
-      <div id="dropdownUserName" className={`${isOpen ? '' : 'hidden'} z-10 w-60 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600`}
+      <div id="dropdownUserName" className={`${isOpen ? '' : 'hidden'} absolute z-50 w-60 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600`}
         data-popper-placement="bottom"
       >
         {/* Map Projects */}

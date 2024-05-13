@@ -44,7 +44,7 @@ const AddContactModal: React.FC<AddContactModalProps> = function ({ contact_list
           Add Contact
         </div>
       </Button>
-      <Modal onClose={() => setOpen(false)} show={isOpen} >
+      <Modal onClose={() => setOpen(false)} show={isOpen} size="7xl">
         <Modal.Header className="border-b border-gray-200 !p-6 dark:border-gray-700">
           <strong>Add new Contact List</strong>
         </Modal.Header>

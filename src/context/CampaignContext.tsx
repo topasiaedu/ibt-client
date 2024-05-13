@@ -10,7 +10,7 @@ export type CampaignInsert = Database['public']['Tables']['campaigns']['Insert']
 
 interface CampaignContextType {
   campaigns: Campaign[];
-  addCampaign: (campaign: CampaignInsert) => void;
+  addCampaign: (campaign: CampaignInsert) => Promise<Campaign | undefined>;
   updateCampaign: (campaign: Campaign) => void;
   deleteCampaign: (campaignId: number) => void;
   loading: boolean;
@@ -70,14 +70,17 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
   }, [currentProject, showAlert]);
 
   const addCampaign = async (campaign: CampaignInsert) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('campaigns')
-      .insert([{ ...campaign, project_id: currentProject?.project_id }]);
+      .insert([{ ...campaign, project_id: currentProject?.project_id }]).select();
+
     if (error) {
       console.error('Error adding campaign:', error);
       showAlert("Error adding campaign", "error");
       return;
     }
+
+    return data![0];
   };
 
   const updateCampaign = async (campaign: Campaign) => {

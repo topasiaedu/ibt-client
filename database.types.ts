@@ -81,6 +81,42 @@ export type Database = {
           },
         ]
       }
+      campaign_phone_numbers: {
+        Row: {
+          campaign_id: number
+          created_at: string
+          id: string
+          phone_number_id: number
+        }
+        Insert: {
+          campaign_id: number
+          created_at?: string
+          id?: string
+          phone_number_id: number
+        }
+        Update: {
+          campaign_id?: number
+          created_at?: string
+          id?: string
+          phone_number_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_phone_numbers_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["campaign_id"]
+          },
+          {
+            foreignKeyName: "campaign_phone_numbers_phone_number_id_fkey"
+            columns: ["phone_number_id"]
+            isOneToOne: false
+            referencedRelation: "phone_numbers"
+            referencedColumns: ["phone_number_id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           campaign_id: number
@@ -334,6 +370,7 @@ export type Database = {
           message_id: number
           message_type: string
           phone_number_id: number
+          project_id: number | null
           status: string | null
           wa_message_id: string | null
         }
@@ -347,6 +384,7 @@ export type Database = {
           message_id?: number
           message_type: string
           phone_number_id: number
+          project_id?: number | null
           status?: string | null
           wa_message_id?: string | null
         }
@@ -360,6 +398,7 @@ export type Database = {
           message_id?: number
           message_type?: string
           phone_number_id?: number
+          project_id?: number | null
           status?: string | null
           wa_message_id?: string | null
         }
@@ -370,6 +409,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "phone_numbers"
             referencedColumns: ["phone_number_id"]
+          },
+          {
+            foreignKeyName: "messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "public_messages_campaign_id_fkey"
@@ -448,6 +494,45 @@ export type Database = {
           project_id?: number
         }
         Relationships: []
+      }
+      project_permission: {
+        Row: {
+          created_at: string
+          id: number
+          project_id: number
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          project_id: number
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          project_id?: number
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_project_permission_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "public_project_permission_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       templates: {
         Row: {

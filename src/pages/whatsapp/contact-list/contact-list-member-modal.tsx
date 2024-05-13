@@ -4,7 +4,7 @@ import {
   Modal,
   Table,
 } from "flowbite-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MdDelete } from "react-icons/md";
 import { CiViewTable } from "react-icons/ci";
 import { useContactListContext, ContactList } from "../../../context/ContactListContext";
@@ -21,6 +21,10 @@ const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function (
     await removeContactFromContactList(contact_list.contact_list_id, contact_id);
   }
 
+  // Rerender if contact_list changes
+  useEffect(() => {
+  }, [contact_list]);
+
 
   return (
     <>
@@ -30,7 +34,7 @@ const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function (
           View Members
         </div>
       </Button>
-      <Modal onClose={() => setOpen(false)} show={isOpen} size="4xl">
+      <Modal onClose={() => setOpen(false)} show={isOpen} size="7xl">
         <Modal.Header className="border-b border-gray-200 !p-6 dark:border-gray-700">
           <strong>Contact List Members</strong>
         </Modal.Header>

@@ -5,9 +5,10 @@ import { HiChevronLeft } from "react-icons/hi";
 import { Contact } from "../../../context/ContactContext";
 interface ContactProfileProps {
   contact: Contact;
+  close_at: string | null;
 }
 
-const ContactProfile: React.FC<ContactProfileProps> = ({ contact }) => {
+const ContactProfile: React.FC<ContactProfileProps> = ({ contact, close_at }) => {
 
   if (!contact) {
     return <div>
@@ -49,6 +50,14 @@ const ContactProfile: React.FC<ContactProfileProps> = ({ contact }) => {
               {contact?.wa_id}
             </div>
           </address>
+          {close_at && (
+            <address className="text-sm font-normal not-italic text-gray-500 dark:text-gray-400">
+            <div className="mt-4 dark:text-gray-400">Window closes at</div>
+            <div className="text-sm font-medium text-gray-900 dark:text-white">
+              {close_at}
+            </div>
+          </address>
+          )}
         </div>
       </div>
       {/* <h3 className="mb-4 text-base font-bold text-gray-900 dark:text-white">
