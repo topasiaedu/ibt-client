@@ -11,11 +11,10 @@ import {
 } from "react-icons/hi";
 import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
 import AddCampaignModal from "./add-campaign-modal";
-// import EditCampaignModal from "./edit-campaign-modal";
-import LoadingPage from "../../pages/loading";
-import { useCampaignContext, Campaigns } from "../../../context/CampaignContext";
-import { useTemplateContext } from "../../../context/TemplateContext";
+import { Campaigns, useCampaignContext } from "../../../context/CampaignContext";
 import { useContactListContext } from "../../../context/ContactListContext";
+import { useTemplateContext } from "../../../context/TemplateContext";
+import LoadingPage from "../../pages/loading";
 
 const CampaignListPage: React.FC = function () {
   const { campaigns, loading } = useCampaignContext();
@@ -123,7 +122,7 @@ const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
               </div>
             </Table.Cell>
             <Table.Cell className="text-center">{contactLists.find(contactList => contactList.contact_list_id === campaign.contact_list_id)?.contact_list_members.length}</Table.Cell>
-            <Table.Cell className="text-center">0</Table.Cell>
+            <Table.Cell className="text-center">{campaign.read_count}</Table.Cell>
             <Table.Cell className="text-center">{campaign.sent}</Table.Cell>
             <Table.Cell className="text-center">{campaign.failed}</Table.Cell>
             {/* <Table.Cell>

@@ -128,6 +128,7 @@ export type Database = {
           phone_number_id: number | null
           post_time: string
           project_id: number | null
+          read: number
           sent: number
           status: string | null
           template_id: number | null
@@ -144,6 +145,7 @@ export type Database = {
           phone_number_id?: number | null
           post_time: string
           project_id?: number | null
+          read?: number
           sent?: number
           status?: string | null
           template_id?: number | null
@@ -160,6 +162,7 @@ export type Database = {
           phone_number_id?: number | null
           post_time?: string
           project_id?: number | null
+          read?: number
           sent?: number
           status?: string | null
           template_id?: number | null

@@ -33,6 +33,7 @@ interface MessagesContextType {
   addMessage: (message: MessageInsert) => void;
   updateMessage: (message: Message) => void;
   deleteMessage: (messageId: number) => void;
+  fetchCampaignReadMessagesCount: (campaignId: number) => Promise<number | undefined>;
   loading: boolean;
 }
 
@@ -274,8 +275,24 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
   }
 
+  const fetchCampaignReadMessagesCount = async (campaignId: number) => {
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select('message_id')
+      .eq('project_id', currentProject?.project_id)
+      .eq('campaign_id', campaignId)
+      .eq('status', 'READ');
+
+    if (error) {
+      console.error('Error fetching campaign read messages count:', error);
+      return;
+    }
+
+    return messages?.length;
+  }
+
   return (
-    <MessagesContext.Provider value={{ conversations, addConversation, updateConversation, deleteConversation, addMessage, updateMessage, deleteMessage, loading }}>
+    <MessagesContext.Provider value={{ conversations, addConversation, updateConversation, deleteConversation, addMessage, updateMessage, deleteMessage, fetchCampaignReadMessagesCount, loading }}>
       {children}
     </MessagesContext.Provider>
   );

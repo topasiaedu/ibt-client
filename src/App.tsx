@@ -55,8 +55,8 @@ const App = () => (
           <ContactListProvider>
             <WhatsAppBusinessAccountProvider>
               <PhoneNumberProvider>
-                <CampaignProvider>
-                  <MessagesProvider>
+                <MessagesProvider>
+                  <CampaignProvider>
                     <TemplateProvider>
                       <CampaignPhoneNumberProvider>
                         <AlertComponent />
@@ -110,8 +110,8 @@ const App = () => (
                         </BrowserRouter>
                       </CampaignPhoneNumberProvider>
                     </TemplateProvider>
-                  </MessagesProvider>
-                </CampaignProvider>
+                  </CampaignProvider>
+                </MessagesProvider>
               </PhoneNumberProvider>
             </WhatsAppBusinessAccountProvider>
           </ContactListProvider>
