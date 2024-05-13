@@ -52,73 +52,21 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
     setLoading(true);
 
     const fetchConversations = async () => {
-      if (!currentProject) return;
+      if (!currentProject) return
+      // CREATE OR REPLACE FUNCTION fetch_conversations(project_id_param INT)
 
-      const { data: messages, error } = await supabase
-        .from('messages')
-        .select(`*`)
-        .eq('project_id', currentProject.project_id)
-        .order('message_id', { ascending: false })
-        .limit(100);
+      const { data, error } = await supabase.rpc('fetch_conversations', { project_id_param: currentProject.project_id });
 
       if (error) {
         console.error('Error fetching conversations:', error);
         return;
       }
 
-      // Loop through messages and group them by phone_number_id and fill up the conversation object
-      let initialConversations: Conversation[] = [];
+      if (!data) return;
 
-      messages?.forEach(async message => {
-        const contact = contacts.find(contact => contact.contact_id === message.contact_id);
-        const phoneNumber = phoneNumbers.find(phoneNumber => phoneNumber.phone_number_id === message.phone_number_id);
-        const whatsappBusinessAccount = whatsAppBusinessAccounts.find(whatsappBusinessAccount => whatsappBusinessAccount.account_id === phoneNumber?.waba_id);
-        const lastMessageTime = message.created_at;
-        const lastMessage = message.content;
-        const unreadMessages = message.status === 'READ' ? 0 : 1;
+      const conversations = data as Conversation[];
 
-        // if any of them is undefined, skip this message
-        if (!contact || !phoneNumber || !whatsappBusinessAccount) return;
-
-        // Use contact_id - phone_number_id as the conversation id
-        const conversationId = `${message.contact_id}-${message.phone_number_id}`;
-
-        // Check if conversation already exists
-        const existingConversation = initialConversations.find(conversation => conversation.id === conversationId);
-
-        if (existingConversation) {
-          existingConversation.messages.push(message);
-          // Check is status is read, if it not, add 1 to unread_messages
-          existingConversation.unread_messages = message.status === 'READ' ? 0 : existingConversation.unread_messages + 1;
-        } else {
-          initialConversations.push({
-            id: conversationId,
-            contact,
-            messages: [message],
-            phone_number: phoneNumber,
-            whatsapp_business_account: whatsappBusinessAccount,
-            last_message_time: lastMessageTime,
-            last_message: lastMessage,
-            unread_messages: unreadMessages,
-            close_at: null,
-          });
-        }
-      });
-
-      // // for each conversation lookup message_window table to get the close_at time and append it to the conversation object
-      // for (const conversation of initialConversations) {
-      //   const { data: messageWindow, error } = await supabase
-      //     .from('message_window')
-      //     .select('close_at')
-      //     .eq('contact_id', conversation.contact.contact_id)
-      //     .eq('phone_number_id', conversation.phone_number.phone_number_id)
-      //     .single();
-
-      //   conversation.close_at = messageWindow?.close_at || '';
-      // }
-
-
-      setConversations(initialConversations!);
+      setConversations(conversations);
     };
 
     fetchConversations();
@@ -138,7 +86,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
             console.log('newConversation', newConversation);
             setConversations(prev => prev.map(conversation => conversation.contact.contact_id === payload.new.contact_id && conversation.phone_number.phone_number_id === payload.new.phone_number_id ? {
-              ...conversation, 
+              ...conversation,
               messages: [payload.new, ...conversation.messages],
               last_message_time: payload.new.created_at,
               last_message: payload.new.content,
@@ -188,7 +136,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
     return () => {
       subscription.unsubscribe();
     };
-  }, [contacts, currentProject, phoneNumbers, whatsAppBusinessAccounts]);
+  }, []);
 
   const addConversation = (conversation: Conversation) => {
     setConversations(prev => [conversation, ...prev]);
