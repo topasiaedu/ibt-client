@@ -80,7 +80,7 @@ const ChatList: React.FC<ChatListProps> = ({ conversations, onSelectConversation
                       {conversation.contact.wa_id} <Badge color="primary">{conversation.phone_number.number}</Badge>
                     </p>
                     <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                      {conversation.last_message}
+                      {conversation.last_message.message_type === "text" ? conversation.last_message.content : conversation.last_message.message_type}
                     </p>
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400"> 
                       Last seen: {new Date(conversation.last_message_time).toLocaleString()}

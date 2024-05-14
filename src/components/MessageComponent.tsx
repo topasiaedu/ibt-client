@@ -36,7 +36,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, me
             </div>
           )}
         </div>
-        {!isInbound && status && <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status}</span>}
+        {!isInbound && status && <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status.toLowerCase()}</span>}
       </div>
     </div>
   );

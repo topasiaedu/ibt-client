@@ -20,7 +20,7 @@ export type Conversation = {
   phone_number: PhoneNumber;
   whatsapp_business_account: WhatsAppBusinessAccount;
   last_message_time: string;
-  last_message: string;
+  last_message: Message;
   unread_messages: number;
   close_at: string | null;
 };
@@ -74,24 +74,20 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
     const handleChanges = (payload: any) => {
       switch (payload.eventType) {
         case 'INSERT':
-          // Find the conversation with the same contact_id and phone_number_id
-          const existingConversation = conversations.find(conversation => conversation.contact.contact_id === payload.new.contact_id && conversation.phone_number.phone_number_id === payload.new.phone_number_id);
+          const conversationId = `${payload.new.contact_id}-${payload.new.phone_number_id}`;
+          const existingConversation = conversations.find(conversation => conversation.id === conversationId);
 
-          console.log('existingConversation', existingConversation);
-          console.log('payload.new', payload.new)
-          // If conversation already exists, update the messages
           if (existingConversation) {
-            console.log('existingConversation', existingConversation);
-            const newConversation = { ...existingConversation, messages: [payload.new, ...existingConversation.messages], last_message_time: payload.new.created_at, last_message: payload.new.content, unread_messages: payload.new.status === 'READ' ? 0 : existingConversation.unread_messages + 1 };
+            const newConversation = { 
+              ...existingConversation, 
+              messages: [payload.new, ...existingConversation.messages], 
+              last_message_time: payload.new.created_at, 
+              last_message: payload.new, 
+              unread_messages: payload.new.status === 'READ' && payload.new.direction === 'inbound' ? 0 : existingConversation.unread_messages + 1
+            };
 
-            console.log('newConversation', newConversation);
-            setConversations(prev => prev.map(conversation => conversation.contact.contact_id === payload.new.contact_id && conversation.phone_number.phone_number_id === payload.new.phone_number_id ? {
-              ...conversation,
-              messages: [payload.new, ...conversation.messages],
-              last_message_time: payload.new.created_at,
-              last_message: payload.new.content,
-              unread_messages: payload.new.status === 'READ' ? 0 : conversation.unread_messages + 1
-            } : conversation));
+            const newConversations = conversations.map(conversation => conversation.id === conversationId ? newConversation : conversation);
+            setConversations(newConversations);
           } else {
             // If conversation does not exist, create a new conversation
             const contact = contacts.find(contact => contact.contact_id === payload.new.contact_id);
@@ -99,11 +95,11 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
             const whatsappBusinessAccount = whatsAppBusinessAccounts.find(whatsappBusinessAccount => whatsappBusinessAccount.account_id === phoneNumber?.waba_id);
             const lastMessageTime = payload.new.created_at;
             const lastMessage = payload.new.content;
-            const unreadMessages = payload.new.status === 'READ' ? 0 : 1;
+            const unreadMessages = payload.new.status === 'READ' && payload.new.direction === 'inbound' ? 0 : 1;
 
             if (!contact || !phoneNumber || !whatsappBusinessAccount) return;
 
-            setConversations(prev => [{
+            const newConversations = [ {
               id: `${payload.new.contact_id}-${payload.new.phone_number_id}`,
               contact,
               messages: [payload.new],
@@ -113,7 +109,9 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
               last_message: lastMessage,
               unread_messages: unreadMessages,
               close_at: null,
-            }, ...prev]);
+            }, ...conversations];
+
+            setConversations(newConversations);
           }
           break;
         case 'UPDATE':
@@ -136,7 +134,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [contacts, conversations, currentProject, phoneNumbers, whatsAppBusinessAccounts]);
 
   const addConversation = (conversation: Conversation) => {
     setConversations(prev => [conversation, ...prev]);

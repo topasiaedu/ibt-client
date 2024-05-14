@@ -14,37 +14,39 @@ const ConversationPage: React.FC = function () {
   const { currentProject } = useProjectContext();
 
   const handleSelectConversation = (conversation: Conversation) => {
-
-    // Mark all messages as read
     for (const message of conversation.messages) {
-      if ( message.status !== "READ") {
+      if (message.status !== "READ" && message.direction === "inbound") {
         updateMessage({
           ...message,
           status: "READ"
         });
       }
     }
-
     conversation.unread_messages = 0;
     setSelectedConversation(conversation);
-
   };
 
   useEffect(() => {
-    // Update selected conversation if it is changed
     if (!selectedConversation) {
       setSelectedConversation(conversations[0]);
     }
-
-    // Check if conversation is updated
     if (selectedConversation) {
       const updatedConversation = conversations.find((conversation) => conversation.id === selectedConversation.id);
       if (updatedConversation) {
+        // Mark all messages as read
+        for (const message of updatedConversation.messages) {
+          if (message.status !== "READ" && message.direction === "inbound") {
+            updateMessage({
+              ...message,
+              status: "READ"
+            });
+          }
+        }
         setSelectedConversation(updatedConversation);
       }
     }
 
-  }, [conversations, selectedConversation]);
+  }, [conversations, selectedConversation, updateMessage]);
 
 
   // If current project is changed, reset selected conversation
@@ -81,7 +83,7 @@ const ConversationPage: React.FC = function () {
           selectedConversation={selectedConversation}
         />
         {selectedConversation && (<ChatWindow conversation={selectedConversation} />)}
-        {selectedConversation && (<ContactProfile contact={selectedConversation.contact} close_at={selectedConversation.close_at}/>)}
+        {selectedConversation && (<ContactProfile contact={selectedConversation.contact} close_at={selectedConversation.close_at} />)}
         {!selectedConversation && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
