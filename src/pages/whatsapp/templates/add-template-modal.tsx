@@ -145,8 +145,6 @@ const AddTemplateModal: React.FC = function () {
     }
 
 
-
-
     if (headerType === "IMAGE" || headerType === "VIDEO") {
       const randomFileName = Math.random().toString(36).substring(7);
       const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);

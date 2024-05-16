@@ -30,7 +30,7 @@ interface MessagesContextType {
   addConversation: (conversation: Conversation) => void;
   updateConversation: (conversation: Conversation) => void;
   deleteConversation: (conversationId: number) => void;
-  addMessage: (message: MessageInsert) => void;
+  addMessage: (message: MessageInsert, file?: File) => void;
   updateMessage: (message: Message) => void;
   deleteMessage: (messageId: number) => void;
   fetchCampaignReadMessagesCount: (campaignId: number) => Promise<number | undefined>;
@@ -78,11 +78,11 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
           const existingConversation = conversations.find(conversation => conversation.id === conversationId);
 
           if (existingConversation) {
-            const newConversation = { 
-              ...existingConversation, 
-              messages: [payload.new, ...existingConversation.messages], 
-              last_message_time: payload.new.created_at, 
-              last_message: payload.new, 
+            const newConversation = {
+              ...existingConversation,
+              messages: [payload.new, ...existingConversation.messages],
+              last_message_time: payload.new.created_at,
+              last_message: payload.new,
               unread_messages: payload.new.status === 'READ' && payload.new.direction === 'inbound' ? 0 : existingConversation.unread_messages + 1
             };
 
@@ -99,7 +99,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
             if (!contact || !phoneNumber || !whatsappBusinessAccount) return;
 
-            const newConversations = [ {
+            const newConversations = [{
               id: `${payload.new.contact_id}-${payload.new.phone_number_id}`,
               contact,
               messages: [payload.new],
@@ -148,19 +148,69 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
     setConversations(prev => prev.filter(conversation => conversation.contact.contact_id !== conversationId));
   };
 
-  const addMessage = async (message: MessageInsert) => {
+  const addMessage = async (message: MessageInsert, file?: File) => {
     try {
       const phoneNumber = phoneNumbers.find(phoneNumber => phoneNumber.phone_number_id === message.phone_number_id);
 
-      const body = JSON.stringify({
+      let body = JSON.stringify({
         messaging_product: 'whatsapp',
-        to: contacts.find(contact => contact.contact_id === message.contact_id)?.wa_id,
-        type: 'text',
-        text: {
-          body: message.content,
-        }
+        to: contacts.find(contact => contact.contact_id === message.contact_id)?.wa_id
       });
 
+      let randomFileName = Math.random().toString(36).substring(7);
+
+      // Check if file is present if so change the body to include the file
+      if (file) {
+       
+        const { error } = await supabase.storage.from("media").upload(`${randomFileName}`, file!);
+
+        if (error) {
+          console.error('Error uploading file:', error);
+          showAlert('Error uploading file', 'error');
+          return;
+        }
+
+        // Check what type of file is being uploaded document | image | video
+        const fileType = file.type.split('/')[0];
+        let mediaType = 'image';
+        if (fileType === 'video') {
+          mediaType = 'video';
+        } else if (fileType === 'application') {
+          mediaType = 'document';
+        }
+
+        // Check if there is caption for the file
+        if (message.content) {
+          body = JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: contacts.find(contact => contact.contact_id === message.contact_id)?.wa_id,
+            type: mediaType,
+            [mediaType]: {
+              link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
+              caption: message.content,
+            },
+          });
+        } else {
+          body = JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: contacts.find(contact => contact.contact_id === message.contact_id)?.wa_id,
+            type: mediaType,
+            [mediaType]: {
+              link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
+            },
+          });
+        }
+
+      } else {
+        body = JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: contacts.find(contact => contact.contact_id === message.contact_id)?.wa_id,
+          type: 'text',
+          text: {
+            body: message.content,
+          },
+        });
+      }
       const response = await fetch(`https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/messages`, {
         method: 'POST',
         headers: {
@@ -184,6 +234,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
         ...message,
         project_id: currentProject?.project_id,
         wa_message_id: data.messages[0].id,
+        media_url: file ? `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}` : null,
       });
 
       if (error) {

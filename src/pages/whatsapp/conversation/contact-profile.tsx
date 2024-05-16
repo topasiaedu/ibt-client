@@ -34,7 +34,7 @@ const ContactProfile: React.FC<ContactProfileProps> = ({ contact, close_at }) =>
         {/* <img
           className="mb-2 h-20 w-20 rounded-lg"
           src="../../images/users/jese-leos-2x.png"
-          alt="Jese portrait"
+          alt="Jese portrait"kz
         /> */}
         <div>
           {contact && (

@@ -9,7 +9,8 @@ interface MessageComponentProps {
   direction?: 'inbound' | 'outbound';
   status?: string;
   buttons?: (string | null)[]
-  headerType?: 'VIDEO' | 'IMAGE' | 'DOCUMENT';}
+  headerType?: 'VIDEO' | 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'DOCUMENT';
+}
 
 const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, media, footer, date, direction, status, buttons, headerType }) => {
   const isInbound = direction === 'inbound';
@@ -22,6 +23,9 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, me
           {header && <span className="text-sm font-semibold text-gray-900 dark:text-white">{header}</span>}
           {media && headerType === "IMAGE" && <img src={media} alt="media" className="w-full h-40 object-cover rounded-xl" />}
           {media && headerType === "VIDEO" && <video src={media} controls className="w-full h-40 object-cover rounded-xl" />}
+          {media && headerType === "AUDIO" && <audio src={media} controls />}
+          {media && headerType === "DOCUMENT" && <a href={media} target="_blank" rel="noreferrer" className="text-sm font-semibold text-blue-500">{media}</a>}
+
           {message && (
             <span className="text-sm font-normal text-gray-900 dark:text-white" style={{ whiteSpace: 'pre-wrap' }}>
               {message}
