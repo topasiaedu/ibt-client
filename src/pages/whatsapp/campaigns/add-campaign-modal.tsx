@@ -48,6 +48,7 @@ const AddCampaignModal: React.FC = function () {
           waba_id: waba.account_id,
           phone_number_id: phoneNumber.phone_number_id,
           name: waba.name + " - " + phoneNumber.number,
+          quality_rating: phoneNumber.quality_rating,
           id: "waba-" + waba.account_id + "-phone-" + phoneNumber.phone_number_id,
         }
       }
@@ -95,7 +96,7 @@ const AddCampaignModal: React.FC = function () {
             }]
           });
         } else if (component.type === "HEADER" && (component.format === "VIDEO" || component.format === "IMAGE")) {
-          const randomFileName = Math.random().toString(36).substring(7) + file?.name;
+          const randomFileName = Math.random().toString(36).substring(7);
           const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
     
           if (error) {
@@ -211,7 +212,10 @@ const AddCampaignModal: React.FC = function () {
                 <Label htmlFor="waba">Select WhatsApp Business Account & Phone Number</Label>
                 <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-2">
                   {/* Create Cards that the user can click on to select which phone number to use and use selected wabaPhoneNumber to manage */}
-                  {wabaPhoneNumber.map((item: any, index: number) => (
+                    {wabaPhoneNumber
+                    // Remove those with UNKNOWN quality_rating
+                    .filter((item: any) => item && item.quality_rating !== "UNKNOWN")
+                    .map((item: any, index: number) => (
                     <Card key={index} onClick={() => {
                       // Use the id of the item to check if it is already in the selectedWabaPhoneNumber
                       const exists = selectedWabaPhoneNumber.find((selectedItem: any) => selectedItem.id === item.id);
