@@ -161,8 +161,11 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
       // Check if file is present if so change the body to include the file
       if (file) {
-       
-        const { error } = await supabase.storage.from("media").upload(`${randomFileName}`, file!);
+        const { error } = await supabase.storage.from("media").upload(`${randomFileName}`, file!, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+        });
 
         if (error) {
           console.error('Error uploading file:', error);
@@ -170,22 +173,15 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
           return;
         }
 
-        // Check what type of file is being uploaded document | image | video
-        const fileType = file.type.split('/')[0];
-        let mediaType = 'image';
-        if (fileType === 'video') {
-          mediaType = 'video';
-        } else if (fileType === 'application') {
-          mediaType = 'document';
-        }
+        console.log("Random File Name", randomFileName)
 
         // Check if there is caption for the file
         if (message.content) {
           body = JSON.stringify({
             messaging_product: 'whatsapp',
             to: contacts.find(contact => contact.contact_id === message.contact_id)?.wa_id,
-            type: mediaType,
-            [mediaType]: {
+            type: message.message_type,
+            [message.message_type]: {
               link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
               caption: message.content,
             },
@@ -194,12 +190,50 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
           body = JSON.stringify({
             messaging_product: 'whatsapp',
             to: contacts.find(contact => contact.contact_id === message.contact_id)?.wa_id,
-            type: mediaType,
-            [mediaType]: {
+            type: message.message_type,
+            [message.message_type]: {
               link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
             },
           });
         }
+
+      } else if (message.message_type === 'audio') {
+        // Upload file to the following api to get the media id
+        // curl - X POST 'https://graph.facebook.com/v19.0/<MEDIA_ID>/media' \
+        // -H 'Authorization: Bearer <ACCESS_TOKEN>' \
+        // -F 'file=@"2jC60Vdjn/cross-trainers-summer-sale.jpg"' \
+        // -F 'type="image/jpeg"' \
+        // -F 'messaging_product="whatsapp"'
+        const form = new FormData();
+        form.append('messaging_product', 'whatsapp');
+        // form.append('file', file);
+        // form.append('type', file.type || 'audio/mpeg'); // Explicitly setting MIME type
+
+        // console log out file in the form data
+        console.log("form", form.get('file'))
+
+        const response = await fetch(`https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/media`, {
+          method: 'POST',
+          headers: {
+            'Authorization': WHATSAPP_ACCESS_TOKEN
+          },
+          body: form,
+        });
+
+        console.log("response", response)
+
+        const data = await response.json();
+
+        console.log("data", data)
+
+        body = JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: contacts.find(contact => contact.contact_id === message.contact_id)?.wa_id,
+          type: 'audio',
+          audio: {
+            id: data.id,
+          },
+        });
 
       } else {
         body = JSON.stringify({

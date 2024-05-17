@@ -16,12 +16,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
   const [input, setInput] = React.useState("")
   const { addMessage } = useMessagesContext();
   const [file, setFile] = React.useState<File | null>(null)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const { showAlert } = useAlertContext();
 
   const handleSubmit = async () => {
     let mediaType = "text";
@@ -58,6 +57,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     setInput("");
     setFile(null);
     setAudioFile(null);
+    setAudioUrl(null);
   };
 
   useEffect(() => {
@@ -92,24 +92,33 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     audioChunks.current = [];
     setAudioFile(null);
 
-
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder.current = new MediaRecorder(stream);
+
+        const options = { mimeType: 'audio/webm' }; // Record initially in audio/webm
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+          console.error(`${options.mimeType} is not supported by this browser.`);
+          return;
+        }
+
+        mediaRecorder.current = new MediaRecorder(stream, options);
+
+        mediaRecorder.current.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.current.onstop = async () => {
+          const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+          const oggBlob = await convertAudioBlobToOgg(audioBlob); // Convert to OGG format
+          const file = new File([oggBlob], 'recording.ogg', { type: 'audio/ogg; codecs=opus' });
+          setAudioFile(file);
+        };
+
         mediaRecorder.current.start();
         setRecording(true);
-
-        mediaRecorder.current.ondataavailable = (event: BlobEvent) => {
-          audioChunks.current.push(event.data);
-        };
-
-        mediaRecorder.current.onstop = () => {
-          const audioBlob = new Blob(audioChunks.current, { type: 'audio/mpeg' });
-          setAudioFile(new File([audioBlob], 'recording.mp3', { type: 'audio/mpeg' }));
-          audioChunks.current = [];
-          stream.getTracks().forEach(track => track.stop());
-        };
       } catch (err) {
         console.error('Failed to start recording:', err);
       }
@@ -124,6 +133,45 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
       setRecording(false);
     }
   };
+
+  const convertAudioBlobToOgg = async (blob: any) => {
+    // Convert audio/webm to audio/ogg; codecs=opus
+    const audioContext = new AudioContext();
+    const audioBlob = blob;
+    const fileReader = new FileReader();
+    const audioBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
+      fileReader.onload = (event) => {
+        if (event.target) {
+          audioContext.decodeAudioData(event.target.result as ArrayBuffer, resolve, reject);
+        }
+      };
+      fileReader.onerror = reject;
+      fileReader.readAsArrayBuffer(audioBlob);
+    });
+
+    const oggBlob = await new Promise<Blob>((resolve, reject) => {
+      const audioCtx = new OfflineAudioContext({
+        numberOfChannels: audioBuffer.numberOfChannels,
+        length: audioBuffer.length,
+        sampleRate: audioBuffer.sampleRate
+      });
+
+      const source = audioCtx.createBufferSource();
+      source.buffer = audioBuffer;
+      audioCtx.oncomplete = (event) => {
+        const renderedBuffer = event.renderedBuffer;
+        renderedBuffer.copyFromChannel(audioBuffer.getChannelData(0), 0);
+        const blob = new Blob([renderedBuffer.getChannelData(0)], { type: 'audio/ogg; codecs=opus' });
+        resolve(blob);
+      };
+
+      source.connect(audioCtx.destination);
+      audioCtx.startRendering();
+    });
+
+    return oggBlob;
+  };
+
 
   return (
     <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full flex flex-col">
@@ -174,8 +222,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 
         {audioUrl && (
           <div className="flex items-center space-x-2">
-            <audio src={audioUrl} controls className="w-40 h-10" />
-            <button type="button" className="p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" onClick={() => setAudioFile(null)}>
+            <audio src={audioUrl} controls className="w-100 h-10" />
+            <button type="button" className="p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" onClick={() => { setAudioFile(null); setAudioUrl(null) }}>
               <svg className="w-5 h-5 rtl:rotate-90" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" clipRule="evenodd" d="M10 1a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9zm4.293 5.293a1 1 0 0 1 1.414 1.414L11.414 10l3.293 3.293a1 1 0 0 1-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 0 1-1.414-1.414L8.586 10 5.293 6.707a1 1 0 0 1 1.414-1.414L10 8.586l3.293-3.293z" />
               </svg>
