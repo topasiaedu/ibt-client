@@ -6,7 +6,7 @@ import MessageComponent from "../../../components/MessageComponent";
 import { IoAddOutline } from "react-icons/io5";
 import { CiMicrophoneOn } from "react-icons/ci";
 import { CiMicrophoneOff } from "react-icons/ci";
-import { useAlertContext } from "../../../context/AlertContext";
+// import { useAlertContext } from "../../../context/AlertContext";
 
 interface ChatWindowProps {
   conversation: Conversation;

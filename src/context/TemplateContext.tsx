@@ -41,7 +41,7 @@ const TemplateContext = createContext<TemplateContextType>(undefined!);
 export function TemplateProvider({ children }: { children: React.ReactNode }) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const { whatsAppBusinessAccounts, selectedWhatsAppBusinessAccount } = useWhatsAppBusinessAccountContext();
+  const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
   const { showAlert } = useAlertContext();
   const { currentProject } = useProjectContext();
 
@@ -135,7 +135,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Add template to database
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('templates')
         .insert([{ ...template, account_id: waba.account_id,  }]);
 

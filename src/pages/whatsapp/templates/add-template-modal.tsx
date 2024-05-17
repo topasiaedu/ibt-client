@@ -14,7 +14,7 @@ import {
   HiPlus,
 } from "react-icons/hi";
 import { useWhatsAppBusinessAccountContext, WhatsAppBusinessAccount } from "../../../context/WhatsAppBusinessAccountContext";
-import { useTemplateContext, TemplateInsert, Component, TemplateButton } from "../../../context/TemplateContext";
+import { useTemplateContext, TemplateInsert, TemplateButton } from "../../../context/TemplateContext";
 import { useProjectContext } from "../../../context/ProjectContext";
 import { supabase } from "../../../utils/supabaseClient";
 import MessageComponent from "../../../components/MessageComponent";
@@ -124,9 +124,6 @@ const AddTemplateModal: React.FC = function () {
     //   ]
     // }
     const bodyDataMatches = bodyData.match(/{{\d+}}/g);
-
-    // We also check for spintax and convert it to {{index}} format, we just use the first one for example
-    const spintaxMatches = bodyData.match(/{([^{}]*)}/g);
     
     if (bodyDataMatches) {
       const example: any = {

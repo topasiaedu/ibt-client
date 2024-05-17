@@ -1,17 +1,14 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import classNames from "classnames";
-import { Sidebar, Tooltip } from "flowbite-react";
+import { Sidebar } from "flowbite-react";
 import React, { useEffect, useState } from "react";
 import { FaListUl } from "react-icons/fa6";
-import { GoWorkflow } from "react-icons/go";
 import {
-  HiChartPie,
-  HiCog,
-  HiInboxIn,
+  HiChartPie, HiInboxIn,
   HiInformationCircle,
-  HiTemplate,
+  HiTemplate
 } from "react-icons/hi";
-import { IoLogoWhatsapp, IoMdContact } from "react-icons/io";
+import { IoMdContact } from "react-icons/io";
 import { TbBrandCampaignmonitor } from "react-icons/tb";
 import { useSidebarContext } from "../context/SidebarContext";
 import isSmallScreen from "../helpers/is-small-screen";
@@ -21,15 +18,15 @@ const ExampleSidebar: React.FC = function () {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
     useSidebarContext();
   const [currentPage, setCurrentPage] = useState("");
-  const [isWhatsAppOpen, setWhatsAppOpen] = useState(true);
+  // const [isWhatsAppOpen, setWhatsAppOpen] = useState(true);
 
 
   useEffect(() => {
     const newPage = window.location.pathname;
 
     setCurrentPage(newPage);
-    setWhatsAppOpen(newPage.includes("/whatsapp/"));
-  }, [setCurrentPage, setWhatsAppOpen]);
+    // setWhatsAppOpen(newPage.includes("/whatsapp/"));
+  }, [setCurrentPage]);
 
   return (
     <div

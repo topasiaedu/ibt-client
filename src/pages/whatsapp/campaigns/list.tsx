@@ -22,9 +22,12 @@ const CampaignListPage: React.FC = function () {
   const [searchValue, setSearchValue] = React.useState("");
   const [startDate, setStartDate] = React.useState<Date | null>(null);
   const [endDate, setEndDate] = React.useState<Date | null>(null);
+  console.log(campaigns);
   const resultingCampaigns: Campaigns = {
     campaigns: campaigns.filter((campaign) =>
-      campaign.name.toLowerCase().includes(searchValue.toLowerCase()) && (!startDate || new Date(campaign.post_time) >= startDate) && (!endDate || new Date(campaign.post_time) <= endDate)
+      campaign.name.toLowerCase().includes(searchValue.toLowerCase()) &&
+      (!startDate || new Date(campaign.post_time) >= startDate) &&
+      (!endDate || new Date(campaign.post_time) <= endDate)
     )
   };
 
@@ -74,6 +77,9 @@ const CampaignListPage: React.FC = function () {
                 onSelectedDateChanged={(date) => setStartDate(date)}
               />
 
+              {/* Add a dash in between start and end date */}
+              <div className="mx-2">-</div>
+
               <Label className="sr-only">End Date</Label>
               <Datepicker
                 value={endDate?.toISOString()}
@@ -91,7 +97,14 @@ const CampaignListPage: React.FC = function () {
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-hidden shadow">
-              <CampaignsTable campaigns={resultingCampaigns.campaigns} />
+              {resultingCampaigns.campaigns.length > 0 ? (
+                <CampaignsTable campaigns={resultingCampaigns.campaigns} />
+              ) : (
+                <div className="flex items-center justify-center h-full flex-col">
+                  <img alt="" src="/images/illustrations/404.svg" className="lg:max-w-md" />
+                  <div className="text-center p-4 text-2xl font-bold dark:text-white">No campaigns found</div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -87,6 +87,7 @@ const ConversationPage: React.FC = function () {
         {!selectedConversation && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
+            <img alt="" src="/images/illustrations/404.svg" className="lg:max-w-md" />
               <h1 className="text-2xl font-bold dark:text-white">Select a conversation to start chatting</h1>
             </div>
           </div>

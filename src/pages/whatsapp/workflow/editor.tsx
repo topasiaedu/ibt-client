@@ -2,19 +2,19 @@ import React, { useCallback, useRef, useState } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
-  Background,
+  // Background,
   useNodesState,
   useEdgesState,
   addEdge,
-  BackgroundVariant,
+  // BackgroundVariant,
   ReactFlowProvider,
   ReactFlowInstance,
-  Node,
+  // Node,
 } from 'reactflow';
 
 import 'reactflow/dist/style.css';
 import NavbarSidebarLayout from '../../../layouts/navbar-sidebar';
-import CustomNode from './editor-components/custom-node';
+// import CustomNode from './editor-components/custom-node';
 import FlowSidebar from './editor-components/flow-sidebar';
 
 import './editor.css';
@@ -40,7 +40,7 @@ const FlowEditor = () => {
 
   const onConnect = useCallback(
     (params: any) => setEdges((eds) => addEdge(params, eds)),
-    [],
+    [setEdges],
   );
 
   const onDragOver = useCallback((event: any) => {
@@ -79,7 +79,7 @@ const FlowEditor = () => {
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [reactFlowInstance],
+    [reactFlowInstance, setNodes],
   );
 
 

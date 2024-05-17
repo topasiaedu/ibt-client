@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, PropsWithChildren, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Database } from '../../database.types';
-import { useWhatsAppBusinessAccountContext } from './WhatsAppBusinessAccountContext';
 import { useAlertContext } from './AlertContext';
 
 export type PhoneNumber = Database['public']['Tables']['phone_numbers']['Row'];

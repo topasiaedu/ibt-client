@@ -15,10 +15,9 @@ import AddContactModal from "./add-contact-modal";
 import EditContactModal from "./edit-contact-modal";
 import LoadingPage from "../pages/loading";
 import { useContactContext, Contacts } from "../../context/ContactContext";
-
+import { usePhoneNumberContext } from "../../context/PhoneNumberContext";
 const ContactListPage: FC = function () {
   const { contacts, loading } = useContactContext();
-
   const [searchValue, setSearchValue] = React.useState("");
 
   if (loading) {
@@ -87,11 +86,14 @@ const ContactListPage: FC = function () {
 };
 
 const ContactsTable: React.FC<Contacts> = function ({ contacts }) {
+  const { phoneNumbers } = usePhoneNumberContext();
+
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
       <Table.Head className="bg-gray-100 dark:bg-gray-700">
         <Table.HeadCell>Name</Table.HeadCell>
         <Table.HeadCell>Phone Number</Table.HeadCell>
+        <Table.HeadCell>Last Contacted By</Table.HeadCell>
         {/* <Table.HeadCell>Tags</Table.HeadCell> */}
         <Table.HeadCell>Actions</Table.HeadCell>
       </Table.Head>
@@ -100,6 +102,9 @@ const ContactsTable: React.FC<Contacts> = function ({ contacts }) {
           <Table.Row key={contact.contact_id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Table.Cell>{contact.name}</Table.Cell>
             <Table.Cell >{contact.wa_id}</Table.Cell>
+            <Table.Cell>
+              {contact.last_contacted_by ? phoneNumbers.find((phoneNumber) => phoneNumber.phone_number_id === contact.last_contacted_by)?.number : "Not contacted yet"}
+            </Table.Cell>
             {/* <Table.Cell>
               {getTags(contact.tags)}
             </Table.Cell> */}

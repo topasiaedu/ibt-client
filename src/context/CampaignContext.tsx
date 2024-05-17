@@ -3,7 +3,6 @@ import { supabase } from '../utils/supabaseClient';
 import { Database } from '../../database.types';
 import { useProjectContext } from './ProjectContext';
 import { useAlertContext } from './AlertContext';
-import { useMessagesContext } from './MessagesContext';
 
 export type Campaign = Database['public']['Tables']['campaigns']['Row'] & { read_count: number };
 export type Campaigns = { campaigns: Campaign[] };
@@ -24,18 +23,13 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
   const [loading, setLoading] = useState<boolean>(false);
   const { currentProject } = useProjectContext();
   const { showAlert } = useAlertContext();
-  const { fetchCampaignReadMessagesCount } = useMessagesContext();
 
   useEffect(() => {
     setLoading(true);
     const fetchCampaigns = async () => {
       if (!currentProject) return;
 
-      const { data: campaigns, error } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('project_id', currentProject.project_id)
-        .order('campaign_id', { ascending: false });
+      const { data: campaigns, error } = await supabase.rpc('fetch_campaigns', { project_id_param: currentProject.project_id });
 
       if (error) {
         console.error('Error fetching campaigns:', error);
@@ -43,14 +37,9 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
         return;
       }
 
-      // Fetch read_count for all campaigns
-      for (const campaign of campaigns!) {
-        const readCount = await fetchCampaignReadMessagesCount(campaign.campaign_id);
-        campaign.read_count = readCount;
-      }
-
-      setCampaigns(campaigns!);
+      setCampaigns(campaigns);
     };
+
 
     fetchCampaigns();
 

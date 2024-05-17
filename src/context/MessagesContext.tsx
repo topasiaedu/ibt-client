@@ -309,7 +309,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
       .select('message_id')
       .eq('project_id', currentProject?.project_id)
       .eq('campaign_id', campaignId)
-      .eq('status', 'READ');
+      .eq('status', 'read');
 
     if (error) {
       console.error('Error fetching campaign read messages count:', error);

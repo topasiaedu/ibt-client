@@ -114,7 +114,7 @@ const AddCampaignModal: React.FC = function () {
             }]
           });
         } else if (component.type === "BODY") {
-          const originalMessage = components.data.find((component: any) => component.type === "BODY").text;
+          // const originalMessage = components.data.find((component: any) => component.type === "BODY").text;
           const bodyInputValues = components.data.filter((component: any) => component.type === "BODY").map((component: any) => {
             return component.example.body_text[0].map((body_text: any, index: number) => {
               const DOM = document.getElementById(selectedTemplate.template_id.toString() + index + body_text) as HTMLInputElement;
