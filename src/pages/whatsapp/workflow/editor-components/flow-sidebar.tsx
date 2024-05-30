@@ -1,37 +1,50 @@
-import React, { DragEvent } from 'react';
-import { Sidebar, Card } from 'flowbite-react';
+import React, { DragEvent, useCallback } from 'react';
+import { Card } from 'flowbite-react';
 
 const FlowSidebar: React.FC = () => {
-  const onDragStart = (event: DragEvent<HTMLDivElement>, nodeType: string) => {
+  const onDragStart = useCallback((event: DragEvent<HTMLDivElement>, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
-  };
-  
+  }, []);
 
   return (
-    <Sidebar>
-      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'input')} draggable>
-        Input Node
-      </Card>
-      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'default')} draggable>
-        Default Node
-      </Card>
-      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'output')} draggable>
-        Output Node
-      </Card>
+    <div className="p-4">
+      <h1 className="text-lg font-bold mb-4">Triggers</h1>
+      {/* <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'contact-added-to-contact-list')} draggable>
+        Contact Added to Contact List
+      </Card> */}
 
-      {/* Triggers */}
-      {/* Webhook */}
-      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'counter')} draggable>
+      {/* <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'contact-tag-added')} draggable>
+        Contact Tag Added
+      </Card> */}
+
+      <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'webhook')} draggable>
         Webhook
       </Card>
-      {/* Contact Tag Added */}
-      <Card className="mb-2" onDragStart={(event) => onDragStart(event, 'contact-tag-added')} draggable>
-        Contact Tag Added
+
+      <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'keyword')} draggable>
+        Keyword
       </Card>
-      
-    </Sidebar>
+
+      <h1 className="text-lg font-bold mb-4">Actions</h1>
+      <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'send-template')} draggable>
+        Send Template
+      </Card>
+
+      <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'send-message')} draggable>
+        Send Message
+      </Card>
+
+      {/* <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'delay')} draggable>
+        Delay
+      </Card> */}
+
+      {/* Add to contact list */}
+      <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'add-to-contact-list')} draggable>
+        Add to Contact List
+      </Card>
+    </div>
   );
 };
 
-export default FlowSidebar;
+export default React.memo(FlowSidebar);

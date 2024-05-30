@@ -13,6 +13,7 @@ import { TbBrandCampaignmonitor } from "react-icons/tb";
 import { useSidebarContext } from "../context/SidebarContext";
 import isSmallScreen from "../helpers/is-small-screen";
 import ProjectDropdown from "./ProjectDropdown";
+import { GoWorkflow } from "react-icons/go";
 
 const ExampleSidebar: React.FC = function () {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
@@ -119,7 +120,7 @@ const ExampleSidebar: React.FC = function () {
                   </Sidebar.Item>
 
                   {/* Workflow */}
-                  {/* <Sidebar.Item
+                  <Sidebar.Item
                     href="/whatsapp/workflow"
                     icon={GoWorkflow}
                     className={
@@ -129,7 +130,7 @@ const ExampleSidebar: React.FC = function () {
                     }
                   >
                     Workflow
-                  </Sidebar.Item>                   */}
+                  </Sidebar.Item>                  
 
                 {/* </Sidebar.Collapse> */}
               </Sidebar.ItemGroup>

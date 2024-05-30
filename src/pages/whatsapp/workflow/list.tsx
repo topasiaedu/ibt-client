@@ -1,30 +1,32 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import {
   Breadcrumb,
+  Button,
   Label,
   Table,
   TextInput,
+  ToggleSwitch
 } from "flowbite-react";
 import React from "react";
 import {
   HiHome,
+  HiOutlinePencilAlt,
+  HiPlus,
 } from "react-icons/hi";
+import { useAlertContext } from "../../../context/AlertContext";
+import { Workflows, useWorkflowContext } from "../../../context/WorkflowContext";
 import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
-import { useTemplateContext, Templates } from "../../../context/TemplateContext";
-import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusinessAccountContext";
-import { useProjectContext } from "../../../context/ProjectContext";
 import LoadingPage from "../../pages/loading";
 
 const WorkflowListPage: React.FC = function () {
-  const { templates,  loading } = useTemplateContext();
   const [searchValue, setSearchValue] = React.useState("");
-  const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
-  const { currentProject } = useProjectContext();
-  const projectWabaIds = whatsAppBusinessAccounts.filter((waba) => waba.project_id === currentProject?.project_id).map((waba) => waba.account_id);
+  // const projectWabaIds = workflows.filter((waba) => waba.project_id === currentProject?.project_id).map((waba) => waba.account_id);
+  const { workflows, loading } = useWorkflowContext();
 
-  const resultingTemplates: Templates = {
-    templates: templates.filter((template) =>
-      template.name.toLowerCase().includes(searchValue.toLowerCase()) && projectWabaIds.includes(template.account_id ?? 0)
+  const resultingTemplates: Workflows = {
+    workflows: workflows.filter((workflow) =>
+      workflow.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+      (workflow.description && workflow.description.toLowerCase().includes(searchValue.toLowerCase()))
     ),
   };
 
@@ -45,10 +47,10 @@ const WorkflowListPage: React.FC = function () {
                 </div>
               </Breadcrumb.Item>
               <Breadcrumb.Item href="#">WhatsApp</Breadcrumb.Item>
-              <Breadcrumb.Item>All Template</Breadcrumb.Item>
+              <Breadcrumb.Item>All Workflow</Breadcrumb.Item>
             </Breadcrumb>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
-              All Templates
+              All Workflows
             </h1>
           </div>
           <div className="sm:flex">
@@ -70,7 +72,13 @@ const WorkflowListPage: React.FC = function () {
 
             </div>
             <div className="ml-auto flex items-center space-x-2 sm:space-x-3">
-              {/* <AddTemplateModal /> */}
+              {/* Redirect to editor */}
+              <Button color="primary" onClick={() => window.location.href = "/whatsapp/workflow/editor"}>
+                <div className="flex items-center gap-x-3">
+                  <HiPlus className="text-xl" />
+                  Add Workflow
+                </div>
+              </Button>
             </div>
           </div>
         </div>
@@ -79,7 +87,7 @@ const WorkflowListPage: React.FC = function () {
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-hidden shadow">
-              <TemplatesTable templates={resultingTemplates.templates} />
+              <TemplatesTable workflows={resultingTemplates.workflows} />
             </div>
           </div>
         </div>
@@ -89,27 +97,53 @@ const WorkflowListPage: React.FC = function () {
   );
 };
 
-const TemplatesTable: React.FC<Templates> = function ({ templates }) {
-  const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
+const TemplatesTable: React.FC<Workflows> = function ({ workflows }) {
+  const { updateWorkflow } = useWorkflowContext();
+  const { showAlert } = useAlertContext();
+
+  const updateRunStatus = async (workflowId: string, run: boolean) => {
+    try {
+      const workflow = workflows.find((workflow) => workflow.id === workflowId);
+      if (!workflow) return;
+      console.log("====================================")
+      console.log("workflow", workflow)
+      console.log("run", run)
+      await updateWorkflow({ ...workflow, run }, workflow.phone_numbers);
+      showAlert("Workflow updated successfully", "success");
+    } catch (error) {
+      showAlert((error as unknown as Error).message, "error");
+    }
+  };
+
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
       <Table.Head className="bg-gray-100 dark:bg-gray-700">
         <Table.HeadCell>Name</Table.HeadCell>
-        <Table.HeadCell>WABA</Table.HeadCell>
-        <Table.HeadCell>Category</Table.HeadCell>
+        <Table.HeadCell>Description</Table.HeadCell>
         <Table.HeadCell>Status</Table.HeadCell>
+        <Table.HeadCell>Action</Table.HeadCell>
       </Table.Head>
       <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-        {templates.map((template) => (
-          <Table.Row key={template.template_id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Table.Cell>{template.name}</Table.Cell>
-            <Table.Cell>{whatsAppBusinessAccounts.find((waba) => waba.account_id === template.account_id)?.name}</Table.Cell>
-            <Table.Cell>{template.category}</Table.Cell>
+        {workflows.map((workflow) => (
+          <Table.Row key={workflow.id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+            <Table.Cell>{workflow.name}</Table.Cell>
+            <Table.Cell>{workflow.description}</Table.Cell>
             <Table.Cell>
               <div className="flex items-center">
-                {getStatusIndicator(template.status)}
-                {template.status}
+                <ToggleSwitch
+                  checked={workflow.run}
+                  onChange={(e) => {
+                    updateRunStatus(workflow.id, e);
+                  }}
+                />
               </div>
+            </Table.Cell>
+            <Table.Cell>
+              {/* Redirect them to editor with id at the end */}
+              <Button color="primary" onClick={() => window.location.href = `/whatsapp/workflow/editor/${workflow.id}`}>
+                <HiOutlinePencilAlt className="text-sm" />
+                Edit
+              </Button>
             </Table.Cell>
           </Table.Row>
         ))}
@@ -118,22 +152,6 @@ const TemplatesTable: React.FC<Templates> = function ({ templates }) {
   );
 };
 
-const getStatusIndicator = (status: string) => {
-  // Pending, Approved, Draft, Rejected
-  // Eg. <div className="mr-2 h-2.5 w-2.5 rounded-full bg-green-400" />
-  switch (status) {
-    case 'PENDING':
-      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-yellow-400" />;
-    case 'APPROVED':
-      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-green-400" />;
-    case 'DRAFT':
-      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-blue-400" />;
-    case 'REJECTED':
-      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-red-400" />;
-    default:
-      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-gray-400" />;
-  }
-};
 
 
 export default WorkflowListPage;

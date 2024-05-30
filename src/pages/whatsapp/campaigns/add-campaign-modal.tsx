@@ -85,7 +85,7 @@ const AddCampaignModal: React.FC = function () {
       if (component.example) {
         if (component.type === "HEADER" && component.format === "TEXT") {
           const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
-    
+
           template_payload.components.push({
             "type": component.type,
             "parameters": [{
@@ -98,13 +98,13 @@ const AddCampaignModal: React.FC = function () {
         } else if (component.type === "HEADER" && (component.format === "VIDEO" || component.format === "IMAGE")) {
           const randomFileName = Math.random().toString(36).substring(7);
           const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
-    
+
           if (error) {
             showAlert("Error uploading file", "error");
             console.error("Error uploading file: ", error);
             return;
           }
-    
+
           template_payload.components.push({
             "type": component.type,
             "parameters": [{
@@ -126,7 +126,7 @@ const AddCampaignModal: React.FC = function () {
               }
             })
           }).flat();
-    
+
           // const replacedMessage = originalMessage.replace(/{{\d}}/g, (match: any) => {
           //   const index = parseInt(match.replace("{{", "").replace("}}", ""));
           //   return bodyInputValues[index - 1];
@@ -138,7 +138,7 @@ const AddCampaignModal: React.FC = function () {
               "text": body_text
             }
           });
-    
+
           template_payload.components.push({
             "type": component.type,
             "parameters": parameters
@@ -212,28 +212,28 @@ const AddCampaignModal: React.FC = function () {
                 <Label htmlFor="waba">Select WhatsApp Business Account & Phone Number</Label>
                 <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-2">
                   {/* Create Cards that the user can click on to select which phone number to use and use selected wabaPhoneNumber to manage */}
-                    {wabaPhoneNumber
+                  {wabaPhoneNumber
                     // Remove those with UNKNOWN quality_rating
                     .filter((item: any) => item && item.quality_rating !== "UNKNOWN")
                     .map((item: any, index: number) => (
-                    <Card key={index} onClick={() => {
-                      // Use the id of the item to check if it is already in the selectedWabaPhoneNumber
-                      const exists = selectedWabaPhoneNumber.find((selectedItem: any) => selectedItem.id === item.id);
-                      if (exists) {
-                        // Remove the item from the selectedWabaPhoneNumber
-                        setSelectedWabaPhoneNumber(selectedWabaPhoneNumber.filter((selectedItem: any) => selectedItem.id !== item.id));
-                      } else {
-                        // Add the item to the selectedWabaPhoneNumber
-                        setSelectedWabaPhoneNumber([...selectedWabaPhoneNumber, item]);
-                      }
-                    }} className={`cursor-pointer ${selectedWabaPhoneNumber.find((selectedItem: any) => selectedItem.id === item.id) ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white" : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"}`}>
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col">
-                          <span className={`text-sm font-semibold ${selectedWabaPhoneNumber.find((selectedItem: any) => selectedItem.id === item.id) ? "text-white" : "text-gray-900 dark:text-white"}`}>{item.name}</span>
+                      <Card key={index} onClick={() => {
+                        // Use the id of the item to check if it is already in the selectedWabaPhoneNumber
+                        const exists = selectedWabaPhoneNumber.find((selectedItem: any) => selectedItem.id === item.id);
+                        if (exists) {
+                          // Remove the item from the selectedWabaPhoneNumber
+                          setSelectedWabaPhoneNumber(selectedWabaPhoneNumber.filter((selectedItem: any) => selectedItem.id !== item.id));
+                        } else {
+                          // Add the item to the selectedWabaPhoneNumber
+                          setSelectedWabaPhoneNumber([...selectedWabaPhoneNumber, item]);
+                        }
+                      }} className={`cursor-pointer ${selectedWabaPhoneNumber.find((selectedItem: any) => selectedItem.id === item.id) ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white" : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col">
+                            <span className={`text-sm font-semibold ${selectedWabaPhoneNumber.find((selectedItem: any) => selectedItem.id === item.id) ? "text-white" : "text-gray-900 dark:text-white"}`}>{item.name}</span>
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    ))}
                 </div>
                 {/* Write a small tip saying that if multiple whatsapp business account is selected then they need to ensure that all waba has the template with the same name */}
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Tip: If multiple WhatsApp Business Account is selected, ensure that all WhatsApp Business Account has the template with the same name</p>
