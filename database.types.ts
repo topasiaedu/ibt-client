@@ -15,6 +15,7 @@ export type Database = {
           details: Json | null
           execution_order: number
           id: string
+          project_id: number
           type: string
           updated_at: string
           workflow_id: string
@@ -23,7 +24,8 @@ export type Database = {
           created_at?: string
           details?: Json | null
           execution_order: number
-          id?: string
+          id: string
+          project_id: number
           type: string
           updated_at?: string
           workflow_id: string
@@ -33,11 +35,19 @@ export type Database = {
           details?: Json | null
           execution_order?: number
           id?: string
+          project_id?: number
           type?: string
           updated_at?: string
           workflow_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "actions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["project_id"]
+          },
           {
             foreignKeyName: "actions_workflow_id_fkey"
             columns: ["workflow_id"]
@@ -621,27 +631,37 @@ export type Database = {
           created_at: string | null
           details: Json | null
           id: string
+          project_id: number | null
           type: string
           updated_at: string | null
-          workflow_id: string | null
+          workflow_id: string
         }
         Insert: {
           created_at?: string | null
           details?: Json | null
-          id?: string
+          id: string
+          project_id?: number | null
           type: string
           updated_at?: string | null
-          workflow_id?: string | null
+          workflow_id: string
         }
         Update: {
           created_at?: string | null
           details?: Json | null
           id?: string
+          project_id?: number | null
           type?: string
           updated_at?: string | null
-          workflow_id?: string | null
+          workflow_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "triggers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["project_id"]
+          },
           {
             foreignKeyName: "triggers_workflow_id_fkey"
             columns: ["workflow_id"]
@@ -768,6 +788,7 @@ export type Database = {
       }
       workflows: {
         Row: {
+          canvas_state: Json | null
           created_at: string
           description: string | null
           id: string
@@ -777,6 +798,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          canvas_state?: Json | null
           created_at?: string
           description?: string | null
           id?: string
@@ -786,6 +808,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          canvas_state?: Json | null
           created_at?: string
           description?: string | null
           id?: string

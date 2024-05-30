@@ -1,29 +1,43 @@
-import React from 'react';
+import debounce from 'lodash.debounce';
+import React, { useCallback, useEffect } from 'react';
 import { Handle, NodeProps, Position } from 'reactflow';
 import { useTemplateContext } from '../../../../context/TemplateContext';
 import { Label, Select, Datepicker, TextInput, Button } from 'flowbite-react';
-
+import { useFlowContext } from '../../../../context/FlowContext';
 
 export type SendTemplateData = {
   templateId?: string;
   timePostType?: string;
+  postTime?: string;
+  postDate?: Date;
 };
 
 export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
   const [postTime, setPostTime] = React.useState('09:00');
   const [postDate, setPostDate] = React.useState(new Date());
-  const [templateId , setTemplateId] = React.useState(props.data?.templateId ?? '');
+  const [templateId, setTemplateId] = React.useState(props.data?.templateId ?? '');
   const [timePostType, setTimePostType] = React.useState(props.data?.timePostType ?? 'immediately');
   const { templates } = useTemplateContext();
+  const { removeNode,updateNodeData } = useFlowContext();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedUpdateNodeData = useCallback(
+    debounce((id, data) => updateNodeData(id, data), 500),
+    []
+  );
+
+  useEffect(() => {
+    debouncedUpdateNodeData(props.id, { templateId, timePostType, postTime, postDate });
+  }, [templateId, timePostType, postTime, postDate, debouncedUpdateNodeData, props.id]);
 
   return (
-    <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg w-sm">
+    <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg max-w-sm flex flex-col gap-2">
       <h1 className="text-lg font-semibold">Send Template Node</h1>
       <Label className='mt-4'>Template</Label>
       <Select
         className='mt-2'
         value={templateId}
-        onChange={(e) => console.log(e.target.value)}
+        onChange={(e) => setTemplateId(e.target.value)}
       >
         {templates.map((template, index) => (
           <option key={index} value={template.template_id}>{template.name}</option>
@@ -51,7 +65,8 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
             <Datepicker
               id="postTime"
               name="postTime"
-              onSelectedDateChanged={(e) => console.log(e)}
+              value={postDate.toISOString().split('T')[0]}
+              onSelectedDateChanged={(e) => { setPostDate(e); }}
             />
           </div>
           <div className="mb-4">
@@ -67,7 +82,7 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
             </div>
           </div>
         </>
-      )      }
+      )}
 
       {timePostType === 'minutes_after' && (
         <div className="mb-4">
@@ -81,9 +96,9 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
           />
         </div>
       )}
-      <Button className="mt-4">Save</Button>
-      <Handle type="target" position={Position.Top} />
-      <Handle type="source" position={Position.Bottom} />
+      <Button className="w-full" color={'red'} onClick={() => { removeNode(props.id) }}>Delete</Button>
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Right} />
     </div>
   );
 }

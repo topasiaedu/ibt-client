@@ -81,7 +81,8 @@ export function ContactListProvider({ children }: { children: React.ReactNode })
       subscription.unsubscribe();
     };
 
-  }, [contactLists, currentProject]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProject]);
 
   const addContactList = async (contactList: ContactList) => {
     const { error } = await supabase

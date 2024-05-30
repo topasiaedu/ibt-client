@@ -1,14 +1,21 @@
 import React, { DragEvent, useCallback } from 'react';
-import { Card } from 'flowbite-react';
+import { Button, Card } from 'flowbite-react';
+import { useFlowContext } from '../../../../context/FlowContext';
 
 const FlowSidebar: React.FC = () => {
   const onDragStart = useCallback((event: DragEvent<HTMLDivElement>, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
   }, []);
+  const {saveWorkflow} = useFlowContext();
 
   return (
     <div className="p-4">
+
+      <Button color="primary" className="w-full mb-4" onClick={saveWorkflow}>
+        Save Workflow & Close
+      </Button>
+
       <h1 className="text-lg font-bold mb-4">Triggers</h1>
       {/* <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'contact-added-to-contact-list')} draggable>
         Contact Added to Contact List

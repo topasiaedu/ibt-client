@@ -1,36 +1,56 @@
-import React from 'react';
+import { Button, Datepicker, Label, Select, TextInput, Textarea } from 'flowbite-react';
+import debounce from 'lodash.debounce';
+import React, { useCallback, useEffect } from 'react';
 import { Handle, NodeProps, Position } from 'reactflow';
-import { Label, Select, Datepicker, TextInput, Button, Textarea } from 'flowbite-react';
+import { useFlowContext } from '../../../../context/FlowContext';
 
 export type SendMessageData = {
   message?: string;
+  postTime?: string;
+  timePostType?: string;
+  postDate?: Date;
 };
 
 export default function SendMessageNode(props: NodeProps<SendMessageData>) {
   const [message, setMessage] = React.useState(props.data?.message ?? '');
-  const [postTime, setPostTime] = React.useState('09:00');
-  const [timePostType, setTimePostType] = React.useState('immediately');
-  const [postDate, setPostDate] = React.useState(new Date());
+  const [postTime, setPostTime] = React.useState(props.data?.postTime ?? '09:00');
+  const [timePostType, setTimePostType] = React.useState(props.data?.timePostType ?? 'immediately');
+  const [postDate, setPostDate] = React.useState(props.data?.postDate ?? new Date());
+  const { removeNode, updateNodeData } = useFlowContext();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedUpdateNodeData = useCallback(
+    debounce((id, data) => updateNodeData(id, data), 500),
+    []
+  );
+
+  useEffect(() => {
+    debouncedUpdateNodeData(props.id, { message, postTime, timePostType, postDate });
+  }, [message, postTime, timePostType, postDate, debouncedUpdateNodeData, props.id]);
 
   return (
-    <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg">
+    <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg max-w-sm flex flex-col gap-2">
       <h1 className="text-lg font-semibold">Send Message Node</h1>
-      <Label className='mt-4'>Message</Label>
-      <Textarea value={message} onChange={(e) => setMessage(e.target.value)} />
-
-      <Label className='mt-4'>Time to send</Label>
-      <Select
-        className='mt-2'
-        value={timePostType}
-        onChange={(e) => setTimePostType(e.target.value)}
-      >
-        <option value="immediately">Immediately</option> {/* Default value */}
-        {/* Specific Date Time */}
-        <option value="specific_date_time">Specific Date Time</option>
-        {/* X minutes after the previous node */}
-        <option value="minutes_after">X minutes after the previous node</option>
-        {/* X hours after the previous node */}
-      </Select>
+      <div>
+        <Label className='mt-4'>Message</Label>
+        <Textarea
+          value={message} onChange={(e) => setMessage(e.target.value)} />
+      </div>
+      <div>
+        <Label className='mt-4'>Time to send</Label>
+        <Select
+          className='mt-2'
+          value={timePostType}
+          onChange={(e) => setTimePostType(e.target.value)}
+        >
+          <option value="immediately">Immediately</option> {/* Default value */}
+          {/* Specific Date Time */}
+          <option value="specific_date_time">Specific Date Time</option>
+          {/* X minutes after the previous node */}
+          <option value="minutes_after">X minutes after the previous node</option>
+          {/* X hours after the previous node */}
+        </Select>
+      </div>
 
       {timePostType === 'specific_date_time' && (
         <>
@@ -39,7 +59,8 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
             <Datepicker
               id="postTime"
               name="postTime"
-              onSelectedDateChanged={(e) => console.log(e)}
+              value={postDate.toISOString().split('T')[0]}
+              onSelectedDateChanged={(e) => { setPostDate(e); }}
             />
           </div>
           <div className="mb-4">
@@ -69,11 +90,9 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
           />
         </div>
       )}
-      <Button className="mt-4">Save</Button>
-
-      <Handle type="target" position={Position.Top} />
-
-      <Handle type="source" position={Position.Bottom} />
+      <Button className="w-full" color={'red'} onClick={() => { removeNode(props.id) }}>Delete</Button>
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Right} />
     </div>
   );
 }
