@@ -32,112 +32,112 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
   console.log("template_payload: ", props.data?.templatePayload)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdateNodeData = useCallback(debounce((id, data) => { updateNodeData(id, data); }, 500), []);
+  const generateTemplatePayload = async (selectedTemplate: Template) => {
+    let template_payload = {
+      "name": selectedTemplate?.name,
+      "language": {
+        "code": selectedTemplate?.language
+      },
+      "components": []
+    } as any;
 
-  useEffect(() => {
-    const generateTemplatePayload = async (selectedTemplate: Template) => {
-      let template_payload = {
-        "name": selectedTemplate?.name,
-        "language": {
-          "code": selectedTemplate?.language
-        },
-        "components": []
-      } as any;
-  
-      if (!selectedTemplate) { showAlert("Please select a template", "error"); return; }
-      if (!selectedTemplate?.components) { showAlert("Template has no components", "error"); return; }
-  
-      const components = selectedTemplate?.components as any
-  
-      for (const [index, component] of components.data.entries()) {
-        if (component.example) {
-          if (component.type === "HEADER" && component.format === "TEXT") {
-            const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
-  
-            template_payload.components.push({
-              "type": component.type,
-              "parameters": [{
-                type: "image",
-                "image": {
-                  "link": componentValue
-                }
-              }]
-            });
-          } else if (component.type === "HEADER" && (component.format === "VIDEO" || component.format === "IMAGE")) {
-            const randomFileName = Math.random().toString(36).substring(7);
-            const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
-  
-            if (error) {
-              showAlert("Error uploading file", "error");
-              console.error("Error uploading file: ", error);
-              return;
-            }
-  
-            template_payload.components.push({
-              "type": component.type,
-              "parameters": [{
-                type: component.format.toLowerCase(),
-                [component.format.toLowerCase()]: {
-                  "link": `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`
-                }
-              }]
-            });
-          } else if (component.type === "BODY") {
-            // const originalMessage = components.data.find((component: any) => component.type === "BODY").text;
-            const bodyInputValues = components.data.filter((component: any) => component.type === "BODY").map((component: any) => {
-              return component.example.body_text[0].map((body_text: any, index: number) => {
-                const DOM = document.getElementById(selectedTemplate.template_id.toString() + index + body_text) as HTMLInputElement;
-                if (DOM) {
-                  return DOM.value;
-                } else {
-                  return body_text;
-                }
-              })
-            }).flat();
-  
-            // const replacedMessage = originalMessage.replace(/{{\d}}/g, (match: any) => {
-            //   const index = parseInt(match.replace("{{", "").replace("}}", ""));
-            //   return bodyInputValues[index - 1];
-            // });
-  
-            const parameters = bodyInputValues.map((body_text: any) => {
-              return {
-                "type": "text",
-                "text": body_text
+    if (!selectedTemplate) { showAlert("Please select a template", "error"); return; }
+    if (!selectedTemplate?.components) { showAlert("Template has no components", "error"); return; }
+
+    const components = selectedTemplate?.components as any
+
+    for (const [index, component] of components.data.entries()) {
+      if (component.example) {
+        if (component.type === "HEADER" && component.format === "TEXT") {
+          const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
+
+          template_payload.components.push({
+            "type": component.type,
+            "parameters": [{
+              type: "image",
+              "image": {
+                "link": componentValue
               }
-            });
-  
-            template_payload.components.push({
-              "type": component.type,
-              "parameters": parameters
-            });
+            }]
+          });
+        } else if (component.type === "HEADER" && (component.format === "VIDEO" || component.format === "IMAGE")) {
+          const randomFileName = Math.random().toString(36).substring(7);
+          const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
+
+          if (error) {
+            showAlert("Error uploading file", "error");
+            console.error("Error uploading file: ", error);
+            return;
           }
+
+          template_payload.components.push({
+            "type": component.type,
+            "parameters": [{
+              type: component.format.toLowerCase(),
+              [component.format.toLowerCase()]: {
+                "link": `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`
+              }
+            }]
+          });
+        } else if (component.type === "BODY") {
+          // const originalMessage = components.data.find((component: any) => component.type === "BODY").text;
+          const bodyInputValues = components.data.filter((component: any) => component.type === "BODY").map((component: any) => {
+            return component.example.body_text[0].map((body_text: any, index: number) => {
+              const DOM = document.getElementById(selectedTemplate.template_id.toString() + index + body_text) as HTMLInputElement;
+              if (DOM) {
+                return DOM.value;
+              } else {
+                return body_text;
+              }
+            })
+          }).flat();
+
+          // const replacedMessage = originalMessage.replace(/{{\d}}/g, (match: any) => {
+          //   const index = parseInt(match.replace("{{", "").replace("}}", ""));
+          //   return bodyInputValues[index - 1];
+          // });
+
+          const parameters = bodyInputValues.map((body_text: any) => {
+            return {
+              "type": "text",
+              "text": body_text
+            }
+          });
+
+          template_payload.components.push({
+            "type": component.type,
+            "parameters": parameters
+          });
         }
       }
-      console.log("template_payload11: ", template_payload);
-      return template_payload;
     }
-    
-    const updateTemplatePayload = async () => {
-      if (selectedTemplate) {
-        const template_payload = await generateTemplatePayload(selectedTemplate);
-        console.log("template_payload: ", template_payload);
-        debouncedUpdateNodeData(props.id, {
-          timePostType,
-          postTime,
-          postDate,
-          selectedTemplate,
-          minutesInput,
-          templatePayload: template_payload,
-        });
-      }
-    };
-    
+    console.log("template_payload11: ", template_payload);
+    return template_payload;
+  }
+
+  const updateTemplatePayload = async () => {
+    if (selectedTemplate) {
+      const template_payload = await generateTemplatePayload(selectedTemplate);
+      console.log("template_payload: ", template_payload);
+      debouncedUpdateNodeData(props.id, {
+        timePostType,
+        postTime,
+        postDate,
+        selectedTemplate,
+        minutesInput,
+        templatePayload: template_payload,
+      });
+    }
+  };
+
+  useEffect(() => {
+
     updateTemplatePayload();
 
   }, [timePostType, postTime, postDate, debouncedUpdateNodeData, props.id, selectedTemplate, minutesInput, file, showAlert]);
 
 
-  
+
   return (
     <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg max-w-sm flex flex-col gap-2">
       <h1 className="text-lg font-semibold">Send Template Node</h1>
@@ -155,7 +155,7 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
             </option>
           ))}
       </Select>
-      {selectedTemplate && selectedTemplate.components && generateTemplateExampleFields(selectedTemplate, selectedTemplate.components, setFile)}
+      {selectedTemplate && selectedTemplate.components && generateTemplateExampleFields(selectedTemplate, selectedTemplate.components, setFile, updateTemplatePayload)}
 
       <Label className='mt-4'>Time to send</Label>
       <Select
@@ -217,7 +217,7 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
 }
 
 
-function generateTemplateExampleFields(selectedTemplate: Template, components: any, setFile: any) {
+function generateTemplateExampleFields(selectedTemplate: Template, components: any, setFile: any, updateTemplatePayload: any) {
   return components.data.map((component: any, index: number) => {
     if (component?.example) {
       switch (component.type) {
@@ -232,6 +232,7 @@ function generateTemplateExampleFields(selectedTemplate: Template, components: a
                       id={selectedTemplate.template_id.toString() + index + body_text}
                       name={selectedTemplate.template_id.toString() + index + body_text}
                       placeholder={body_text}
+                      onChange={updateTemplatePayload}
                     />
                   </div>
                 )

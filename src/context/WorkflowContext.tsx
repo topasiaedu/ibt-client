@@ -66,6 +66,7 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
           phone_numbers: workflow_phone_numbers(*, phone_number_id(*))
         `)
         .eq('project_id', currentProject?.project_id)
+        .order('created_at', { ascending: false });
 
       if (error) { showAlert(error.message, 'error'); console.error(error); return; }
       console.log(workflows);
