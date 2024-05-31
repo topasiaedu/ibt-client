@@ -105,10 +105,12 @@ const TemplatesTable: React.FC<Workflows> = function ({ workflows }) {
     try {
       const workflow = workflows.find((workflow) => workflow.id === workflowId);
       if (!workflow) return;
-      console.log("====================================")
-      console.log("workflow", workflow)
-      console.log("run", run)
-      await updateWorkflow({ ...workflow, run }, workflow.phone_numbers);
+      await updateWorkflow({ 
+        id: workflow.id,
+        name: workflow.name,
+        description: workflow.description,
+        run: run,
+       }, workflow.phone_numbers);
       showAlert("Workflow updated successfully", "success");
     } catch (error) {
       showAlert((error as unknown as Error).message, "error");

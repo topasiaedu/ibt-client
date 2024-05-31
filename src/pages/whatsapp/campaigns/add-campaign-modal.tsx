@@ -66,7 +66,22 @@ const AddCampaignModal: React.FC = function () {
       showAlert("Please fill in all the fields", "error");
       return;
     }
-    const combinedDateTime = postDate.toISOString().split("T")[0] + " " + postTime;
+
+    // Assuming postDate is a Date object and postTime is a string in "HH:mm" format
+    const combinedDateTimeString = postDate.toISOString().split("T")[0] + "T" + postTime + ":00";
+
+    // Create a new Date object from the combined date-time string
+    const combinedDateTime = new Date(combinedDateTimeString);
+
+    // Convert the date-time to the Asia/Kuala_Lumpur timezone offset
+    const kualaLumpurOffset = 8 * 60; // +08:00 in minutes
+    const localOffset = combinedDateTime.getTimezoneOffset(); // Current local timezone offset in minutes
+
+    // Adjust the combined date-time to Asia/Kuala_Lumpur time
+    const kualaLumpurDateTime = new Date(combinedDateTime.getTime() + (kualaLumpurOffset - localOffset) * 60000);
+
+    // Format the adjusted date-time to the desired format
+    const formattedDateTime = kualaLumpurDateTime.toISOString().replace('T', ' ').substring(0, 19);
 
     let template_payload = {
       "name": selectedTemplate?.name,
@@ -151,7 +166,7 @@ const AddCampaignModal: React.FC = function () {
       name: campaignName,
       template_id: selectedTemplate?.template_id || 0,
       contact_list_id: selectedContactList?.contact_list_id || 0,
-      post_time: combinedDateTime,
+      post_time: formattedDateTime,
       template_payload: template_payload,
       status: "PENDING",
       phone_number_id: selectedWabaPhoneNumber[0].phone_number_id,
