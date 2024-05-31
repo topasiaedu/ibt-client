@@ -6,7 +6,6 @@ import { useFlowContext } from '../../../../context/FlowContext';
 
 export type AddToContactListData = {
   listId?: string;
-  contactId?: string;
 };
 
 export default function AddToContactListNode(props: NodeProps<AddToContactListData>) {

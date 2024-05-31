@@ -1,48 +1,161 @@
 import debounce from 'lodash.debounce';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Handle, NodeProps, Position } from 'reactflow';
-import { useTemplateContext } from '../../../../context/TemplateContext';
-import { Label, Select, Datepicker, TextInput, Button } from 'flowbite-react';
+import { Template, useTemplateContext } from '../../../../context/TemplateContext';
+import { Label, Select, Datepicker, TextInput, Button, FileInput } from 'flowbite-react';
 import { useFlowContext } from '../../../../context/FlowContext';
+import { supabase } from '../../../../utils/supabaseClient';
+import { useAlertContext } from '../../../../context/AlertContext';
 
 export type SendTemplateData = {
-  templateId?: string;
+  selectedTemplate?: Template | null;
+  templatePayload?: string;
   timePostType?: string;
   postTime?: string;
   postDate?: Date;
+  minutesInput?: number;
+  mediaUrl?: string;
 };
 
 export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
-  const [postTime, setPostTime] = React.useState('09:00');
-  const [postDate, setPostDate] = React.useState(new Date());
-  const [templateId, setTemplateId] = React.useState(props.data?.templateId ?? '');
   const [timePostType, setTimePostType] = React.useState(props.data?.timePostType ?? 'immediately');
+  const { removeNode, updateNodeData } = useFlowContext();
   const { templates } = useTemplateContext();
-  const { removeNode,updateNodeData } = useFlowContext();
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(props.data?.selectedTemplate ?? null);
+  const [postDate, setPostDate] = useState<Date>(new Date());
+  const [postTime, setPostTime] = useState<string>("");
+  const { showAlert } = useAlertContext();
+  const [file, setFile] = useState<File | null>(null);
+  const [minutesInput, setMinutesInput] = useState<number>(0);
+  const [mediaUrl, setMediaUrl] = useState<string>(props.data?.mediaUrl ?? "");
 
+  console.log("template_payload: ", props.data?.templatePayload)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedUpdateNodeData = useCallback(
-    debounce((id, data) => updateNodeData(id, data), 500),
-    []
-  );
+  const debouncedUpdateNodeData = useCallback(debounce((id, data) => { updateNodeData(id, data); }, 500), []);
 
   useEffect(() => {
-    debouncedUpdateNodeData(props.id, { templateId, timePostType, postTime, postDate });
-  }, [templateId, timePostType, postTime, postDate, debouncedUpdateNodeData, props.id]);
+    const generateTemplatePayload = async (selectedTemplate: Template) => {
+      let template_payload = {
+        "name": selectedTemplate?.name,
+        "language": {
+          "code": selectedTemplate?.language
+        },
+        "components": []
+      } as any;
+  
+      if (!selectedTemplate) { showAlert("Please select a template", "error"); return; }
+      if (!selectedTemplate?.components) { showAlert("Template has no components", "error"); return; }
+  
+      const components = selectedTemplate?.components as any
+  
+      for (const [index, component] of components.data.entries()) {
+        if (component.example) {
+          if (component.type === "HEADER" && component.format === "TEXT") {
+            const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
+  
+            template_payload.components.push({
+              "type": component.type,
+              "parameters": [{
+                type: "image",
+                "image": {
+                  "link": componentValue
+                }
+              }]
+            });
+          } else if (component.type === "HEADER" && (component.format === "VIDEO" || component.format === "IMAGE")) {
+            const randomFileName = Math.random().toString(36).substring(7);
+            const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
+  
+            if (error) {
+              showAlert("Error uploading file", "error");
+              console.error("Error uploading file: ", error);
+              return;
+            }
+  
+            template_payload.components.push({
+              "type": component.type,
+              "parameters": [{
+                type: component.format.toLowerCase(),
+                [component.format.toLowerCase()]: {
+                  "link": `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`
+                }
+              }]
+            });
+          } else if (component.type === "BODY") {
+            // const originalMessage = components.data.find((component: any) => component.type === "BODY").text;
+            const bodyInputValues = components.data.filter((component: any) => component.type === "BODY").map((component: any) => {
+              return component.example.body_text[0].map((body_text: any, index: number) => {
+                const DOM = document.getElementById(selectedTemplate.template_id.toString() + index + body_text) as HTMLInputElement;
+                if (DOM) {
+                  return DOM.value;
+                } else {
+                  return body_text;
+                }
+              })
+            }).flat();
+  
+            // const replacedMessage = originalMessage.replace(/{{\d}}/g, (match: any) => {
+            //   const index = parseInt(match.replace("{{", "").replace("}}", ""));
+            //   return bodyInputValues[index - 1];
+            // });
+  
+            const parameters = bodyInputValues.map((body_text: any) => {
+              return {
+                "type": "text",
+                "text": body_text
+              }
+            });
+  
+            template_payload.components.push({
+              "type": component.type,
+              "parameters": parameters
+            });
+          }
+        }
+      }
+      console.log("template_payload11: ", template_payload);
+      return template_payload;
+    }
+    
+    const updateTemplatePayload = async () => {
+      if (selectedTemplate) {
+        const template_payload = await generateTemplatePayload(selectedTemplate);
+        console.log("template_payload: ", template_payload);
+        debouncedUpdateNodeData(props.id, {
+          timePostType,
+          postTime,
+          postDate,
+          selectedTemplate,
+          minutesInput,
+          templatePayload: template_payload,
+        });
+      }
+    };
+    
+    updateTemplatePayload();
 
+  }, [timePostType, postTime, postDate, debouncedUpdateNodeData, props.id, selectedTemplate, minutesInput, file, showAlert]);
+
+
+  
   return (
     <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg max-w-sm flex flex-col gap-2">
       <h1 className="text-lg font-semibold">Send Template Node</h1>
       <Label className='mt-4'>Template</Label>
       <Select
         className='mt-2'
-        value={templateId}
-        onChange={(e) => setTemplateId(e.target.value)}
+        value={selectedTemplate?.template_id ?? ""}
+        onChange={(e) => setSelectedTemplate(templates.find((template) => template.template_id === parseInt(e.target.value)) || null)}
       >
-        {templates.map((template, index) => (
-          <option key={index} value={template.template_id}>{template.name}</option>
-        ))}
+        {templates
+          .filter(template => template.status === "APPROVED")
+          .map((template) => (
+            <option key={template.template_id} value={template.template_id}>
+              {template.name}
+            </option>
+          ))}
       </Select>
+      {selectedTemplate && selectedTemplate.components && generateTemplateExampleFields(selectedTemplate, selectedTemplate.components, setFile)}
 
       <Label className='mt-4'>Time to send</Label>
       <Select
@@ -91,8 +204,8 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
             id="minutes"
             name="minutes"
             type="number"
-            value={timePostType}
-            onChange={(e) => console.log(e.target.value)}
+            value={minutesInput}
+            onChange={(e) => setMinutesInput(parseInt(e.target.value))}
           />
         </div>
       )}
@@ -101,4 +214,56 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
       <Handle type="source" position={Position.Right} />
     </div>
   );
+}
+
+
+function generateTemplateExampleFields(selectedTemplate: Template, components: any, setFile: any) {
+  return components.data.map((component: any, index: number) => {
+    if (component?.example) {
+      switch (component.type) {
+        case "BODY":
+          return (
+            <div key={selectedTemplate.template_id.toString() + index} className="mb-4">
+              <Label htmlFor={selectedTemplate.template_id.toString() + index}>{component.type}</Label>
+              {component.example.body_text[0].map((body_text: any, index: number) => {
+                return (
+                  <div className="mt-1" key={selectedTemplate.template_id.toString() + index + body_text}>
+                    <TextInput
+                      id={selectedTemplate.template_id.toString() + index + body_text}
+                      name={selectedTemplate.template_id.toString() + index + body_text}
+                      placeholder={body_text}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          )
+        case "HEADER":
+          return (
+            <div key={selectedTemplate.template_id.toString() + index} className="mb-4">
+              <Label htmlFor={selectedTemplate.template_id.toString() + index}>{component.type} {component.format}</Label>
+              <div className="mt-1">
+                <FileInput
+                  id={selectedTemplate.template_id.toString() + index}
+                  name={selectedTemplate.template_id.toString() + index}
+                  placeholder={component.example.header_image}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setFile(file);
+                    }
+                  }}
+                />
+                {/* Write a note saying if left empty will reuse the original one */}
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">If left empty, the original {component.format.toLowerCase()} will be used</p>
+              </div>
+            </div>
+          )
+        default:
+          return null
+      }
+    } else {
+      return null;
+    }
+  });
 }

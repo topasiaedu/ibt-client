@@ -76,8 +76,10 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
     updateWorkflow,
     createTrigger,
     deleteTrigger,
+    updateTrigger,
     createAction,
     deleteAction,
+    updateAction,
     loading: workflowLoading
   } = useWorkflowContext();
 
@@ -158,10 +160,10 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       if (type === 'webhook') {
         newNode = {
           ...newNode,
-          data: { ...newNode.data, url: `https://ibts.whatsgenie.com/webhook/${currentWorkflowId}` }
+          data: { ...newNode.data, url: `https://ibts.whatsgenie.com/ibt/webhook/${currentWorkflowId}` }
         }
       }
-      
+
 
       addNode(newNode);
     }, [addNode, currentWorkflowId, nodes, reactFlowInstance, removeNode, showAlert]);
@@ -174,8 +176,8 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
     edges.forEach((edge) => {
       const sourceNode = nodes.find((node) => node.id === edge.source);
       const targetNode = nodes.find((node) => node.id === edge.target);
-      if (! connectedNodes.includes(sourceNode?.id ?? '')) { connectedNodes.push(sourceNode?.id ?? ''); }
-      if (! connectedNodes.includes(targetNode?.id ?? '')) { connectedNodes.push(targetNode?.id ?? ''); }
+      if (!connectedNodes.includes(sourceNode?.id ?? '')) { connectedNodes.push(sourceNode?.id ?? ''); }
+      if (!connectedNodes.includes(targetNode?.id ?? '')) { connectedNodes.push(targetNode?.id ?? ''); }
     });
 
     // Save the workflow
@@ -204,7 +206,8 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
         type: node.type,
         details: node.data,
         workflow_id: currentWorkflowId,
-        project_id: currentProject?.project_id
+        project_id: currentProject?.project_id,
+        active: true
       } as TriggerInsert
     });
     const actionData = actionNodes.map((node, index) => {
@@ -214,50 +217,98 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
         details: node.data,
         workflow_id: currentWorkflowId,
         project_id: currentProject?.project_id,
-        execution_order: index + 1
+        execution_order: index + 1,
+        active: true
       } as ActionInsert
     });
 
     // Check if the workflow is new or existing
-    if (workflowData.id !== '1') {
+    console.log("workflowData.id !== '1' || currentWorkflowId !== ''", workflowData.id !== '1' || currentWorkflowId !== '')
+    console.log("workflowData.id !== '1'", workflowData.id !== '1')
+    console.log("currentWorkflowId !== ''", currentWorkflowId !== '')
+    if (workflowData.id !== '1' || currentWorkflowId !== '') {
       // Update the workflow
       const workflow: WorkflowUpdate = {
         id: workflowData.id,
         name: workflowData.name,
         description: workflowData.description,
         run: workflowData.run,
-        canvas_state: workflowData.canvas_state 
+        canvas_state: workflowData.canvas_state
       }
       await updateWorkflow(workflow, workflowData.phone_numbers);
 
-      console.log("Workflow updated, data: ", workflowData, triggerData, actionData)
-      // Delete all the triggers and actions
+      // Update Delete and Create the triggers and actions
       const existingTriggers = workflows.find((workflow) => workflow.id === currentWorkflowId)?.trigger;
       const existingActions = workflows.find((workflow) => workflow.id === currentWorkflowId)?.actions;
 
-      if (existingTriggers) { existingTriggers.forEach((trigger) => deleteTrigger(trigger.id)); }
-      if (existingActions) { existingActions.forEach((action) => deleteAction(action.id)); }
+      if (existingTriggers) { existingTriggers.forEach((trigger) => updateTrigger(trigger)); }
+      if (existingActions) { existingActions.forEach((action) => updateAction(action)); }
 
-      // Create the triggers and actions
-      for (const trigger of triggerData) {  await createTrigger(trigger); }
-      for (const action of actionData) { await createAction(action); }
+      const triggerIds = triggerData.map((trigger) => trigger.id);
+      const actionIds = actionData.map((action) => action.id);
+      if (existingTriggers) {
+        existingTriggers.forEach((trigger) => {
+          if (!triggerIds.includes(trigger.id)) {
+            updateTrigger({
+              id: trigger.id,
+              type: trigger.type,
+              details: trigger.details,
+              workflow_id: trigger.workflow_id,
+              project_id: trigger.project_id,
+              active: false
+            });
+          }
+        })
+      }
+      if (existingActions) {
+        existingActions.forEach((action) => {
+          if (!actionIds.includes(action.id)) {
+            updateAction({
+              id: action.id,
+              type: action.type,
+              details: action.details,
+              workflow_id: action.workflow_id,
+              project_id: action.project_id,
+              active: false
+            });
+          }
+        })
+      }
+
+      // Create the triggers and actions that are new
+      triggerData.forEach((trigger) => { if (!existingTriggers?.map((trigger) => trigger.id).includes(trigger.id)) { createTrigger(trigger); } });
+      actionData.forEach((action) => { if (!existingActions?.map((action) => action.id).includes(action.id)) { createAction(action); } });
+
 
     } else {
       // Create the workflow
-      const workflow = await createWorkflow(workflowData, workflowData.phone_numbers);
+      const workflow = await createWorkflow({
+        name: workflowData.name,
+        description: workflowData.description,
+        run: workflowData.run,
+        project_id: currentProject?.project_id,
+        canvas_state: workflowData.canvas_state
+      }, workflowData.phone_numbers);
       if (!workflow) { showAlert("Workflow not saved", "error"); return; }
       // Create the triggers
-      for (const trigger of triggerData) { 
+      for (const trigger of triggerData) {
         // Replace the workflow id with the new workflow id
         trigger.workflow_id = workflow;
+        if (trigger.type === 'webhook' && trigger.details) { 
+          (trigger.details as { url: string }).url = `https://ibts.whatsgenie.com/ibt/webhook/${workflow}`; 
+        }
         await createTrigger(trigger);
       }
       // Create the actions
-      for (const action of actionData) { 
+      for (const action of actionData) {
         // Replace the workflow id with the new workflow id
         action.workflow_id = workflow;
         await createAction(action);
       }
+
+      // Redirect the user to /whatsapp/workflow
+      // window.location.href = `/whatsapp/workflow`;
+      setCurrentWorkflowId(workflow);
     }
     showAlert("Workflow saved", "success");
   }

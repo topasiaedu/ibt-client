@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       actions: {
         Row: {
+          active: boolean | null
           created_at: string
           details: Json | null
           execution_order: number
@@ -21,6 +22,7 @@ export type Database = {
           workflow_id: string
         }
         Insert: {
+          active?: boolean | null
           created_at?: string
           details?: Json | null
           execution_order: number
@@ -31,6 +33,7 @@ export type Database = {
           workflow_id: string
         }
         Update: {
+          active?: boolean | null
           created_at?: string
           details?: Json | null
           execution_order?: number
@@ -628,6 +631,7 @@ export type Database = {
       }
       triggers: {
         Row: {
+          active: boolean | null
           created_at: string | null
           details: Json | null
           id: string
@@ -637,6 +641,7 @@ export type Database = {
           workflow_id: string
         }
         Insert: {
+          active?: boolean | null
           created_at?: string | null
           details?: Json | null
           id: string
@@ -646,6 +651,7 @@ export type Database = {
           workflow_id: string
         }
         Update: {
+          active?: boolean | null
           created_at?: string | null
           details?: Json | null
           id?: string
@@ -723,6 +729,7 @@ export type Database = {
           id: string
           payload: Json
           status: string
+          type: string | null
         }
         Insert: {
           action_id: string
@@ -731,6 +738,7 @@ export type Database = {
           id?: string
           payload: Json
           status?: string
+          type?: string | null
         }
         Update: {
           action_id?: string
@@ -739,6 +747,7 @@ export type Database = {
           id?: string
           payload?: Json
           status?: string
+          type?: string | null
         }
         Relationships: [
           {

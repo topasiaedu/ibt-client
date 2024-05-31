@@ -42,13 +42,13 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
           className='mt-2'
           value={timePostType}
           onChange={(e) => setTimePostType(e.target.value)}
-        >
-          <option value="immediately">Immediately</option> {/* Default value */}
+        > <option value="immediately">Immediately</option> {/* Default value */}
           {/* Specific Date Time */}
           <option value="specific_date_time">Specific Date Time</option>
           {/* X minutes after the previous node */}
           <option value="minutes_after">X minutes after the previous node</option>
           {/* X hours after the previous node */}
+         
         </Select>
       </div>
 
