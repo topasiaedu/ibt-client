@@ -14,7 +14,7 @@ import { PhoneNumberProvider } from "./context/PhoneNumberContext";
 import { ProjectProvider } from "./context/ProjectContext";
 import { TemplateProvider } from "./context/TemplateContext";
 import { WhatsAppBusinessAccountProvider } from "./context/WhatsAppBusinessAccountContext";
-import './index.css';
+import "./index.css";
 import DashboardPage from "./pages";
 import ForgotPasswordPage from "./pages/authentication/forgot-password";
 import ProfileLockPage from "./pages/authentication/profile-lock";
@@ -68,47 +68,134 @@ const App = () => (
                               <Routes>
                                 <Route element={<FlowbiteWrapper />}>
                                   {/* Protected Routes */}
-                                  <Route element={<ProtectedRoute />} >
-                                    <Route path="/" element={<DashboardPage />} index />
-                                    <Route path="/mailing/compose" element={<MailingComposePage />} />
-                                    <Route path="/mailing/inbox" element={<MailingInboxPage />} />
-                                    <Route path="/mailing/read" element={<MailingReadPage />} />
-                                    <Route path="/mailing/reply" element={<MailingReplyPage />} />
-                                    <Route path="/e-commerce/billing" element={<EcommerceBillingPage />} />
-                                    <Route path="/e-commerce/invoice" element={<EcommerceInvoicePage />} />
-                                    <Route path="/e-commerce/products" element={<EcommerceProductsPage />} />
-                                    <Route path="/users/feed" element={<UserFeedPage />} />
-                                    <Route path="/users/list" element={<UserListPage />} />
-                                    <Route path="/contacts" element={<ContactListPage />} />
-                                    <Route path="/whatsapp/conversation" element={<ConversationPage />} />
-                                    <Route path="/whatsapp/campaigns" element={<CampaignListPage />} />
-                                    <Route path="/whatsapp/templates" element={<TemplateListPage />} />
-                                    <Route path="/whatsapp/contact-list" element={<WhatsAppContactListPage />} />
-                                    <Route path="/whatsapp/workflow" element={<WorkflowListPage />} />
-                                    <Route path="/whatsapp/workflow/editor/:id?" element={<FlowEditor />} />
-                                    <Route path="/users/profile" element={<UserProfilePage />} />
-                                    <Route path="/users/settings" element={<UserSettingsPage />} />
+                                  <Route element={<ProtectedRoute />}>
+                                    <Route
+                                      path="/"
+                                      element={<DashboardPage />}
+                                      index
+                                    />
+                                    <Route
+                                      path="/mailing/compose"
+                                      element={<MailingComposePage />}
+                                    />
+                                    <Route
+                                      path="/mailing/inbox"
+                                      element={<MailingInboxPage />}
+                                    />
+                                    <Route
+                                      path="/mailing/read"
+                                      element={<MailingReadPage />}
+                                    />
+                                    <Route
+                                      path="/mailing/reply"
+                                      element={<MailingReplyPage />}
+                                    />
+                                    <Route
+                                      path="/e-commerce/billing"
+                                      element={<EcommerceBillingPage />}
+                                    />
+                                    <Route
+                                      path="/e-commerce/invoice"
+                                      element={<EcommerceInvoicePage />}
+                                    />
+                                    <Route
+                                      path="/e-commerce/products"
+                                      element={<EcommerceProductsPage />}
+                                    />
+                                    <Route
+                                      path="/users/feed"
+                                      element={<UserFeedPage />}
+                                    />
+                                    <Route
+                                      path="/users/list"
+                                      element={<UserListPage />}
+                                    />
+                                    <Route
+                                      path="/contacts"
+                                      element={<ContactListPage />}
+                                    />
+                                    <Route
+                                      path="/whatsapp/conversation"
+                                      element={<ConversationPage />}
+                                    />
+                                    <Route
+                                      path="/whatsapp/campaigns"
+                                      element={<CampaignListPage />}
+                                    />
+                                    <Route
+                                      path="/whatsapp/templates"
+                                      element={<TemplateListPage />}
+                                    />
+                                    <Route
+                                      path="/whatsapp/contact-list"
+                                      element={<WhatsAppContactListPage />}
+                                    />
+                                    <Route
+                                      path="/whatsapp/workflow"
+                                      element={<WorkflowListPage />}
+                                    />
+                                    <Route
+                                      path="/whatsapp/workflow/editor/:id?"
+                                      element={<FlowEditor />}
+                                    />
+                                    <Route
+                                      path="/users/profile"
+                                      element={<UserProfilePage />}
+                                    />
+                                    <Route
+                                      path="/users/settings"
+                                      element={<UserSettingsPage />}
+                                    />
                                   </Route>
 
                                   {/* Public Routes */}
-                                  <Route path="/pages/pricing" element={<PricingPage />} />
-                                  <Route path="/pages/maintenance" element={<MaintenancePage />} />
-                                  <Route path="/authentication/sign-in" element={<SignInPage />} />
-                                  <Route path="/authentication/sign-up" element={<SignUpPage />} />
-                                  <Route path="/authentication/forgot-password" element={<ForgotPasswordPage />} />
-                                  <Route path="/authentication/reset-password" element={<ResetPasswordPage />} />
-                                  <Route path="/authentication/profile-lock" element={<ProfileLockPage />} />
+                                  <Route
+                                    path="/pages/pricing"
+                                    element={<PricingPage />}
+                                  />
+                                  <Route
+                                    path="/pages/maintenance"
+                                    element={<MaintenancePage />}
+                                  />
+                                  <Route
+                                    path="/authentication/sign-in"
+                                    element={<SignInPage />}
+                                  />
+                                  <Route
+                                    path="/authentication/sign-up"
+                                    element={<SignUpPage />}
+                                  />
+                                  <Route
+                                    path="/authentication/forgot-password"
+                                    element={<ForgotPasswordPage />}
+                                  />
+                                  <Route
+                                    path="/authentication/reset-password"
+                                    element={<ResetPasswordPage />}
+                                  />
+                                  <Route
+                                    path="/authentication/profile-lock"
+                                    element={<ProfileLockPage />}
+                                  />
 
                                   {/* Legal Pages */}
-                                  <Route path="/legal/privacy" element={<PrivacyPage />} />
+                                  <Route
+                                    path="/legal/privacy"
+                                    element={<PrivacyPage />}
+                                  />
 
                                   {/* Testing */}
-                                  <Route path="/loading" element={<LoadingPage />} />
+                                  <Route
+                                    path="/loading"
+                                    element={<LoadingPage />}
+                                  />
 
                                   {/* Error Handling Routes */}
-                                  <Route path="/500" element={<ServerErrorPage />} />
+                                  <Route
+                                    path="/500"
+                                    element={<ServerErrorPage />}
+                                  />
                                   <Route path="*" element={<NotFoundPage />} />
-
                                 </Route>
                               </Routes>
                             </BrowserRouter>

@@ -80,7 +80,7 @@ const ExampleNavbar: React.FC = function () {
                 <HiSearch className="h-6 w-6" />
               </button>
               {/* <NotificationBellDropdown /> */}
-              <AppDrawerDropdown />
+              {/* <AppDrawerDropdown /> */}
               <DarkThemeToggle />
             </div>
             <div className="hidden lg:block">
@@ -196,6 +196,7 @@ const AppDrawerDropdown: FC = function () {
 };
 
 const UserDropdown: FC = function () {
+  const { user } = useAuthContext();
   const { signOut } = useAuthContext();
 
   return (
@@ -215,14 +216,15 @@ const UserDropdown: FC = function () {
       }
     >
       <Dropdown.Header>
-        <span className="block text-sm">Neil Sims</span>
+        {/* <span className="block text-sm">Neil Sims</span> */}
         <span className="block truncate text-sm font-medium">
-          neil.sims@flowbite.com
+          {user?.email}
         </span>
       </Dropdown.Header>
-      <Dropdown.Item>Dashboard</Dropdown.Item>
-      <Dropdown.Item>Settings</Dropdown.Item>
-      <Dropdown.Item>Earnings</Dropdown.Item>
+      <Dropdown.Item
+        href="/"
+      >Dashboard</Dropdown.Item>
+      {/* <Dropdown.Item>Settings</Dropdown.Item> */}
       <Dropdown.Divider />
       <Dropdown.Item
       onClick={() => signOut()}
