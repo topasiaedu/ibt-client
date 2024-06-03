@@ -6,6 +6,7 @@ interface AuthContextProps {
   user: any;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;
+  signUp: (email: string, password: string) => Promise<any>;
   loading: boolean;
 }
 
@@ -66,8 +67,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setLoading(false);
   };
 
+  const signUp = async (email: string, password: string) => {
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      console.error('Error during sign up:', error);
+      setLoading(false);
+      return { error };
+    }
+    setUser(data.user);
+    setLoading(false);
+    return { user: data.user };
+  }
+
   return (
-    <AuthContext.Provider value={{ user, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ user, signIn, signOut, signUp, loading }}>
       {children}
     </AuthContext.Provider>
   );

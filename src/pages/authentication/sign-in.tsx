@@ -45,7 +45,7 @@ const SignInPage: FC = function () {
           className="mr-3 h-10"
         />
         <span className="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">
-          ASF
+          NM Media
         </span>
       </a>
       <Card
@@ -58,7 +58,7 @@ const SignInPage: FC = function () {
           Sign in to platform
         </h1>
         {error && ( 
-            <div className="mb-6 p-3 text-sm text-center text-red-500 bg-red-100 dark:bg-red-500 dark:text-red-100">
+            <div className="mb-6 p-3 text-sm text-center text-red-500 bg-red-100 dark:bg-red-500 dark:text-red-100 rounded-md">
               {error}
             </div>
           )}
@@ -100,12 +100,12 @@ const SignInPage: FC = function () {
             </Button>
           </div>
           
-          {/* <p className="text-sm text-gray-500 dark:text-gray-300">
+          <p className="text-sm text-gray-500 dark:text-gray-300">
             Not registered?&nbsp;
-            <a href="#" className="text-primary-600 dark:text-primary-300">
+            <a href="/authentication/sign-up" className="text-primary-600 dark:text-primary-300">
               Create account
             </a>
-          </p> */}
+          </p>
         </form>
       </Card>
     </div>
