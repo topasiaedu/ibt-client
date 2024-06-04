@@ -1,11 +1,21 @@
-import debounce from 'lodash.debounce';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Handle, NodeProps, Position } from 'reactflow';
-import { Template, useTemplateContext } from '../../../../context/TemplateContext';
-import { Label, Select, Datepicker, TextInput, Button, FileInput } from 'flowbite-react';
-import { useFlowContext } from '../../../../context/FlowContext';
-import { supabase } from '../../../../utils/supabaseClient';
-import { useAlertContext } from '../../../../context/AlertContext';
+import debounce from "lodash.debounce";
+import React, { useCallback, useEffect, useState } from "react";
+import { Handle, NodeProps, Position } from "reactflow";
+import {
+  Template,
+  useTemplateContext,
+} from "../../../../context/TemplateContext";
+import {
+  Label,
+  Select,
+  Datepicker,
+  TextInput,
+  Button,
+  FileInput,
+} from "flowbite-react";
+import { useFlowContext } from "../../../../context/FlowContext";
+import { supabase } from "../../../../utils/supabaseClient";
+import { useAlertContext } from "../../../../context/AlertContext";
 
 export type SendTemplateData = {
   selectedTemplate?: Template | null;
@@ -18,10 +28,14 @@ export type SendTemplateData = {
 };
 
 export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
-  const [timePostType, setTimePostType] = React.useState(props.data?.timePostType ?? 'immediately');
+  const [timePostType, setTimePostType] = React.useState(
+    props.data?.timePostType ?? "immediately"
+  );
   const { removeNode, updateNodeData } = useFlowContext();
   const { templates } = useTemplateContext();
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(props.data?.selectedTemplate ?? null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
+    props.data?.selectedTemplate ?? null
+  );
   const [postDate, setPostDate] = useState<Date>(new Date());
   const [postTime, setPostTime] = useState<string>("");
   const { showAlert } = useAlertContext();
@@ -29,68 +43,113 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
   const [minutesInput, setMinutesInput] = useState<number>(0);
   const [mediaUrl, setMediaUrl] = useState<string>(props.data?.mediaUrl ?? "");
 
-  console.log("template_payload: ", props.data?.templatePayload)
+  console.log("template_payload: ", props.data?.templatePayload);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedUpdateNodeData = useCallback(debounce((id, data) => { updateNodeData(id, data); }, 500), []);
+  const debouncedUpdateNodeData = useCallback(
+    debounce((id, data) => {
+      updateNodeData(id, data);
+    }, 500),
+    []
+  );
   const generateTemplatePayload = async (selectedTemplate: Template) => {
     let template_payload = {
-      "name": selectedTemplate?.name,
-      "language": {
-        "code": selectedTemplate?.language
+      name: selectedTemplate?.name,
+      language: {
+        code: selectedTemplate?.language,
       },
-      "components": []
+      components: [],
     } as any;
 
-    if (!selectedTemplate) { showAlert("Please select a template", "error"); return; }
-    if (!selectedTemplate?.components) { showAlert("Template has no components", "error"); return; }
+    if (!selectedTemplate) {
+      showAlert("Please select a template", "error");
+      return;
+    }
+    if (!selectedTemplate?.components) {
+      showAlert("Template has no components", "error");
+      return;
+    }
 
-    const components = selectedTemplate?.components as any
+    const components = selectedTemplate?.components as any;
 
     for (const [index, component] of components.data.entries()) {
       if (component.example) {
         if (component.type === "HEADER" && component.format === "TEXT") {
-          const componentValue = (document.getElementById(selectedTemplate?.template_id.toString() + index) as HTMLInputElement).value;
+          const componentValue = (
+            document.getElementById(
+              selectedTemplate?.template_id.toString() + index
+            ) as HTMLInputElement
+          ).value;
 
           template_payload.components.push({
-            "type": component.type,
-            "parameters": [{
-              type: "image",
-              "image": {
-                "link": componentValue
-              }
-            }]
+            type: component.type,
+            parameters: [
+              {
+                type: "text",
+                text: {
+                  body: componentValue,
+                },
+              },
+            ],
           });
-        } else if (component.type === "HEADER" && (component.format === "VIDEO" || component.format === "IMAGE")) {
-          const randomFileName = Math.random().toString(36).substring(7);
-          const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
+        } else if (
+          component.type === "HEADER" &&
+          (component.format === "VIDEO" || component.format === "IMAGE")
+        ) {
+          if (file) {
+            const randomFileName = Math.random().toString(36).substring(7);
+            const { error } = await supabase.storage
+              .from("media")
+              .upload(`templates/${randomFileName}`, file);
 
-          if (error) {
-            showAlert("Error uploading file", "error");
-            console.error("Error uploading file: ", error);
-            return;
+            if (error) {
+              showAlert("Error uploading file", "error");
+              console.error("Error uploading file: ", error);
+              return;
+            }
+
+            template_payload.components.push({
+              type: component.type,
+              parameters: [
+                {
+                  type: component.format.toLowerCase(),
+                  [component.format.toLowerCase()]: {
+                    link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`,
+                  },
+                },
+              ],
+            });
+          } else {
+            template_payload.components.push({
+              type: component.type,
+              parameters: [
+                {
+                  type: component.format.toLowerCase(),
+                  [component.format.toLowerCase()]: {
+                    link: component.example.header_handle[0],
+                  },
+                },
+              ],
+            });
           }
-
-          template_payload.components.push({
-            "type": component.type,
-            "parameters": [{
-              type: component.format.toLowerCase(),
-              [component.format.toLowerCase()]: {
-                "link": `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`
-              }
-            }]
-          });
         } else if (component.type === "BODY") {
           // const originalMessage = components.data.find((component: any) => component.type === "BODY").text;
-          const bodyInputValues = components.data.filter((component: any) => component.type === "BODY").map((component: any) => {
-            return component.example.body_text[0].map((body_text: any, index: number) => {
-              const DOM = document.getElementById(selectedTemplate.template_id.toString() + index + body_text) as HTMLInputElement;
-              if (DOM) {
-                return DOM.value;
-              } else {
-                return body_text;
-              }
+          const bodyInputValues = components.data
+            .filter((component: any) => component.type === "BODY")
+            .map((component: any) => {
+              return component.example.body_text[0].map(
+                (body_text: any, index: number) => {
+                  const DOM = document.getElementById(
+                    selectedTemplate.template_id.toString() + index + body_text
+                  ) as HTMLInputElement;
+                  if (DOM) {
+                    return DOM.value;
+                  } else {
+                    return body_text;
+                  }
+                }
+              );
             })
-          }).flat();
+            .flat();
 
           // const replacedMessage = originalMessage.replace(/{{\d}}/g, (match: any) => {
           //   const index = parseInt(match.replace("{{", "").replace("}}", ""));
@@ -99,21 +158,21 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
 
           const parameters = bodyInputValues.map((body_text: any) => {
             return {
-              "type": "text",
-              "text": body_text
-            }
+              type: "text",
+              text: body_text,
+            };
           });
 
           template_payload.components.push({
-            "type": component.type,
-            "parameters": parameters
+            type: component.type,
+            parameters: parameters,
           });
         }
       }
     }
     console.log("template_payload11: ", template_payload);
     return template_payload;
-  }
+  };
 
   const updateTemplatePayload = async () => {
     if (selectedTemplate) {
@@ -131,38 +190,55 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
   };
 
   useEffect(() => {
-
     updateTemplatePayload();
-
-  }, [timePostType, postTime, postDate, debouncedUpdateNodeData, props.id, selectedTemplate, minutesInput, file, showAlert]);
-
-
+  }, [
+    timePostType,
+    postTime,
+    postDate,
+    debouncedUpdateNodeData,
+    props.id,
+    selectedTemplate,
+    minutesInput,
+    file,
+    showAlert,
+  ]);
 
   return (
     <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg max-w-sm flex flex-col gap-2">
       <h1 className="text-lg font-semibold">Send Template Node</h1>
-      <Label className='mt-4'>Template</Label>
+      <Label className="mt-4">Template</Label>
       <Select
-        className='mt-2'
+        className="mt-2"
         value={selectedTemplate?.template_id ?? ""}
-        onChange={(e) => setSelectedTemplate(templates.find((template) => template.template_id === parseInt(e.target.value)) || null)}
-      >
+        onChange={(e) =>
+          setSelectedTemplate(
+            templates.find(
+              (template) => template.template_id === parseInt(e.target.value)
+            ) || null
+          )
+        }>
         {templates
-          .filter(template => template.status === "APPROVED")
+          .filter((template) => template.status === "APPROVED")
           .map((template) => (
             <option key={template.template_id} value={template.template_id}>
               {template.name}
             </option>
           ))}
       </Select>
-      {selectedTemplate && selectedTemplate.components && generateTemplateExampleFields(selectedTemplate, selectedTemplate.components, setFile, updateTemplatePayload)}
+      {selectedTemplate &&
+        selectedTemplate.components &&
+        generateTemplateExampleFields(
+          selectedTemplate,
+          selectedTemplate.components,
+          setFile,
+          updateTemplatePayload
+        )}
 
-      <Label className='mt-4'>Time to send</Label>
+      <Label className="mt-4">Time to send</Label>
       <Select
-        className='mt-2'
+        className="mt-2"
         value={timePostType}
-        onChange={(e) => setTimePostType(e.target.value)}
-      >
+        onChange={(e) => setTimePostType(e.target.value)}>
         <option value="immediately">Immediately</option> {/* Default value */}
         {/* Specific Date Time */}
         <option value="specific_date_time">Specific Date Time</option>
@@ -171,35 +247,66 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
         {/* X hours after the previous node */}
       </Select>
 
-      {timePostType === 'specific_date_time' && (
+      {timePostType === "specific_date_time" && (
         <>
           <div className="mb-4">
-            <Label htmlFor="postTime" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select date:</Label>
+            <Label
+              htmlFor="postTime"
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Select date:
+            </Label>
             <Datepicker
               id="postTime"
               name="postTime"
-              value={postDate.toISOString().split('T')[0]}
-              onSelectedDateChanged={(e) => { setPostDate(e); }}
+              value={postDate.toISOString().split("T")[0]}
+              onSelectedDateChanged={(e) => {
+                setPostDate(e);
+              }}
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="time" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select time:</label>
+            <label
+              htmlFor="time"
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Select time:
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 end-0 top-0 flex items-center pe-3.5 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                  <path fillRule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 text-gray-500 dark:text-gray-400"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    fillRule="evenodd"
+                    d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
-              <input type="time" id="time" className="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" min="09:00" max="18:00" value={postTime} required
-                onChange={(e) => setPostTime(e.target.value)} />
+              <input
+                type="time"
+                id="time"
+                className="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                min="09:00"
+                max="18:00"
+                value={postTime}
+                required
+                onChange={(e) => setPostTime(e.target.value)}
+              />
             </div>
           </div>
         </>
       )}
 
-      {timePostType === 'minutes_after' && (
+      {timePostType === "minutes_after" && (
         <div className="mb-4">
-          <Label htmlFor="minutes" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Minutes after the previous node:</Label>
+          <Label
+            htmlFor="minutes"
+            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+            Minutes after the previous node:
+          </Label>
           <TextInput
             id="minutes"
             name="minutes"
@@ -209,40 +316,75 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
           />
         </div>
       )}
-      <Button className="w-full" color={'red'} onClick={() => { removeNode(props.id) }}>Delete</Button>
+      <Button
+        className="w-full"
+        color={"red"}
+        onClick={() => {
+          removeNode(props.id);
+        }}>
+        Delete
+      </Button>
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
     </div>
   );
 }
 
-
-function generateTemplateExampleFields(selectedTemplate: Template, components: any, setFile: any, updateTemplatePayload: any) {
+function generateTemplateExampleFields(
+  selectedTemplate: Template,
+  components: any,
+  setFile: any,
+  updateTemplatePayload: any
+) {
   return components.data.map((component: any, index: number) => {
     if (component?.example) {
       switch (component.type) {
         case "BODY":
           return (
-            <div key={selectedTemplate.template_id.toString() + index} className="mb-4">
-              <Label htmlFor={selectedTemplate.template_id.toString() + index}>{component.type}</Label>
-              {component.example.body_text[0].map((body_text: any, index: number) => {
-                return (
-                  <div className="mt-1" key={selectedTemplate.template_id.toString() + index + body_text}>
-                    <TextInput
-                      id={selectedTemplate.template_id.toString() + index + body_text}
-                      name={selectedTemplate.template_id.toString() + index + body_text}
-                      placeholder={body_text}
-                      onChange={updateTemplatePayload}
-                    />
-                  </div>
-                )
-              })}
+            <div
+              key={selectedTemplate.template_id.toString() + index}
+              className="mb-4">
+              <Label htmlFor={selectedTemplate.template_id.toString() + index}>
+                {component.type}
+              </Label>
+              {component.example.body_text[0].map(
+                (body_text: any, index: number) => {
+                  return (
+                    <div
+                      className="mt-1"
+                      key={
+                        selectedTemplate.template_id.toString() +
+                        index +
+                        body_text
+                      }>
+                      <TextInput
+                        id={
+                          selectedTemplate.template_id.toString() +
+                          index +
+                          body_text
+                        }
+                        name={
+                          selectedTemplate.template_id.toString() +
+                          index +
+                          body_text
+                        }
+                        placeholder={body_text}
+                        onChange={updateTemplatePayload}
+                      />
+                    </div>
+                  );
+                }
+              )}
             </div>
-          )
+          );
         case "HEADER":
           return (
-            <div key={selectedTemplate.template_id.toString() + index} className="mb-4">
-              <Label htmlFor={selectedTemplate.template_id.toString() + index}>{component.type} {component.format}</Label>
+            <div
+              key={selectedTemplate.template_id.toString() + index}
+              className="mb-4">
+              <Label htmlFor={selectedTemplate.template_id.toString() + index}>
+                {component.type} {component.format}
+              </Label>
               <div className="mt-1">
                 <FileInput
                   id={selectedTemplate.template_id.toString() + index}
@@ -256,12 +398,15 @@ function generateTemplateExampleFields(selectedTemplate: Template, components: a
                   }}
                 />
                 {/* Write a note saying if left empty will reuse the original one */}
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">If left empty, the original {component.format.toLowerCase()} will be used</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  If left empty, the original {component.format.toLowerCase()}{" "}
+                  will be used
+                </p>
               </div>
             </div>
-          )
+          );
         default:
-          return null
+          return null;
       }
     } else {
       return null;
