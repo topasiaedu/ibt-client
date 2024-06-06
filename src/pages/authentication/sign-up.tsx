@@ -1,6 +1,5 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Button, Card, Checkbox, Label, TextInput } from "flowbite-react";
-import type { FC } from "react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../context/AuthContext";
@@ -41,6 +40,14 @@ const SignUpPage: React.FC = function () {
       navigate("/");
     }
   };
+
+  if (loading) {
+    return <LoadingPage />;
+  }
+
+  if (user) {
+    navigate("/");
+  }
 
   return (
     <div className="flex flex-col items-center justify-center px-6 lg:h-screen lg:gap-y-12">

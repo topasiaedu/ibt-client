@@ -41,7 +41,6 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
   const { showAlert } = useAlertContext();
   const [file, setFile] = useState<File | null>(null);
   const [minutesInput, setMinutesInput] = useState<number>(0);
-  const [mediaUrl, setMediaUrl] = useState<string>(props.data?.mediaUrl ?? "");
 
   console.log("template_payload: ", props.data?.templatePayload);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -170,7 +169,6 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
         }
       }
     }
-    console.log("template_payload11: ", template_payload);
     return template_payload;
   };
 
@@ -191,6 +189,7 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
 
   useEffect(() => {
     updateTemplatePayload();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     timePostType,
     postTime,

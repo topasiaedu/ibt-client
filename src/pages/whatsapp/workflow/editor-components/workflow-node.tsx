@@ -51,6 +51,7 @@ export default function WorkflowNode(props: NodeProps<WorkflowNodeData>) {
       previousDependenciesRef.current = dependencies;
     }
   
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(effect, [previousDependenciesRef.current]);
   };
   

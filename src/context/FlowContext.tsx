@@ -1,4 +1,12 @@
-import React, { LegacyRef, ReactNode, createContext, useCallback, useContext, useRef, useState } from 'react';
+import React, {
+  LegacyRef,
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import {
   Connection,
   Edge,
@@ -8,17 +16,17 @@ import {
   ReactFlowInstance,
   addEdge,
   useEdgesState,
-  useNodesState
-} from 'reactflow';
-import { useAlertContext } from './AlertContext';
+  useNodesState,
+} from "reactflow";
+import { useAlertContext } from "./AlertContext";
 import {
   ActionInsert,
   TriggerInsert,
   WorkflowUpdate,
-  useWorkflowContext
-} from './WorkflowContext';
-import { useProjectContext } from './ProjectContext';
-import { Json } from '../../database.types';
+  useWorkflowContext,
+} from "./WorkflowContext";
+import { useProjectContext } from "./ProjectContext";
+import { Json } from "../../database.types";
 
 interface FlowContextProps {
   nodes: Node[];
@@ -47,7 +55,7 @@ const FlowContext = createContext<FlowContextProps | undefined>(undefined);
 export const useFlowContext = (): FlowContextProps => {
   const context = useContext(FlowContext);
   if (!context) {
-    throw new Error('useFlowContext must be used within a FlowProvider');
+    throw new Error("useFlowContext must be used within a FlowProvider");
   }
   return context;
 };
@@ -56,18 +64,27 @@ interface FlowProviderProps {
   children: ReactNode;
 }
 
-const TriggerNodeTypes = ['webhook', 'keyword', 'contact-added-to-contact-list'];
-const ActionNodeTypes = ['add-to-contact-list', 'send-message', 'send-template'];
+const TriggerNodeTypes = [
+  "webhook",
+  "keyword",
+  "contact-added-to-contact-list",
+];
+const ActionNodeTypes = [
+  "add-to-contact-list",
+  "send-message",
+  "send-template",
+];
 
 export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [triggers, setTriggers] = useState<Node[]>([]);
   const [actions, setActions] = useState<Node[]>([]);
-  const [currentWorkflowId, setCurrentWorkflowId] = useState<string>('');
+  const [currentWorkflowId, setCurrentWorkflowId] = useState<string>("");
   const { showAlert } = useAlertContext();
   const { currentProject } = useProjectContext();
   const {
@@ -75,75 +92,91 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
     createWorkflow,
     updateWorkflow,
     createTrigger,
-    deleteTrigger,
     updateTrigger,
     createAction,
-    deleteAction,
     updateAction,
-    loading: workflowLoading
   } = useWorkflowContext();
 
-  const addNode = useCallback((node: Node) => {
-    setNodes((nds) => [...nds, node]);
-    const isTrigger = TriggerNodeTypes.includes(node.type ?? '');
-    const isAction = ActionNodeTypes.includes(node.type ?? '');
+  const addNode = useCallback(
+    (node: Node) => {
+      setNodes((nds) => [...nds, node]);
+      const isTrigger = TriggerNodeTypes.includes(node.type ?? "");
+      const isAction = ActionNodeTypes.includes(node.type ?? "");
 
-    if (isTrigger) {
-      setTriggers((nds) => [...nds, node]);
-    } else if (isAction) {
-      setActions((nds) => [...nds, node]);
-    }
-  }, [setNodes]);
+      if (isTrigger) {
+        setTriggers((nds) => [...nds, node]);
+      } else if (isAction) {
+        setActions((nds) => [...nds, node]);
+      }
+    },
+    [setNodes]
+  );
 
+  const removeNode = useCallback(
+    (id: string) => {
+      setNodes((nds) => nds.filter((node) => node.id !== id));
+      setEdges((eds) =>
+        eds.filter((edge) => edge.source !== id || edge.target !== id)
+      );
 
-  const removeNode = useCallback((id: string) => {
-    setNodes((nds) => nds.filter((node) => node.id !== id));
-    setEdges((eds) => eds.filter((edge) => edge.source !== id || edge.target !== id));
+      const triggerNode = triggers.find((node) => node.id === id);
+      if (triggerNode) {
+        setTriggers((nds) => nds.filter((node) => node.id !== id));
+      }
 
-    const triggerNode = triggers.find((node) => node.id === id);
-    if (triggerNode) {
-      setTriggers((nds) => nds.filter((node) => node.id !== id));
-    }
+      const actionNode = actions.find((node) => node.id === id);
+      if (actionNode) {
+        setActions((nds) => nds.filter((node) => node.id !== id));
+      }
+    },
+    [actions, setEdges, setNodes, triggers]
+  );
 
-    const actionNode = actions.find((node) => node.id === id);
-    if (actionNode) {
-      setActions((nds) => nds.filter((node) => node.id !== id));
-    }
-  }, [actions, setEdges, setNodes, triggers]);
+  const removeEdge = useCallback(
+    (id: string) => {
+      setEdges((eds) => eds.filter((edge) => edge.id !== id));
+    },
+    [setEdges]
+  );
 
-  const removeEdge = useCallback((id: string) => {
-    setEdges((eds) => eds.filter((edge) => edge.id !== id));
-  }, [setEdges]);
-
-  const onConnect = useCallback((connection: Connection) => {
-    setEdges((eds) => addEdge(connection, eds));
-  }, [setEdges]);
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      setEdges((eds) => addEdge(connection, eds));
+    },
+    [setEdges]
+  );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = "move";
   }, []);
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      const type = event.dataTransfer.getData('application/reactflow');
+      const type = event.dataTransfer.getData("application/reactflow");
 
       if (!type || !reactFlowInstance) {
         return;
       }
 
       // Check if there is already a trigger node
-      const triggerNode = nodes.find((node) => TriggerNodeTypes.includes(node.type ?? ''));
-      if (type === 'keyword' && triggerNode) {
+      const triggerNode = nodes.find((node) =>
+        TriggerNodeTypes.includes(node.type ?? "")
+      );
+      if (type === "keyword" && triggerNode) {
         showAlert("Only one trigger node is allowed", "error");
         return;
       }
 
       const position = reactFlowInstance.project({
-        x: event.clientX - (reactFlowWrapper.current?.getBoundingClientRect().left || 0),
-        y: event.clientY - (reactFlowWrapper.current?.getBoundingClientRect().top || 0),
+        x:
+          event.clientX -
+          (reactFlowWrapper.current?.getBoundingClientRect().left || 0),
+        y:
+          event.clientY -
+          (reactFlowWrapper.current?.getBoundingClientRect().top || 0),
       });
 
       let newNode: Node = {
@@ -153,31 +186,49 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
         data: {
           onNodesDelete: removeNode,
           currentWorkflowId,
-          existing: false
+          existing: false,
         },
       };
 
-      if (type === 'webhook') {
+      if (type === "webhook") {
         newNode = {
           ...newNode,
-          data: { ...newNode.data, url: `https://ibts.whatsgenie.com/ibt/webhook/${currentWorkflowId}` }
-        }
+          data: {
+            ...newNode.data,
+            url: `https://ibts.whatsgenie.com/ibt/webhook/${currentWorkflowId}`,
+          },
+        };
       }
 
-
       addNode(newNode);
-    }, [addNode, currentWorkflowId, nodes, reactFlowInstance, removeNode, showAlert]);
+    },
+    [
+      addNode,
+      currentWorkflowId,
+      nodes,
+      reactFlowInstance,
+      removeNode,
+      showAlert,
+    ]
+  );
 
   const saveWorkflow = async () => {
-    if (!currentProject) { showAlert("Project not found", "error"); return; }
+    if (!currentProject) {
+      showAlert("Project not found", "error");
+      return;
+    }
 
     // Check the edges to get all connected nodes and put it in an array of [workflow, trigger, action]
     const connectedNodes: string[] = [];
     edges.forEach((edge) => {
       const sourceNode = nodes.find((node) => node.id === edge.source);
       const targetNode = nodes.find((node) => node.id === edge.target);
-      if (!connectedNodes.includes(sourceNode?.id ?? '')) { connectedNodes.push(sourceNode?.id ?? ''); }
-      if (!connectedNodes.includes(targetNode?.id ?? '')) { connectedNodes.push(targetNode?.id ?? ''); }
+      if (!connectedNodes.includes(sourceNode?.id ?? "")) {
+        connectedNodes.push(sourceNode?.id ?? "");
+      }
+      if (!connectedNodes.includes(targetNode?.id ?? "")) {
+        connectedNodes.push(targetNode?.id ?? "");
+      }
     });
 
     // Save the workflow
@@ -186,11 +237,20 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
     // If the workflow is existing, update the workflow
     // If the workflow is existing, delete all the triggers and actions and recreate them
     // If the workflow is existing, update the triggers and actions
-    const workflowNodes = nodes.filter((node) => connectedNodes.includes(node.id));
-    const triggerNodes = workflowNodes.filter((node) => TriggerNodeTypes.includes(node.type ?? ''));
-    const actionNodes = workflowNodes.filter((node) => ActionNodeTypes.includes(node.type ?? ''));
-    const workflowNode = nodes.find((node) => node.type === 'workflow');
-    if (!workflowNode) { showAlert("Workflow node not found", "error"); return; }
+    const workflowNodes = nodes.filter((node) =>
+      connectedNodes.includes(node.id)
+    );
+    const triggerNodes = workflowNodes.filter((node) =>
+      TriggerNodeTypes.includes(node.type ?? "")
+    );
+    const actionNodes = workflowNodes.filter((node) =>
+      ActionNodeTypes.includes(node.type ?? "")
+    );
+    const workflowNode = nodes.find((node) => node.type === "workflow");
+    if (!workflowNode) {
+      showAlert("Workflow node not found", "error");
+      return;
+    }
     const workflowData = {
       id: workflowNode.id,
       name: workflowNode.data.name,
@@ -198,8 +258,8 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       run: workflowNode.data.run,
       phone_numbers: workflowNode.data.phone_numbers,
       canvas_state: { nodes, edges } as unknown as Json | undefined,
-      project_id: currentProject?.project_id
-    }
+      project_id: currentProject?.project_id,
+    };
     const triggerData = triggerNodes.map((node) => {
       return {
         id: node.id,
@@ -207,8 +267,8 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
         details: node.data,
         workflow_id: currentWorkflowId,
         project_id: currentProject?.project_id,
-        active: true
-      } as TriggerInsert
+        active: true,
+      } as TriggerInsert;
     });
     const actionData = actionNodes.map((node, index) => {
       return {
@@ -218,84 +278,100 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
         workflow_id: currentWorkflowId,
         project_id: currentProject?.project_id,
         execution_order: index + 1,
-        active: true
-      } as ActionInsert
+        active: true,
+      } as ActionInsert;
     });
-
-    // Check if the workflow is new or existing
-    console.log("workflowData.id !== '1' || currentWorkflowId !== ''", workflowData.id !== '1' || currentWorkflowId !== '')
-    console.log("workflowData.id !== '1'", workflowData.id !== '1')
-    console.log("currentWorkflowId !== ''", currentWorkflowId !== '')
-    if (workflowData.id !== '1' || currentWorkflowId !== '') {
+    
+    if (workflowData.id !== "1" || currentWorkflowId !== "") {
       // Update the workflow
       const workflow: WorkflowUpdate = {
         id: workflowData.id,
         name: workflowData.name,
         description: workflowData.description,
         run: workflowData.run,
-        canvas_state: workflowData.canvas_state
-      }
+        canvas_state: workflowData.canvas_state,
+      };
       await updateWorkflow(workflow, workflowData.phone_numbers);
 
       // Update Delete and Create the triggers and actions
-      const existingTriggers = workflows.find((workflow) => workflow.id === currentWorkflowId)?.trigger;
-      const existingActions = workflows.find((workflow) => workflow.id === currentWorkflowId)?.actions;
+      const existingTriggers = workflows.find(
+        (workflow) => workflow.id === currentWorkflowId
+      )?.trigger;
+      const existingActions = workflows.find(
+        (workflow) => workflow.id === currentWorkflowId
+      )?.actions;
 
-      if (existingTriggers) { existingTriggers.forEach((trigger) => updateTrigger(trigger)); }
-      if (existingActions) { existingActions.forEach((action) => updateAction(action)); }
-
-      const triggerIds = triggerData.map((trigger) => trigger.id);
-      const actionIds = actionData.map((action) => action.id);
       if (existingTriggers) {
+        // Update those that are existing
+        triggerData.forEach((trigger) => {
+          if (existingTriggers.map((trigger) => trigger.id).includes(trigger.id)) {
+            updateTrigger(trigger);
+          }
+        });
+
+        // Change active to false for those that are not in the new triggers
         existingTriggers.forEach((trigger) => {
-          if (!triggerIds.includes(trigger.id)) {
-            updateTrigger({
-              id: trigger.id,
-              type: trigger.type,
-              details: trigger.details,
-              workflow_id: trigger.workflow_id,
-              project_id: trigger.project_id,
-              active: false
-            });
+          if (!triggerData.map((trigger) => trigger.id).includes(trigger.id)) {
+            updateTrigger({ ...trigger, active: false });
           }
-        })
+        }
+        );
+        
       }
+
       if (existingActions) {
-        existingActions.forEach((action) => {
-          if (!actionIds.includes(action.id)) {
-            updateAction({
-              id: action.id,
-              type: action.type,
-              details: action.details,
-              workflow_id: action.workflow_id,
-              project_id: action.project_id,
-              active: false
-            });
+        // Update those that are existing
+        actionData.forEach((action) => {
+          if (existingActions.map((action) => action.id).includes(action.id)) {
+            updateAction(action);
           }
-        })
+        });
+
+        // Change active to false for those that are not in the new actions
+        existingActions.forEach((action) => {
+          if (!actionData.map((action) => action.id).includes(action.id)) {
+            updateAction({ ...action, active: false });
+          }
+        });
       }
 
       // Create the triggers and actions that are new
-      triggerData.forEach((trigger) => { if (!existingTriggers?.map((trigger) => trigger.id).includes(trigger.id)) { createTrigger(trigger); } });
-      actionData.forEach((action) => { if (!existingActions?.map((action) => action.id).includes(action.id)) { createAction(action); } });
-
-
+      triggerData.forEach((trigger) => {
+        if (
+          !existingTriggers?.map((trigger) => trigger.id).includes(trigger.id)
+        ) {
+          createTrigger(trigger);
+        }
+      });
+      actionData.forEach((action) => {
+        if (!existingActions?.map((action) => action.id).includes(action.id)) {
+          createAction(action);
+        }
+      });
     } else {
       // Create the workflow
-      const workflow = await createWorkflow({
-        name: workflowData.name,
-        description: workflowData.description,
-        run: workflowData.run,
-        project_id: currentProject?.project_id,
-        canvas_state: workflowData.canvas_state
-      }, workflowData.phone_numbers);
-      if (!workflow) { showAlert("Workflow not saved", "error"); return; }
+      const workflow = await createWorkflow(
+        {
+          name: workflowData.name,
+          description: workflowData.description,
+          run: workflowData.run,
+          project_id: currentProject?.project_id,
+          canvas_state: workflowData.canvas_state,
+        },
+        workflowData.phone_numbers
+      );
+      if (!workflow) {
+        showAlert("Workflow not saved", "error");
+        return;
+      }
       // Create the triggers
       for (const trigger of triggerData) {
         // Replace the workflow id with the new workflow id
         trigger.workflow_id = workflow;
-        if (trigger.type === 'webhook' && trigger.details) { 
-          (trigger.details as { url: string }).url = `https://ibts.whatsgenie.com/ibt/webhook/${workflow}`; 
+        if (trigger.type === "webhook" && trigger.details) {
+          (
+            trigger.details as { url: string }
+          ).url = `https://ibts.whatsgenie.com/ibt/webhook/${workflow}`;
         }
         await createTrigger(trigger);
       }
@@ -311,41 +387,44 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       setCurrentWorkflowId(workflow);
     }
     showAlert("Workflow saved", "success");
-  }
+  };
 
   const loadWorkflow = (nodes: Node[], edges: Edge[]) => {
+    setLoading(true);
     setNodes(nodes);
     setEdges(edges);
-  }
+    setLoading(false);
+  };
 
   const updateNodeData = (id: string, data: any) => {
-    setNodes(prevNodes =>
-      prevNodes.map(node => (node.id === id ? { ...node, data } : node))
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => (node.id === id ? { ...node, data } : node))
     );
-  }
+  };
 
   return (
-    <FlowContext.Provider value={{
-      nodes,
-      edges,
-      reactFlowInstance,
-      reactFlowWrapper,
-      setReactFlowInstance,
-      addNode,
-      removeNode,
-      removeEdge,
-      onNodesChange,
-      onEdgesChange,
-      onDragOver,
-      onDrop,
-      onConnect,
-      currentWorkflowId,
-      saveWorkflow,
-      loadWorkflow,
-      loading,
-      setCurrentWorkflowId,
-      updateNodeData
-    }}>
+    <FlowContext.Provider
+      value={{
+        nodes,
+        edges,
+        reactFlowInstance,
+        reactFlowWrapper,
+        setReactFlowInstance,
+        addNode,
+        removeNode,
+        removeEdge,
+        onNodesChange,
+        onEdgesChange,
+        onDragOver,
+        onDrop,
+        onConnect,
+        currentWorkflowId,
+        saveWorkflow,
+        loadWorkflow,
+        loading,
+        setCurrentWorkflowId,
+        updateNodeData,
+      }}>
       {children}
     </FlowContext.Provider>
   );

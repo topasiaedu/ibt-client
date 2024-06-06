@@ -69,7 +69,6 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
         .order('created_at', { ascending: false });
 
       if (error) { showAlert(error.message, 'error'); console.error(error); return; }
-      console.log(workflows);
       if (workflows) {
         setWorkflows(workflows);
       }
@@ -120,7 +119,6 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
   };
 
   const deleteTrigger = async (triggerId: string) => {
-    console.log(triggerId);
     const { error } = await supabase.from('triggers').delete().eq('id', triggerId);
     if (error) { showAlert(error.message, 'error'); console.error(error); return; }
   };
@@ -131,6 +129,7 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
   };
 
   const updateAction = async (action: ActionUpdate) => {
+    console.log("action", action);
     const { error } = await supabase.from('actions').update(action).eq('id', action.id);
     if (error) { showAlert(error.message, 'error'); console.error(error); return; }
   };
