@@ -42,7 +42,6 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
   const [file, setFile] = useState<File | null>(null);
   const [minutesInput, setMinutesInput] = useState<number>(0);
 
-  console.log("template_payload: ", props.data?.templatePayload);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdateNodeData = useCallback(
     debounce((id, data) => {

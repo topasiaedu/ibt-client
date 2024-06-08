@@ -91,13 +91,13 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
         return { name, phone };
       });
 
-      contactsArray.forEach((contact) => {
+      await contactsArray.forEach(async (contact) => {
         const tempContact = { name: contact.name || 'Unknown', wa_id: contact.phone } as Contact;
         // Check if the contact already exists
-        findContact(tempContact).then((data) => {
+        await findContact(tempContact).then(async (data) => {
           if (data) {
             // Add the contact to the contact list
-            addContactToContactList(contact_list.contact_list_id, data.contact_id)
+            await addContactToContactList(contact_list.contact_list_id, data.contact_id)
           } else {
             // Adjust here for potentially undefined name
             const createContactData: Contact = {
@@ -113,7 +113,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
             if (contact.name) createContactData.name = contact.name;
 
             // Add the contact to the contacts table
-            addContact(createContactData)
+            await addContact(createContactData)
               .then((response) => {
                 if (!response) return;
                 addContactToContactList(contact_list.contact_list_id, response.contact_id);
@@ -124,8 +124,8 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
         });
       });
     }
-    setOpen(false);
     setLoading(false);
+    setOpen(false);
   };
 
   return (
