@@ -261,6 +261,11 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       project_id: currentProject?.project_id,
     };
     const triggerData = triggerNodes.map((node) => {
+      if (node.type === "webhook" && node.data) {
+        (
+          node.data as { url: string }
+        ).url = `https://ibts.whatsgenie.com/ibt/webhook/${currentWorkflowId}`;
+      }
       return {
         id: node.id,
         type: node.type,

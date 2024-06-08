@@ -9,7 +9,7 @@ const ProjectDropdown: React.FC = () => {
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   return (
-    <div className="mb-3" style={{ position: "relative" }}>
+    <div className="mb-3 relative">
       <button
         id="dropdownProjectNameButton"
         onClick={toggleDropdown}

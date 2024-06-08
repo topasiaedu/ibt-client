@@ -7,72 +7,40 @@ import {
   Select,
   FileInput,
   Textarea,
-  Card
+  Card,
 } from "flowbite-react";
 import React, { useState } from "react";
+import { HiPlus } from "react-icons/hi";
 import {
-  HiPlus,
-} from "react-icons/hi";
-import { useWhatsAppBusinessAccountContext, WhatsAppBusinessAccount } from "../../../context/WhatsAppBusinessAccountContext";
-import { useTemplateContext, TemplateInsert, TemplateButton } from "../../../context/TemplateContext";
+  useWhatsAppBusinessAccountContext,
+  WhatsAppBusinessAccount,
+} from "../../../context/WhatsAppBusinessAccountContext";
+import {
+  useTemplateContext,
+  TemplateInsert,
+  TemplateButton,
+} from "../../../context/TemplateContext";
 import { useProjectContext } from "../../../context/ProjectContext";
 import { supabase } from "../../../utils/supabaseClient";
 import MessageComponent from "../../../components/MessageComponent";
 import { useAlertContext } from "../../../context/AlertContext";
 
-// What we're trying to create:
-// {
-//   "name": "ws_feb28_lastpush",
-//   "components": [
-//     {
-//       "type": "HEADER",
-//       "format": "IMAGE",
-//       "example": {
-//         "header_handle": [
-//           "https:\/\/scontent.whatsapp.net\/v\/t61.29466-34\/221367052_772825333968146_6919410577702217059_n.jpg?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=C3YMkn7oaVQAX8p66uH&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&oh=01_ASAnabWlFjeDSbvAHSp66qlIm0RY72bkbv-S6npiKrXJzA&oe=66311C96"
-//         ]
-//       }
-//     },
-//     {
-//       "type": "BODY",
-//       "text": "*最后一天！你离财务自由只有一步之遥* ！💸\n\n今天就是你实现财务自由的最后一天！别再犹豫了，赶紧加入我们的投资课程吧！💰\n\n▫️▫️▫️▫️▫️▫️▫️\n赶紧点击进入直播间👉 https:\/\/bit.ly\/wsfebclass\n🟩  Zoom Meeting ID: 8229 179 4111 (888888)\n\n▫️▫️▫️▫️▫️▫️▫️"
-//     },
-//     {
-//       "type": "FOOTER",
-//       "text": "赶紧点击进入直播间 \/ 用Meeting ID 进也可以"
-//     },
-//     {
-//       "type": "BUTTONS",
-//       "buttons": [
-//         {
-//           "type": "URL",
-//           "text": "点击进入课堂",
-//           "url": "https:\/\/bit.ly\/wsfebclass"
-//         }
-//       ]
-//     }
-//   ],
-//   "language": "zh_CN",
-//   "status": "APPROVED",
-//   "category": "MARKETING",        
-//   "id": "772825330634813"
-// },
-
-const currentDate = new Date().toLocaleDateString('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
-  second: 'numeric',
-  hour12: true
-})
+const currentDate = new Date().toLocaleDateString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+  hour12: true,
+});
 
 const AddTemplateModal: React.FC = function () {
   const [isOpen, setIsOpen] = useState(false);
   const { addTemplate } = useTemplateContext();
   const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
-  const [selectedWhatsappBusinessAccount, setSelectedWhatsappBusinessAccount] = useState<WhatsAppBusinessAccount | null>(null);
+  const [selectedWhatsappBusinessAccount, setSelectedWhatsappBusinessAccount] =
+    useState<WhatsAppBusinessAccount | null>(null);
   const [templateName, setTemplateName] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [buttons, setButtons] = useState<TemplateButton[]>([]);
@@ -81,7 +49,8 @@ const AddTemplateModal: React.FC = function () {
   const [headerData, setHeaderData] = useState<string>("");
   const [bodyData, setBodyData] = useState<string>("");
   const [footerData, setFooterData] = useState<string>("");
-  const [selectedButtonType, setSelectedButtonType] = useState<string>("QUICK_REPLY");
+  const [selectedButtonType, setSelectedButtonType] =
+    useState<string>("QUICK_REPLY");
   const { currentProject } = useProjectContext();
   const [file, setFile] = useState<File | null>(null);
   const { showAlert } = useAlertContext();
@@ -94,7 +63,6 @@ const AddTemplateModal: React.FC = function () {
       name: templateName,
       wa_template_id: null,
       status: "PENDING",
-
     };
 
     let components: any[] = [];
@@ -103,14 +71,14 @@ const AddTemplateModal: React.FC = function () {
     if (footerData) {
       components.push({
         type: "FOOTER",
-        text: footerData
+        text: footerData,
       });
     }
 
     if (buttons.length > 0) {
       components.push({
         type: "BUTTONS",
-        buttons: buttons
+        buttons: buttons,
       });
     }
 
@@ -124,27 +92,28 @@ const AddTemplateModal: React.FC = function () {
     //   ]
     // }
     const bodyDataMatches = bodyData.match(/{{\d+}}/g);
-    
+
     if (bodyDataMatches) {
       const example: any = {
-        body_text: [bodyDataMatches.map((match) => match.replace(/[{}]/g, ""))]
+        body_text: [bodyDataMatches.map((match) => match.replace(/[{}]/g, ""))],
       };
       components.push({
         type: "BODY",
         text: bodyData,
-        example
+        example,
       });
     } else {
       components.push({
         type: "BODY",
-        text: bodyData
+        text: bodyData,
       });
     }
 
-
     if (headerType === "IMAGE" || headerType === "VIDEO") {
       const randomFileName = Math.random().toString(36).substring(7);
-      const { error } = await supabase.storage.from("media").upload(`templates/${randomFileName}`, file!);
+      const { error } = await supabase.storage
+        .from("media")
+        .upload(`templates/${randomFileName}`, file!);
 
       if (error) {
         console.error("Error uploading file: ", error);
@@ -157,8 +126,8 @@ const AddTemplateModal: React.FC = function () {
           format: "IMAGE",
           example: {
             header_handle: [
-              `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`
-            ]
+              `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`,
+            ],
           } as any,
         },
         ...components,
@@ -168,7 +137,7 @@ const AddTemplateModal: React.FC = function () {
         {
           type: "HEADER",
           format: "TEXT",
-          text: headerData
+          text: headerData,
         },
         ...components,
       ];
@@ -176,7 +145,7 @@ const AddTemplateModal: React.FC = function () {
 
     // Add components to the template
     template.components = {
-      data: components
+      data: components,
     } as any;
 
     addTemplate(template);
@@ -190,21 +159,60 @@ const AddTemplateModal: React.FC = function () {
     let newBodyData = bodyData;
     if (bodyDataMatches) {
       bodyDataMatches.forEach((match) => {
-        const domInputValue = (document.getElementById(`bodyData${parseInt(match.replace(/[{}]/g, "")) - 1}`) as HTMLInputElement)?.value;
+        const domInputValue = (
+          document.getElementById(
+            `bodyData${parseInt(match.replace(/[{}]/g, "")) - 1}`
+          ) as HTMLInputElement
+        )?.value;
         newBodyData = newBodyData.replace(match, domInputValue || "");
       });
     }
-    const buttonTexts = buttons.map(button => button.text) || [];
+    const buttonTexts = buttons.map((button) => button.text) || [];
     if (headerType === "IMAGE" && file) {
-      return <MessageComponent message={newBodyData} footer={footerData} date={currentDate} media={URL.createObjectURL(file)} buttons={buttonTexts} headerType="IMAGE" />
+      return (
+        <MessageComponent
+          message={newBodyData}
+          footer={footerData}
+          date={currentDate}
+          media={URL.createObjectURL(file)}
+          buttons={buttonTexts}
+          headerType="IMAGE"
+        />
+      );
     } else if (headerType === "TEXT") {
-      return <MessageComponent header={headerData} message={newBodyData} footer={footerData} date={currentDate} buttons={buttonTexts} />
+      return (
+        <MessageComponent
+          header={headerData}
+          message={newBodyData}
+          footer={footerData}
+          date={currentDate}
+          buttons={buttonTexts}
+        />
+      );
     } else if (headerType === "VIDEO" && file) {
-      return <MessageComponent message={newBodyData} footer={footerData} date={currentDate} media={URL.createObjectURL(file)} buttons={buttonTexts} headerType="VIDEO" />
+      return (
+        <MessageComponent
+          message={newBodyData}
+          footer={footerData}
+          date={currentDate}
+          media={URL.createObjectURL(file)}
+          buttons={buttonTexts}
+          headerType="VIDEO"
+        />
+      );
     } else if (headerType === "DOCUMENT") {
-      return <MessageComponent message={newBodyData} footer={footerData} date={currentDate} media={headerData} buttons={buttonTexts} headerType="DOCUMENT" />
+      return (
+        <MessageComponent
+          message={newBodyData}
+          footer={footerData}
+          date={currentDate}
+          media={headerData}
+          buttons={buttonTexts}
+          headerType="DOCUMENT"
+        />
+      );
     }
-  }
+  };
   return (
     <>
       <Button color="primary" onClick={() => setIsOpen(true)}>
@@ -213,7 +221,7 @@ const AddTemplateModal: React.FC = function () {
           Add Template
         </div>
       </Button>
-      <Modal onClose={() => setIsOpen(false)} show={isOpen} size={'7xl'}>
+      <Modal onClose={() => setIsOpen(false)} show={isOpen} size={"7xl"}>
         <Modal.Header className="border-b border-gray-200 !p-6 dark:border-gray-700">
           <strong>Add new Template</strong>
         </Modal.Header>
@@ -231,22 +239,39 @@ const AddTemplateModal: React.FC = function () {
                     value={templateName}
                   />
                   {/* Write a small reminder that it cannot have space or capitalized letters */}
-                  <p className="text-sm text-gray-500">Template name should not have spaces or capitalized letters</p>
+                  <p className="text-sm text-gray-500">
+                    Template name should not have spaces or capitalized letters
+                  </p>
                 </div>
               </div>
               <div className="mt-6">
-                <Label htmlFor="whatsAppBusinessAccount">WhatsApp Business Account</Label>
+                <Label htmlFor="whatsAppBusinessAccount">
+                  WhatsApp Business Account
+                </Label>
                 <div className="mt-1">
                   <Select
                     id="whatsAppBusinessAccount"
                     name="whatsAppBusinessAccount"
-                    onChange={(e) => setSelectedWhatsappBusinessAccount(whatsAppBusinessAccounts.find((whatsAppBusinessAccount) => whatsAppBusinessAccount.account_id === parseInt(e.target.value)) || null)}
-                  >
+                    onChange={(e) =>
+                      setSelectedWhatsappBusinessAccount(
+                        whatsAppBusinessAccounts.find(
+                          (whatsAppBusinessAccount) =>
+                            whatsAppBusinessAccount.account_id ===
+                            parseInt(e.target.value)
+                        ) || null
+                      )
+                    }>
                     <option value="">Select WhatsApp Business Account</option>
                     {whatsAppBusinessAccounts
-                      .filter((whatsAppBusinessAccount) => whatsAppBusinessAccount.project_id === currentProject?.project_id)
+                      .filter(
+                        (whatsAppBusinessAccount) =>
+                          whatsAppBusinessAccount.project_id ===
+                          currentProject?.project_id
+                      )
                       .map((whatsAppBusinessAccount) => (
-                        <option key={whatsAppBusinessAccount.account_id} value={whatsAppBusinessAccount.account_id}>
+                        <option
+                          key={whatsAppBusinessAccount.account_id}
+                          value={whatsAppBusinessAccount.account_id}>
                           {whatsAppBusinessAccount.name}
                         </option>
                       ))}
@@ -261,8 +286,7 @@ const AddTemplateModal: React.FC = function () {
                   <Select
                     id="category"
                     name="category"
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
+                    onChange={(e) => setSelectedCategory(e.target.value)}>
                     <option value="">Select Category</option>
                     <option value="MARKETING">Marketing</option>
                     <option value="UTILITY">Utility</option>
@@ -277,8 +301,7 @@ const AddTemplateModal: React.FC = function () {
                   <Select
                     id="language"
                     name="language"
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                  >
+                    onChange={(e) => setSelectedLanguage(e.target.value)}>
                     <option value="">Select Language</option>
                     <option value="zh_CN">Chinese</option>
                     <option value="en_US">English</option>
@@ -294,8 +317,7 @@ const AddTemplateModal: React.FC = function () {
                   <Select
                     id="headerType"
                     name="headerType"
-                    onChange={(e) => setHeaderType(e.target.value)}
-                  >
+                    onChange={(e) => setHeaderType(e.target.value)}>
                     <option value="">None</option>
                     <option value="IMAGE">Image</option>
                     <option value="VIDEO">Video</option>
@@ -308,7 +330,9 @@ const AddTemplateModal: React.FC = function () {
               {/* Render Different Fields based on Header Type */}
               {headerType && (
                 <div className="mt-6">
-                  <Label htmlFor="headerImage">Header {headerType.toLowerCase()}</Label>
+                  <Label htmlFor="headerImage">
+                    Header {headerType.toLowerCase()}
+                  </Label>
                   <div className="mt-1">
                     {headerType !== "TEXT" && headerType && (
                       <FileInput
@@ -345,7 +369,9 @@ const AddTemplateModal: React.FC = function () {
               {/* Check body data for {{1}}  or {{2}} and so on and create new Fields for each of them */}
               {bodyData.match(/{{\d+}}/g)?.map((match, index) => (
                 <div key={index} className="mt-6">
-                  <Label htmlFor={`bodyData${index}`}>{`Body Data ${index + 1}`}</Label>
+                  <Label htmlFor={`bodyData${index}`}>{`Body Data ${
+                    index + 1
+                  }`}</Label>
                   <div className="mt-1">
                     <TextInput
                       id={`bodyData${index}`}
@@ -358,7 +384,10 @@ const AddTemplateModal: React.FC = function () {
 
               {/* Footer */}
               <div className="mt-6">
-                <Label htmlFor="footer">Footer <span className="text-sm text-gray-500">(Optional)</span></Label>
+                <Label htmlFor="footer">
+                  Footer{" "}
+                  <span className="text-sm text-gray-500">(Optional)</span>
+                </Label>
                 <div className="mt-1">
                   <TextInput
                     id="footer"
@@ -370,15 +399,13 @@ const AddTemplateModal: React.FC = function () {
               </div>
 
               <div className="mt-6 flex justify-between items-center">
-
                 <div>
                   <Label htmlFor="buttonType">Button Type</Label>
                   <div className="mt-1">
                     <Select
                       id="buttonType"
                       name="buttonType"
-                      onChange={(e) => setSelectedButtonType(e.target.value)}
-                    >
+                      onChange={(e) => setSelectedButtonType(e.target.value)}>
                       <option value="">Select Button Type</option>
                       <option value="QUICK_REPLY">Quick Reply</option>
                       <option value="URL">URL</option>
@@ -387,13 +414,23 @@ const AddTemplateModal: React.FC = function () {
                 </div>
 
                 <div>
-                  <Button color="primary" onClick={() => {
-                    // Check button type selected 
-                    // Add button to the list only if the button type is selected an length of buttons is less than 2
-                    if (selectedButtonType && buttons.length < 2) {
-                      setButtons([...buttons, { type: selectedButtonType, text: "", url: "", phone_number: "" }]);
-                    }
-                  }}>
+                  <Button
+                    color="primary"
+                    onClick={() => {
+                      // Check button type selected
+                      // Add button to the list only if the button type is selected an length of buttons is less than 2
+                      if (selectedButtonType && buttons.length < 2) {
+                        setButtons([
+                          ...buttons,
+                          {
+                            type: selectedButtonType,
+                            text: "",
+                            url: "",
+                            phone_number: "",
+                          },
+                        ]);
+                      }
+                    }}>
                     Add Button
                   </Button>
                 </div>
@@ -404,11 +441,17 @@ const AddTemplateModal: React.FC = function () {
                 <Card key={index} className="mt-6">
                   {/* Button Index */}
                   <div className="flex justify-between items-center">
-                    <p>Button {index + 1} <span className="text-sm text-gray-500">({button.type})</span></p>
+                    <p>
+                      Button {index + 1}{" "}
+                      <span className="text-sm text-gray-500">
+                        ({button.type})
+                      </span>
+                    </p>
                     <Button
                       color="red"
-                      onClick={() => setButtons(prev => prev.filter((_, i) => i !== index))}
-                    >
+                      onClick={() =>
+                        setButtons((prev) => prev.filter((_, i) => i !== index))
+                      }>
                       Delete
                     </Button>
                   </div>
@@ -418,7 +461,15 @@ const AddTemplateModal: React.FC = function () {
                       id="buttonText"
                       name="buttonText"
                       placeholder="Button Text"
-                      onChange={(e) => setButtons(prev => prev.map((button, i) => i === index ? { ...button, text: e.target.value } : button))}
+                      onChange={(e) =>
+                        setButtons((prev) =>
+                          prev.map((button, i) =>
+                            i === index
+                              ? { ...button, text: e.target.value }
+                              : button
+                          )
+                        )
+                      }
                     />
                   </div>
                   {button.type === "URL" && (
@@ -429,13 +480,21 @@ const AddTemplateModal: React.FC = function () {
                           id="buttonUrl"
                           name="buttonUrl"
                           placeholder="Button URL"
-                          onChange={(e) => setButtons(prev => prev.map((button, i) => i === index ? { ...button, url: e.target.value } : button))}
+                          onChange={(e) =>
+                            setButtons((prev) =>
+                              prev.map((button, i) =>
+                                i === index
+                                  ? { ...button, url: e.target.value }
+                                  : button
+                              )
+                            )
+                          }
                         />
                       </div>
-                    </>)}
+                    </>
+                  )}
 
                   {/* Place a delete button on the top right corner */}
-
                 </Card>
               ))}
             </div>
@@ -447,9 +506,7 @@ const AddTemplateModal: React.FC = function () {
                 <div className="h-[46px] w-[3px] bg-gray-800 absolute -start-[17px] top-[178px] rounded-s-lg"></div>
                 <div className="h-[64px] w-[3px] bg-gray-800 absolute -end-[17px] top-[142px] rounded-e-lg"></div>
                 <div className="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-white">
-                  <div className="p-6">
-                    {generatePreview()}
-                  </div>
+                  <div className="p-6">{generatePreview()}</div>
                 </div>
               </div>
             </div>
