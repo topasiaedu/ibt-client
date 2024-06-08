@@ -61,7 +61,6 @@ const FlowEditor: React.FC = () => {
       addNode(newNode);
 
     } else {
-      console.log("Workflows: ", workflows);
       const workflow = workflows.find((workflow) => workflow.id === workflowId);
       if (workflow) {
         const canvas_state = workflow.canvas_state as { nodes: any[]; edges: any[]; };

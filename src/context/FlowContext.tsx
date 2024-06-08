@@ -252,7 +252,7 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       return;
     }
     const workflowData = {
-      id: workflowNode.id,
+      id: currentWorkflowId || "1",
       name: workflowNode.data.name,
       description: workflowNode.data.description,
       run: workflowNode.data.run,
@@ -281,7 +281,7 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
         active: true,
       } as ActionInsert;
     });
-    
+
     if (workflowData.id !== "1" || currentWorkflowId !== "") {
       // Update the workflow
       const workflow: WorkflowUpdate = {
@@ -304,7 +304,9 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       if (existingTriggers) {
         // Update those that are existing
         triggerData.forEach((trigger) => {
-          if (existingTriggers.map((trigger) => trigger.id).includes(trigger.id)) {
+          if (
+            existingTriggers.map((trigger) => trigger.id).includes(trigger.id)
+          ) {
             updateTrigger(trigger);
           }
         });
@@ -314,9 +316,7 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
           if (!triggerData.map((trigger) => trigger.id).includes(trigger.id)) {
             updateTrigger({ ...trigger, active: false });
           }
-        }
-        );
-        
+        });
       }
 
       if (existingActions) {

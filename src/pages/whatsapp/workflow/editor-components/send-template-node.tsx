@@ -174,7 +174,6 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
   const updateTemplatePayload = async () => {
     if (selectedTemplate) {
       const template_payload = await generateTemplatePayload(selectedTemplate);
-      console.log("template_payload: ", template_payload);
       debouncedUpdateNodeData(props.id, {
         timePostType,
         postTime,
