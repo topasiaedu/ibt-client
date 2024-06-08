@@ -58,20 +58,18 @@ export default function WorkflowNode(props: NodeProps<WorkflowNodeData>) {
 
   useDeepCompareEffect(() => {
     const updateSelectedWabaPhoneNumbers = () => {
-      if (props.data?.existingPhoneNumbers) {
+      if (props.data?.phone_numbers) {
         const newSelectedWabaPhoneNumbers = wabaPhoneNumber.filter((item: any) =>
-          props.data.existingPhoneNumbers?.some((selectedItem: any) =>
-            item.phone_number_id === selectedItem.phone_number_id.phone_number_id
-          )
+          props.data.phone_numbers?.some((selectedItem: any) => {
+            return item.phone_number_id === selectedItem.phone_number_id
+          })
         );
-
         setSelectedWabaPhoneNumber((prev: any) => [...prev, ...newSelectedWabaPhoneNumbers]);
       }
     };
 
     updateSelectedWabaPhoneNumbers();
-  }, [props.data?.existingPhoneNumbers, wabaPhoneNumber]);
-  
+  }, [props.data?.phone_numbers, wabaPhoneNumber]);
   useEffect(() => {
     debouncedUpdateNodeData(props.id, { name, description, phone_numbers: selectedWabaPhoneNumber });
     // eslint-disable-next-line react-hooks/exhaustive-deps
