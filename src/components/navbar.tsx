@@ -5,6 +5,8 @@ import { HiSearch } from "react-icons/hi";
 import { useSidebarContext } from "../context/SidebarContext";
 import React from "react";
 import { useAuthContext } from "../context/AuthContext";
+import { HiX, HiMenuAlt1 } from "react-icons/hi";
+import isSmallScreen from "../helpers/is-small-screen";
 
 const ExampleNavbar: React.FC = function () {
   const { isOpenOnSmallScreens, setOpenOnSmallScreens, isPageWithSidebar } =
