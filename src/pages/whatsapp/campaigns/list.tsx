@@ -22,7 +22,6 @@ const CampaignListPage: React.FC = function () {
   const [searchValue, setSearchValue] = React.useState("");
   const [startDate, setStartDate] = React.useState<Date | null>(null);
   const [endDate, setEndDate] = React.useState<Date | null>(null);
-  console.log(campaigns);
   const resultingCampaigns: Campaigns = {
     campaigns: campaigns.filter((campaign) =>
       campaign.name.toLowerCase().includes(searchValue.toLowerCase()) &&

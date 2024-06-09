@@ -42,7 +42,7 @@ const ExampleSidebar: React.FC = function () {
         <div className="flex h-full flex-col justify-between py-2">
           <div>
 
-            <ProjectDropdown />
+            <ProjectDropdown collapsed={isSidebarOpenOnSmallScreens && !isSmallScreen()} />
             
             <Sidebar.Items>
               <Sidebar.ItemGroup>

@@ -1,20 +1,13 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import type { FC } from "react";
-import {
-  Avatar,
-  DarkThemeToggle,
-  Dropdown,
-  Navbar,
-} from "flowbite-react";
-import {
-  HiSearch
-} from "react-icons/hi";
+import { Avatar, DarkThemeToggle, Dropdown, Navbar } from "flowbite-react";
+import { HiSearch } from "react-icons/hi";
 import { useSidebarContext } from "../context/SidebarContext";
 import React from "react";
 import { useAuthContext } from "../context/AuthContext";
 
 const ExampleNavbar: React.FC = function () {
-  const { isOpenOnSmallScreens, setOpenOnSmallScreens } =
+  const { isOpenOnSmallScreens, setOpenOnSmallScreens, isPageWithSidebar } =
     useSidebarContext();
 
   return (
@@ -22,11 +15,10 @@ const ExampleNavbar: React.FC = function () {
       <div className="w-full p-3 lg:px-5 lg:pl-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            {/* {isPageWithSidebar && (
+            {isPageWithSidebar && (
               <button
                 onClick={() => setOpenOnSmallScreens(!isOpenOnSmallScreens)}
-                className="mr-3 cursor-pointer rounded p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white lg:inline"
-              >
+                className="mr-3 cursor-pointer rounded p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white lg:inline">
                 <span className="sr-only">Toggle sidebar</span>
                 {isOpenOnSmallScreens && isSmallScreen() ? (
                   <HiX className="h-6 w-6" />
@@ -34,7 +26,7 @@ const ExampleNavbar: React.FC = function () {
                   <HiMenuAlt1 className="h-6 w-6" />
                 )}
               </button>
-            )} */}
+            )}
             <Navbar.Brand href="/">
               <img
                 alt=""
@@ -64,8 +56,7 @@ const ExampleNavbar: React.FC = function () {
             <div className="flex items-center">
               <button
                 onClick={() => setOpenOnSmallScreens(!isOpenOnSmallScreens)}
-                className="cursor-pointer rounded p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:ring-2 focus:ring-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:bg-gray-700 dark:focus:ring-gray-700 lg:hidden"
-              >
+                className="cursor-pointer rounded p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:ring-2 focus:ring-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:bg-gray-700 dark:focus:ring-gray-700 lg:hidden">
                 <span className="sr-only">Search</span>
                 <HiSearch className="h-6 w-6" />
               </button>
@@ -101,22 +92,17 @@ const UserDropdown: FC = function () {
             size="sm"
           />
         </span>
-      }
-    >
+      }>
       <Dropdown.Header>
         {/* <span className="block text-sm">Neil Sims</span> */}
         <span className="block truncate text-sm font-medium">
           {user?.email}
         </span>
       </Dropdown.Header>
-      <Dropdown.Item
-        href="/"
-      >Dashboard</Dropdown.Item>
+      <Dropdown.Item href="/">Dashboard</Dropdown.Item>
       {/* <Dropdown.Item>Settings</Dropdown.Item> */}
       <Dropdown.Divider />
-      <Dropdown.Item
-      onClick={() => signOut()}
-      >Sign out</Dropdown.Item>
+      <Dropdown.Item onClick={() => signOut()}>Sign out</Dropdown.Item>
     </Dropdown>
   );
 };

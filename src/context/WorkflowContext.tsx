@@ -98,6 +98,8 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({ children }) 
 
     // Update the phone numbers in the workflow by deleting all previous one and add the new ones
     await supabase.from('workflow_phone_numbers').delete().eq('workflow_id', workflow.id);
+    console.log("Deleting phone numbers, workflow id", workflow.id);
+    console.log("phoneNumbers", phoneNumbers);
     for (const phoneNumber of phoneNumbers) {
       await supabase.from('workflow_phone_numbers').insert({ workflow_id: workflow.id, phone_number_id: phoneNumber.phone_number_id });
     }

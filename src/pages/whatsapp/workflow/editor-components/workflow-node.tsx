@@ -64,7 +64,7 @@ export default function WorkflowNode(props: NodeProps<WorkflowNodeData>) {
             return item.phone_number_id === selectedItem.phone_number_id
           })
         );
-        setSelectedWabaPhoneNumber((prev: any) => [...prev, ...newSelectedWabaPhoneNumbers]);
+        setSelectedWabaPhoneNumber(newSelectedWabaPhoneNumbers);
       }
     };
 
