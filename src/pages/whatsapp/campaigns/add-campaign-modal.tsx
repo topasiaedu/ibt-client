@@ -47,7 +47,7 @@ const AddCampaignModal: React.FC = function () {
         return {
           waba_id: waba.account_id,
           phone_number_id: phoneNumber.phone_number_id,
-          name: waba.name + " - " + phoneNumber.number,
+          name: waba.name + " - " + phoneNumber.name + " (" + phoneNumber.number + ")",
           quality_rating: phoneNumber.quality_rating,
           id: "waba-" + waba.account_id + "-phone-" + phoneNumber.phone_number_id,
         }
