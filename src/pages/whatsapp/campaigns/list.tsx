@@ -143,7 +143,15 @@ const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
             <Table.Cell>{campaign.name}</Table.Cell>
             <Table.Cell>{contactLists.find(contactList => contactList.contact_list_id === campaign.contact_list_id)?.name}</Table.Cell>
             <Table.Cell>{templates.find(template => template.template_id === campaign.template_id)?.name}</Table.Cell>
-            <Table.Cell>{new Date(campaign.post_time).toLocaleString()}</Table.Cell>
+            <Table.Cell>{new Intl.DateTimeFormat('en-US', {
+              timeZone: 'Asia/Kuala_Lumpur',
+              year: 'numeric',
+              month: 'long',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            }).format(new Date(campaign.post_time))}</Table.Cell>
             <Table.Cell>
               <div className="flex items-center gap-x-3">
                 {getStatusIndicator(campaign.status)}

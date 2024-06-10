@@ -26,7 +26,6 @@ import { useProjectContext } from "../../../context/ProjectContext";
 import { Template, useTemplateContext } from "../../../context/TemplateContext";
 import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusinessAccountContext";
 import { supabase } from "../../../utils/supabaseClient";
-import { toDate, toZonedTime, format } from 'date-fns-tz';
 
 const AddCampaignModal: React.FC = function () {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,8 +49,8 @@ const AddCampaignModal: React.FC = function () {
   );
   const { addCampaignPhoneNumber } = useCampaignPhoneNumberContext();
   const [file, setFile] = useState<File | null>(null);
-  const timeZone = 'Asia/Kuala_Lumpur';
 
+  // console.log("DATETIME", addTimeToDate(postDate, postTime).toString());
   const wabaPhoneNumber = whatsAppBusinessAccounts
     .map((waba) => {
       return phoneNumbers.map((phoneNumber) => {
@@ -100,13 +99,10 @@ const AddCampaignModal: React.FC = function () {
     }
 
     // Assuming postDate is a Date object and postTime is a string in "HH:mm" format
-    const combinedDateTime = addTimeToDate(
+    const combinedDateTimeString = addTimeToDate(
       postDate,
       postTime
-    );
-    const utcDate = toDate(combinedDateTime, {timeZone});
-
-    const combinedDateTimeString = utcDate.toISOString();
+    ).toISOString();
 
     let template_payload = {
       name: selectedTemplate?.name,
