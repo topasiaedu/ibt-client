@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, PropsWithChildren, useEffect } from 'react';
+import React, { createContext, useContext, useState, PropsWithChildren, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Database } from '../../database.types';
 import { useAlertContext } from './AlertContext';
@@ -66,7 +66,7 @@ export const PhoneNumberProvider: React.FC<PropsWithChildren<{}>> = ({ children 
 
   }, [showAlert]);
 
-  const addPhoneNumber = async (phoneNumber: PhoneNumber) => {
+  const addPhoneNumber = useCallback(async (phoneNumber: PhoneNumber) => {
     const { error } = await supabase
       .from('phone_numbers')
       .insert(phoneNumber);
@@ -76,9 +76,9 @@ export const PhoneNumberProvider: React.FC<PropsWithChildren<{}>> = ({ children 
       showAlert('Error adding phone number', 'error');
       return null;
     }
-  }
+  }, [showAlert]);
 
-  const updatePhoneNumber = async (phoneNumber: PhoneNumber) => {
+  const updatePhoneNumber = useCallback(async (phoneNumber: PhoneNumber) => {
     const { error } = await supabase
       .from('phone_numbers')
       .update(phoneNumber)
@@ -88,9 +88,9 @@ export const PhoneNumberProvider: React.FC<PropsWithChildren<{}>> = ({ children 
       console.error('Error updating phone number:', error);
       showAlert('Error updating phone number', 'error');
     }
-  }
+  }, [showAlert]);
 
-  const deletePhoneNumber = async (phoneNumberId: number) => {
+  const deletePhoneNumber = useCallback(async (phoneNumberId: number) => {
     const { error } = await supabase
       .from('phone_numbers')
       .delete()
@@ -100,15 +100,24 @@ export const PhoneNumberProvider: React.FC<PropsWithChildren<{}>> = ({ children 
       console.error('Error deleting phone number:', error);
       showAlert('Error deleting phone number', 'error');
     }
-  }
+  }, [showAlert]);
+
+  const contextValue = useMemo(() => ({
+    phoneNumbers,
+    addPhoneNumber,
+    updatePhoneNumber,
+    deletePhoneNumber,
+    loading
+  }), [phoneNumbers, loading, addPhoneNumber, updatePhoneNumber, deletePhoneNumber]);
 
   return (
-    <PhoneNumberContext.Provider value={{ phoneNumbers, addPhoneNumber, updatePhoneNumber, deletePhoneNumber, loading }}>
+    <PhoneNumberContext.Provider value={contextValue}>
       {children}
     </PhoneNumberContext.Provider>
   );
 }
-
+// Add the whyDidYouRender property after defining the component
+(PhoneNumberProvider as any).whyDidYouRender = true; // Add this line
 export const usePhoneNumberContext = () => {
   const context = useContext(PhoneNumberContext);
   

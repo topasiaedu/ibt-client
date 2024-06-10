@@ -4,11 +4,14 @@ import React, {
   useState,
   PropsWithChildren,
   useEffect,
+  useCallback,
+  useMemo,
 } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
 import { useAlertContext } from "./AlertContext";
+import isEqual from "lodash/isEqual"; // Import lodash's isEqual for deep comparison
 
 export type Campaign = Database["public"]["Tables"]["campaigns"]["Row"] & {
   read_count: number;
@@ -50,7 +53,13 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
         return;
       }
 
-      setCampaigns(campaigns);
+      setCampaigns((prevCampaigns) => {
+        if (!isEqual(prevCampaigns, campaigns)) {
+          console.log("Updating campaigns state");
+          return campaigns;
+        }
+        return prevCampaigns;
+      });
     };
 
     fetchCampaigns();
@@ -92,59 +101,68 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
     };
   }, [currentProject, showAlert]);
 
-  const addCampaign = async (campaign: CampaignInsert) => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("campaigns")
-      .insert([{ ...campaign, project_id: currentProject?.project_id }])
-      .select();
-    console.log("data", data);
-    if (error) {
-      console.error("Error adding campaign:", error);
-      showAlert("Error adding campaign", "error");
-      return;
-    }
-    
-    setLoading(false);
-    return data![0];
-  };
-
-  const updateCampaign = async (campaign: Campaign) => {
-    try {
-      await supabase
+  const addCampaign = useCallback(
+    async (campaign: CampaignInsert) => {
+      setLoading(true);
+      const { data, error } = await supabase
         .from("campaigns")
-        .update(campaign)
-        .eq("campaign_id", campaign.campaign_id)
-        .single();
-    } catch (error) {
-      console.error("Error updating campaign:", error);
-      showAlert("Error updating campaign", "error");
-    }
-  };
+        .insert([{ ...campaign, project_id: currentProject?.project_id }])
+        .select();
+      console.log("data", data);
+      if (error) {
+        console.error("Error adding campaign:", error);
+        showAlert("Error adding campaign", "error");
+        setLoading(false);
+        return;
+      }
 
-  const deleteCampaign = async (campaignId: number) => {
-    try {
-      await supabase.from("campaigns").delete().eq("campaign_id", campaignId);
-    } catch (error) {
-      console.error("Error deleting campaign:", error);
-      showAlert("Error deleting campaign", "error");
-    }
-  };
+      setLoading(false);
+      return data![0];
+    },
+    [currentProject, showAlert]
+  );
+
+  const updateCampaign = useCallback(
+    async (campaign: Campaign) => {
+      try {
+        await supabase
+          .from("campaigns")
+          .update(campaign)
+          .eq("campaign_id", campaign.campaign_id)
+          .single();
+      } catch (error) {
+        console.error("Error updating campaign:", error);
+        showAlert("Error updating campaign", "error");
+      }
+    },
+    [showAlert]
+  );
+
+  const deleteCampaign = useCallback(
+    async (campaignId: number) => {
+      try {
+        await supabase.from("campaigns").delete().eq("campaign_id", campaignId);
+      } catch (error) {
+        console.error("Error deleting campaign:", error);
+        showAlert("Error deleting campaign", "error");
+      }
+    },
+    [showAlert]
+  );
+
+  const contextValue = useMemo(
+    () => ({ campaigns, addCampaign, updateCampaign, deleteCampaign, loading }),
+    [campaigns, addCampaign, updateCampaign, deleteCampaign, loading]
+  );
 
   return (
-    <CampaignContext.Provider
-      value={{
-        campaigns,
-        addCampaign,
-        updateCampaign,
-        deleteCampaign,
-        loading,
-      }}>
+    <CampaignContext.Provider value={contextValue}>
       {children}
     </CampaignContext.Provider>
   );
 };
-
+// Add the whyDidYouRender property after defining the component
+(CampaignProvider as any).whyDidYouRender = true; // Add this line
 export const useCampaignContext = () => {
   const context = useContext(CampaignContext);
   if (!context) {

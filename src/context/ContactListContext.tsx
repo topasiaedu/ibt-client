@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
@@ -106,9 +113,7 @@ export function ContactListProvider({
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "contact_list_members" },
-        (payload) => {
-          
-        }
+        (payload) => {}
       );
 
     setLoading(false);
@@ -121,16 +126,16 @@ export function ContactListProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProject]);
 
-  const addContactList = async (contactList: ContactList) => {
+  const addContactList = useCallback(async (contactList: ContactList) => {
     const { error } = await supabase.from("contact_lists").insert(contactList);
 
     if (error) {
       console.error("Error adding contactList:", error);
       return;
     }
-  };
+  }, []);
 
-  const updateContactList = async (contactList: ContactList) => {
+  const updateContactList = useCallback(async (contactList: ContactList) => {
     const { contact_list_members, ...contactListWithoutMembers } = contactList;
     const { error } = await supabase
       .from("contact_lists")
@@ -141,9 +146,9 @@ export function ContactListProvider({
       console.error("Error updating contactList:", error);
       return;
     }
-  };
+  }, []);
 
-  const deleteContactList = async (contactListId: number) => {
+  const deleteContactList = useCallback(async (contactListId: number) => {
     const { error } = await supabase
       .from("contact_lists")
       .delete()
@@ -153,49 +158,62 @@ export function ContactListProvider({
       console.error("Error deleting contactList:", error);
       return null;
     }
-  };
+  }, []);
 
-  const removeContactFromContactList = async (
-    contactListId: number,
-    contactId: number
-  ) => {
-    const { error } = await supabase
-      .from("contact_list_members")
-      .delete()
-      .eq("contact_list_id", contactListId)
-      .eq("contact_id", contactId);
+  const removeContactFromContactList = useCallback(
+    async (contactListId: number, contactId: number) => {
+      const { error } = await supabase
+        .from("contact_list_members")
+        .delete()
+        .eq("contact_list_id", contactListId)
+        .eq("contact_id", contactId);
 
-    if (error) {
-      console.error("Error removing contact from contactList:", error);
-      return null;
-    }
-  };
+      if (error) {
+        console.error("Error removing contact from contactList:", error);
+        return null;
+      }
+    },
+    []
+  );
 
-  const addContactToContactList = async (
-    contactListId: number,
-    contactId: number
-  ) => {
-    const { error } = await supabase
-      .from("contact_list_members")
-      .insert({ contact_list_id: contactListId, contact_id: contactId });
+  const addContactToContactList = useCallback(
+    async (contactListId: number, contactId: number) => {
+      const { error } = await supabase
+        .from("contact_list_members")
+        .insert({ contact_list_id: contactListId, contact_id: contactId });
 
-    if (error) {
-      console.error("Error adding contact to contactList:", error);
-      return null;
-    }
-  };
+      if (error) {
+        console.error("Error adding contact to contactList:", error);
+        return null;
+      }
+    },
+    []
+  );
 
+  const contextValue = useMemo(
+    () => ({
+      contactLists,
+      addContactList,
+      updateContactList,
+      deleteContactList,
+      removeContactFromContactList,
+      addContactToContactList,
+      loading,
+    }),
+    [
+      contactLists,
+      addContactList,
+      updateContactList,
+      deleteContactList,
+      removeContactFromContactList,
+      addContactToContactList,
+      loading,
+    ]
+  );
+// Add the whyDidYouRender property after defining the component
+(ContactListProvider as any).whyDidYouRender = true; // Add this line
   return (
-    <ContactListContext.Provider
-      value={{
-        contactLists,
-        addContactList,
-        updateContactList,
-        deleteContactList,
-        removeContactFromContactList,
-        addContactToContactList,
-        loading,
-      }}>
+    <ContactListContext.Provider value={contextValue}>
       {children}
     </ContactListContext.Provider>
   );

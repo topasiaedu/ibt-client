@@ -58,10 +58,7 @@ const App = () => (
             <WhatsAppBusinessAccountProvider>
               <PhoneNumberProvider>
                 <WorkflowProvider>
-                  <MessagesProvider>
-                    <CampaignProvider>
                       <TemplateProvider>
-                        <CampaignPhoneNumberProvider>
                           <FlowProvider>
                             <AlertComponent />
                             <BrowserRouter>
@@ -116,11 +113,11 @@ const App = () => (
                                     />
                                     <Route
                                       path="/whatsapp/conversation"
-                                      element={<ConversationPage />}
+                                      element={<MessagesProvider><ConversationPage /></MessagesProvider>}
                                     />
                                     <Route
                                       path="/whatsapp/campaigns"
-                                      element={<CampaignListPage />}
+                                      element={<CampaignProvider><CampaignPhoneNumberProvider><CampaignListPage /></CampaignPhoneNumberProvider></CampaignProvider>}
                                     />
                                     <Route
                                       path="/whatsapp/templates"
@@ -200,10 +197,7 @@ const App = () => (
                               </Routes>
                             </BrowserRouter>
                           </FlowProvider>
-                        </CampaignPhoneNumberProvider>
                       </TemplateProvider>
-                    </CampaignProvider>
-                  </MessagesProvider>
                 </WorkflowProvider>
               </PhoneNumberProvider>
             </WhatsAppBusinessAccountProvider>
