@@ -211,6 +211,15 @@ const AddTemplateModal: React.FC = function () {
           headerType="DOCUMENT"
         />
       );
+    } else {
+      return (
+        <MessageComponent
+          message={newBodyData}
+          footer={footerData}
+          date={currentDate}
+          buttons={buttonTexts}
+        />
+      );
     }
   };
   return (

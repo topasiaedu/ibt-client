@@ -62,7 +62,7 @@ const AddCampaignModal: React.FC = function () {
       return;
     }
 
-    if (!selectedTemplate || !selectedContactList || !campaignName || !postTime) {
+    if (!selectedTemplate || !selectedContactList || !campaignName || !postTime ||!file) {
       showAlert("Please fill in all the fields", "error");
       return;
     }
