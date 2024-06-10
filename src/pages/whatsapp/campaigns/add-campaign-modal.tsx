@@ -25,7 +25,7 @@ import { supabase } from "../../../utils/supabaseClient";
 
 const AddCampaignModal: React.FC = function () {
   const [isOpen, setIsOpen] = useState(false);
-  const { addCampaign } = useCampaignContext();
+  const { addCampaign, loading } = useCampaignContext();
   const { templates } = useTemplateContext();
   const { contactLists } = useContactListContext();
   const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
@@ -332,7 +332,7 @@ const AddCampaignModal: React.FC = function () {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button color="primary" onClick={() => handleAddCampaign()}>
+          <Button color="primary" onClick={() => handleAddCampaign()}disabled={loading}>
             Create campaign
           </Button>
         </Modal.Footer>

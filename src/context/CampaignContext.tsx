@@ -93,6 +93,7 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
   }, [currentProject, showAlert]);
 
   const addCampaign = async (campaign: CampaignInsert) => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("campaigns")
       .insert([{ ...campaign, project_id: currentProject?.project_id }])
@@ -103,7 +104,8 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
       showAlert("Error adding campaign", "error");
       return;
     }
-
+    
+    setLoading(false);
     return data![0];
   };
 
