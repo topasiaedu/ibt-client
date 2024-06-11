@@ -87,9 +87,13 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
         const parts = contact.split(',');
         // Check if contact has both name and phone or just phone
         const phone = parts[0].trim();
-        const name = parts.length === 2 ? parts[1].trim() : undefined; // or '' if you prefer an empty string over undefined
+        const name = parts.length === 2 ? parts[1].trim() : undefined; // or '' if you prefer an empty string over undefined    
+
         return { name, phone };
       });
+
+      // Remove Empty Contacts
+      const filteredContactsArray = contactsArray.filter((contact) => contact.phone !== '');
 
       await contactsArray.forEach(async (contact) => {
         const tempContact = { name: contact.name || 'Unknown', wa_id: contact.phone } as Contact;
