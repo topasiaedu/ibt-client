@@ -24,19 +24,19 @@ interface WhatsAppBusinessAccountContextType {
   addWhatsAppBusinessAccount: (whatsAppBusinessAccount: WhatsAppBusinessAccountInsert) => void;
   updateWhatsAppBusinessAccount: (whatsAppBusinessAccount: WhatsAppBusinessAccount) => void;
   deleteWhatsAppBusinessAccount: (whatsAppBusinessAccountId: number) => void;
-  selectedWhatsAppBusinessAccount: WhatsAppBusinessAccount | null;
-  setSelectedWhatsAppBusinessAccount: (whatsAppBusinessAccount: WhatsAppBusinessAccount | null) => void;
+  // selectedWhatsAppBusinessAccount: WhatsAppBusinessAccount | null;
+  // setSelectedWhatsAppBusinessAccount: (whatsAppBusinessAccount: WhatsAppBusinessAccount | null) => void;
   loading: boolean;
 }
 
 const WhatsAppBusinessAccountContext = createContext<WhatsAppBusinessAccountContextType>(undefined!);
 
 export const WhatsAppBusinessAccountProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
-  const storage = window.localStorage.getItem("selectedWhatsAppBusinessAccount");
+  // const storage = window.localStorage.getItem("selectedWhatsAppBusinessAccount");
   const [whatsAppBusinessAccounts, setWhatsAppBusinessAccounts] = useState<WhatsAppBusinessAccount[]>([]);
-  const [selectedWhatsAppBusinessAccount, setSelectedWhatsAppBusinessAccount] = useState<WhatsAppBusinessAccount | null>(
-    storage ? JSON.parse(storage) : null
-  );
+  // const [selectedWhatsAppBusinessAccount, setSelectedWhatsAppBusinessAccount] = useState<WhatsAppBusinessAccount | null>(
+  //   storage ? JSON.parse(storage) : null
+  // );
   const [loading, setLoading] = useState<boolean>(false);
   const { currentProject } = useProjectContext();
   const { showAlert } = useAlertContext();
@@ -66,9 +66,9 @@ export const WhatsAppBusinessAccountProvider: React.FC<PropsWithChildren<{}>> = 
         return prevWhatsAppBusinessAccounts;
       });
 
-      if (!selectedWhatsAppBusinessAccount && whatsAppBusinessAccounts!.length > 0) {
-        setSelectedWhatsAppBusinessAccount(whatsAppBusinessAccounts![0]);
-      }
+      // if (!selectedWhatsAppBusinessAccount && whatsAppBusinessAccounts!.length > 0) {
+      //   setSelectedWhatsAppBusinessAccount(whatsAppBusinessAccounts![0]);
+      // }
     };
 
     fetchWhatsAppBusinessAccounts();
@@ -104,7 +104,7 @@ export const WhatsAppBusinessAccountProvider: React.FC<PropsWithChildren<{}>> = 
     return () => {
       subscription.unsubscribe();
     };
-  }, [currentProject, selectedWhatsAppBusinessAccount, showAlert]);
+  }, [currentProject, showAlert]);
 
   const addWhatsAppBusinessAccount = useCallback(
     async (whatsAppBusinessAccount: WhatsAppBusinessAccountInsert) => {
@@ -161,8 +161,8 @@ export const WhatsAppBusinessAccountProvider: React.FC<PropsWithChildren<{}>> = 
       addWhatsAppBusinessAccount,
       updateWhatsAppBusinessAccount,
       deleteWhatsAppBusinessAccount,
-      selectedWhatsAppBusinessAccount,
-      setSelectedWhatsAppBusinessAccount,
+      // selectedWhatsAppBusinessAccount,
+      // setSelectedWhatsAppBusinessAccount,
       loading,
     }),
     [
@@ -170,8 +170,8 @@ export const WhatsAppBusinessAccountProvider: React.FC<PropsWithChildren<{}>> = 
       addWhatsAppBusinessAccount,
       updateWhatsAppBusinessAccount,
       deleteWhatsAppBusinessAccount,
-      selectedWhatsAppBusinessAccount,
-      setSelectedWhatsAppBusinessAccount,
+      // selectedWhatsAppBusinessAccount,
+      // setSelectedWhatsAppBusinessAccount,
       loading,
     ]
   );

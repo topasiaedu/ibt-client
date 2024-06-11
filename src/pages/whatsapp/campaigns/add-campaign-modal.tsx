@@ -50,6 +50,7 @@ const AddCampaignModal: React.FC = function () {
   const { addCampaignPhoneNumber } = useCampaignPhoneNumberContext();
   const [file, setFile] = useState<File | null>(null);
 
+  if ( postDate && postTime) {console.log("DATETIME", replaceTimeInDate(postDate, postTime).toString());}
   // console.log("DATETIME", addTimeToDate(postDate, postTime).toString());
   const wabaPhoneNumber = whatsAppBusinessAccounts
     .map((waba) => {
@@ -99,10 +100,11 @@ const AddCampaignModal: React.FC = function () {
     }
 
     // Assuming postDate is a Date object and postTime is a string in "HH:mm" format
-    const combinedDateTimeString = addTimeToDate(
+    const combinedDateTimeString = replaceTimeInDate(
       postDate,
       postTime
     ).toISOString();
+    
 
     let template_payload = {
       name: selectedTemplate?.name,
@@ -575,12 +577,14 @@ function generateTemplateExampleFields(
 
 export default AddCampaignModal;
 
-function addTimeToDate(date: Date, timeString: string): Date {
+function replaceTimeInDate(date: Date, timeString: string): Date {
   const [hours, minutes] = timeString.split(":").map(Number);
 
   const newDate = new Date(date);
-  newDate.setHours(newDate.getHours() + hours);
-  newDate.setMinutes(newDate.getMinutes() + minutes);
+  newDate.setHours(hours);
+  newDate.setMinutes(minutes);
+  newDate.setSeconds(0); // Optionally reset seconds to 0
 
   return newDate;
 }
+

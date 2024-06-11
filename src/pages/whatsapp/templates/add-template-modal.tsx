@@ -9,7 +9,7 @@ import {
   Textarea,
   Card,
 } from "flowbite-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { HiPlus } from "react-icons/hi";
 import {
   useWhatsAppBusinessAccountContext,
@@ -54,6 +54,7 @@ const AddTemplateModal: React.FC = function () {
   const { currentProject } = useProjectContext();
   const [file, setFile] = useState<File | null>(null);
   const { showAlert } = useAlertContext();
+  const [preview, setPreview] = useState<JSX.Element | null>(null);
 
   const handleAddTemplate = async () => {
     const template: TemplateInsert = {
@@ -170,7 +171,8 @@ const AddTemplateModal: React.FC = function () {
     const buttonTexts = buttons.map((button) => button.text) || [];
     if (headerType === "IMAGE" && file) {
       return (
-        <MessageComponent
+        setPreview(
+          <MessageComponent
           message={newBodyData}
           footer={footerData}
           date={currentDate}
@@ -178,9 +180,11 @@ const AddTemplateModal: React.FC = function () {
           buttons={buttonTexts}
           headerType="IMAGE"
         />
+        )
       );
     } else if (headerType === "TEXT") {
       return (
+        setPreview(
         <MessageComponent
           header={headerData}
           message={newBodyData}
@@ -188,9 +192,11 @@ const AddTemplateModal: React.FC = function () {
           date={currentDate}
           buttons={buttonTexts}
         />
+        )
       );
     } else if (headerType === "VIDEO" && file) {
       return (
+        setPreview(
         <MessageComponent
           message={newBodyData}
           footer={footerData}
@@ -199,9 +205,11 @@ const AddTemplateModal: React.FC = function () {
           buttons={buttonTexts}
           headerType="VIDEO"
         />
+        )
       );
     } else if (headerType === "DOCUMENT") {
       return (
+        setPreview(
         <MessageComponent
           message={newBodyData}
           footer={footerData}
@@ -210,18 +218,26 @@ const AddTemplateModal: React.FC = function () {
           buttons={buttonTexts}
           headerType="DOCUMENT"
         />
+        )
       );
     } else {
       return (
+        setPreview(
         <MessageComponent
           message={newBodyData}
           footer={footerData}
           date={currentDate}
           buttons={buttonTexts}
         />
+        )
       );
     }
   };
+
+  useEffect(() => {
+    generatePreview();
+  }, [headerData, bodyData, footerData, buttons, file, headerType]);
+
   return (
     <>
       <Button color="primary" onClick={() => setIsOpen(true)}>
@@ -515,7 +531,7 @@ const AddTemplateModal: React.FC = function () {
                 <div className="h-[46px] w-[3px] bg-gray-800 absolute -start-[17px] top-[178px] rounded-s-lg"></div>
                 <div className="h-[64px] w-[3px] bg-gray-800 absolute -end-[17px] top-[142px] rounded-e-lg"></div>
                 <div className="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-white overflow-y-auto hide-scrollbar">
-                  <div className="p-6">{generatePreview()}</div>
+                  <div className="p-6">{preview}</div>
                 </div>
               </div>
             </div>
