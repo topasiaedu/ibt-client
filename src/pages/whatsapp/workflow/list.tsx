@@ -2,36 +2,42 @@
 import {
   Breadcrumb,
   Button,
+  Datepicker,
   Label,
   Table,
   TextInput,
-  ToggleSwitch
+  ToggleSwitch,
 } from "flowbite-react";
 import React from "react";
-import {
-  HiHome,
-  HiOutlinePencilAlt,
-  HiPlus,
-} from "react-icons/hi";
+import { HiHome, HiOutlinePencilAlt, HiPlus } from "react-icons/hi";
 import { useAlertContext } from "../../../context/AlertContext";
-import { Workflows, useWorkflowContext } from "../../../context/WorkflowContext";
+import {
+  Workflows,
+  useWorkflowContext,
+} from "../../../context/WorkflowContext";
 import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
 import LoadingPage from "../../pages/loading";
+import { BsFillCalendarDateFill } from "react-icons/bs";
 
 const WorkflowListPage: React.FC = function () {
   const [searchValue, setSearchValue] = React.useState("");
   // const projectWabaIds = workflows.filter((waba) => waba.project_id === currentProject?.project_id).map((waba) => waba.account_id);
-  const { workflows, loading } = useWorkflowContext();
+  const { workflows, loading, startDate, setStartDate, endDate, setEndDate } =
+    useWorkflowContext();
 
   const resultingTemplates: Workflows = {
-    workflows: workflows.filter((workflow) =>
-      workflow.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      (workflow.description && workflow.description.toLowerCase().includes(searchValue.toLowerCase()))
+    workflows: workflows.filter(
+      (workflow) =>
+        workflow.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+        (workflow.description &&
+          workflow.description
+            .toLowerCase()
+            .includes(searchValue.toLowerCase()))
     ),
   };
 
   if (loading) {
-    return <LoadingPage />
+    return <LoadingPage />;
   }
 
   return (
@@ -70,10 +76,32 @@ const WorkflowListPage: React.FC = function () {
                 </div>
               </form>
 
+              <Label className="sr-only">Start Date</Label>
+              <Datepicker
+                value={startDate?.toLocaleDateString()}
+                placeholder="Start Date"
+                icon={BsFillCalendarDateFill}
+                onSelectedDateChanged={(date) => setStartDate(date)}
+              />
+
+              {/* Add a dash in between start and end date */}
+              <div className="mx-2">-</div>
+
+              <Label className="sr-only">End Date</Label>
+              <Datepicker
+                value={endDate?.toLocaleDateString()}
+                placeholder="End Date"
+                icon={BsFillCalendarDateFill}
+                onSelectedDateChanged={(date) => setEndDate(date)}
+              />
             </div>
             <div className="ml-auto flex items-center space-x-2 sm:space-x-3">
               {/* Redirect to editor */}
-              <Button color="primary" onClick={() => window.location.href = "/whatsapp/workflow/editor"}>
+              <Button
+                color="primary"
+                onClick={() =>
+                  (window.location.href = "/whatsapp/workflow/editor")
+                }>
                 <div className="flex items-center gap-x-3">
                   <HiPlus className="text-xl" />
                   Add Workflow
@@ -105,12 +133,15 @@ const TemplatesTable: React.FC<Workflows> = function ({ workflows }) {
     try {
       const workflow = workflows.find((workflow) => workflow.id === workflowId);
       if (!workflow) return;
-      await updateWorkflow({ 
-        id: workflow.id,
-        name: workflow.name,
-        description: workflow.description,
-        run: run,
-       }, workflow.phone_numbers);
+      await updateWorkflow(
+        {
+          id: workflow.id,
+          name: workflow.name,
+          description: workflow.description,
+          run: run,
+        },
+        workflow.phone_numbers
+      );
       showAlert("Workflow updated successfully", "success");
     } catch (error) {
       showAlert((error as unknown as Error).message, "error");
@@ -122,20 +153,24 @@ const TemplatesTable: React.FC<Workflows> = function ({ workflows }) {
       <Table.Head className="bg-gray-100 dark:bg-gray-700">
         <Table.HeadCell>Name</Table.HeadCell>
         <Table.HeadCell>Description</Table.HeadCell>
-        <Table.HeadCell>Total Read</Table.HeadCell>
+        <Table.HeadCell>Total Contacts</Table.HeadCell>
         <Table.HeadCell>Total Sent</Table.HeadCell>
         <Table.HeadCell>Total Failed</Table.HeadCell>
+        <Table.HeadCell>Total Read</Table.HeadCell>
         <Table.HeadCell>Status</Table.HeadCell>
         <Table.HeadCell>Action</Table.HeadCell>
       </Table.Head>
       <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
         {workflows.map((workflow) => (
-          <Table.Row key={workflow.id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+          <Table.Row
+            key={workflow.id}
+            className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Table.Cell>{workflow.name}</Table.Cell>
             <Table.Cell>{workflow.description}</Table.Cell>
-            <Table.Cell>{workflow.total_read}</Table.Cell>
+            <Table.Cell>{workflow.total_unique_contacts}</Table.Cell>
             <Table.Cell>{workflow.total_sent}</Table.Cell>
             <Table.Cell>{workflow.total_failed}</Table.Cell>
+            <Table.Cell>{workflow.total_read}</Table.Cell>
             <Table.Cell>
               <div className="flex items-center">
                 <ToggleSwitch
@@ -149,7 +184,11 @@ const TemplatesTable: React.FC<Workflows> = function ({ workflows }) {
             </Table.Cell>
             <Table.Cell>
               {/* Redirect them to editor with id at the end */}
-              <Button color="primary" onClick={() => window.location.href = `/whatsapp/workflow/editor/${workflow.id}`}>
+              <Button
+                color="primary"
+                onClick={() =>
+                  (window.location.href = `/whatsapp/workflow/editor/${workflow.id}`)
+                }>
                 <HiOutlinePencilAlt className="text-sm" />
                 Edit
               </Button>
@@ -160,7 +199,5 @@ const TemplatesTable: React.FC<Workflows> = function ({ workflows }) {
     </Table>
   );
 };
-
-
 
 export default WorkflowListPage;

@@ -26,6 +26,7 @@ export type Workflow = Database["public"]["Tables"]["workflows"]["Row"] & {
   total_read: number;
   total_sent: number;
   total_failed: number;
+  total_unique_contacts: number;
 };
 export type Workflows = { workflows: Workflow[] };
 export type WorkflowInsert =
@@ -68,6 +69,10 @@ export type WorkflowContextType = {
   createWorkflowLog: (workflowLog: WorkflowLogInsert) => Promise<void>;
   createEvent: (event: EventInsert) => Promise<void>;
   loading: boolean;
+  startDate: Date;
+  setStartDate: (date: Date) => void;
+  endDate: Date;
+  setEndDate: (date: Date) => void;
 };
 
 const WorkflowContext = createContext<WorkflowContextType>(
@@ -81,6 +86,11 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({
   const { showAlert } = useAlertContext();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  // Set the default start date to the beginning of the current month
+  const [startDate, setStartDate] = useState<Date>(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  );
+  const [endDate, setEndDate] = useState<Date>(new Date());
 
   useEffect(() => {
     setLoading(true);
@@ -88,12 +98,17 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({
       if (!currentProject) {
         return;
       }
+      console.log("startDate", startDate);
+      console.log("endDate", endDate);
 
-      const { data: workflowData, error: workflowError } = await supabase.rpc("fetch_workflows", {
-        project_id_param: currentProject.project_id,
-        start_date: "2024-01-01T00:00:00Z",
-        end_date: "2024-12-31T23:59:59Z",
-      });
+      const { data: workflowData, error: workflowError } = await supabase.rpc(
+        "fetch_workflows",
+        {
+          project_id_param: currentProject.project_id,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+        }
+      );
 
       console.log("workflowData", workflowData);
 
@@ -116,7 +131,7 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({
 
     getWorkflows();
     setLoading(false);
-  }, [currentProject, showAlert]);
+  }, [currentProject, endDate, showAlert, startDate]);
 
   const createWorkflow = useCallback(
     async (workflow: WorkflowInsert, phoneNumbers: PhoneNumber[]) => {
@@ -318,6 +333,10 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({
       createWorkflowLog,
       createEvent,
       loading,
+      startDate,
+      setStartDate,
+      endDate,
+      setEndDate,
     }),
     [
       workflows,
@@ -333,6 +352,10 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({
       createWorkflowLog,
       createEvent,
       loading,
+      startDate,
+      setStartDate,
+      endDate,
+      setEndDate,
     ]
   );
 

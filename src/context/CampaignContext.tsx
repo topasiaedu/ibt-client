@@ -141,7 +141,11 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
   const deleteCampaign = useCallback(
     async (campaignId: number) => {
       try {
+        await supabase.from("campaign_phone_numbers").delete().eq("campaign_id", campaignId);
+
         await supabase.from("campaigns").delete().eq("campaign_id", campaignId);
+
+        showAlert("Campaign deleted successfully", "success");
       } catch (error) {
         console.error("Error deleting campaign:", error);
         showAlert("Error deleting campaign", "error");
