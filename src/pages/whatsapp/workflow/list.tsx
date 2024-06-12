@@ -122,6 +122,9 @@ const TemplatesTable: React.FC<Workflows> = function ({ workflows }) {
       <Table.Head className="bg-gray-100 dark:bg-gray-700">
         <Table.HeadCell>Name</Table.HeadCell>
         <Table.HeadCell>Description</Table.HeadCell>
+        <Table.HeadCell>Total Read</Table.HeadCell>
+        <Table.HeadCell>Total Sent</Table.HeadCell>
+        <Table.HeadCell>Total Failed</Table.HeadCell>
         <Table.HeadCell>Status</Table.HeadCell>
         <Table.HeadCell>Action</Table.HeadCell>
       </Table.Head>
@@ -130,12 +133,16 @@ const TemplatesTable: React.FC<Workflows> = function ({ workflows }) {
           <Table.Row key={workflow.id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Table.Cell>{workflow.name}</Table.Cell>
             <Table.Cell>{workflow.description}</Table.Cell>
+            <Table.Cell>{workflow.total_read}</Table.Cell>
+            <Table.Cell>{workflow.total_sent}</Table.Cell>
+            <Table.Cell>{workflow.total_failed}</Table.Cell>
             <Table.Cell>
               <div className="flex items-center">
                 <ToggleSwitch
                   checked={workflow.run}
                   onChange={(e) => {
                     updateRunStatus(workflow.id, e);
+                    workflow.run = e;
                   }}
                 />
               </div>

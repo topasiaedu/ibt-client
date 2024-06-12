@@ -23,6 +23,9 @@ export type Workflow = Database["public"]["Tables"]["workflows"]["Row"] & {
   phone_numbers: PhoneNumber[];
   trigger: Trigger[];
   actions: Action[];
+  total_read: number;
+  total_sent: number;
+  total_failed: number;
 };
 export type Workflows = { workflows: Workflow[] };
 export type WorkflowInsert =
@@ -86,28 +89,24 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({
         return;
       }
 
-      const { data: workflows, error } = await supabase
-        .from("workflows")
-        .select(
-          `
-          *,
-          trigger: triggers(*),
-          actions: actions(*),
-          phone_numbers: workflow_phone_numbers(*, phone_number_id(*))
-        `
-        )
-        .eq("project_id", currentProject?.project_id)
-        .order("created_at", { ascending: false });
+      const { data: workflowData, error: workflowError } = await supabase.rpc("fetch_workflows", {
+        project_id_param: currentProject.project_id,
+        start_date: "2024-01-01T00:00:00Z",
+        end_date: "2024-12-31T23:59:59Z",
+      });
 
-      if (error) {
-        showAlert(error.message, "error");
-        console.error(error);
+      console.log("workflowData", workflowData);
+
+      if (workflowError) {
+        showAlert(workflowError.message, "error");
+        console.error(workflowError);
         return;
       }
-      if (workflows) {
+
+      if (workflowData) {
         setWorkflows((prevWorkflows) => {
-          if (!isEqual(prevWorkflows, workflows)) {
-            return workflows;
+          if (!isEqual(prevWorkflows, workflowData)) {
+            return workflowData;
           } else {
             return prevWorkflows;
           }
