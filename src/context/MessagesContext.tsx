@@ -17,6 +17,7 @@ import {
   WhatsAppBusinessAccount,
   useWhatsAppBusinessAccountContext,
 } from "./WhatsAppBusinessAccountContext";
+import isEqual from "lodash/isEqual"; // Import lodash's isEqual for deep comparison
 
 export type Message = Database["public"]["Tables"]["messages"]["Row"];
 export type Messages = { messages: Message[] };
@@ -64,7 +65,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
   const { phoneNumbers } = usePhoneNumberContext();
   const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
 
-  console.log('MessagesProvider render'); // Add this line to log renders
+  console.log("MessagesProvider render"); // Add this line to log renders
 
   useEffect(() => {
     setLoading(true);
@@ -86,7 +87,13 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
 
       const conversations = data as Conversation[];
 
-      setConversations(conversations);
+      setConversations((prevConversations) => {
+        if (!isEqual(prevConversations, conversations)) {
+          console.log("Updating campaigns state");
+          return conversations;
+        }
+        return prevConversations;
+      });
     };
 
     fetchConversations();
@@ -94,7 +101,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
     const handleChanges = (payload: any) => {
       switch (payload.eventType) {
         case "INSERT":
-          console.log('INSERT event triggered'); // Add this line
+          console.log("INSERT event triggered"); // Add this line
           const conversationId = `${payload.new.contact_id}-${payload.new.phone_number_id}`;
           const existingConversation = conversations.find(
             (conversation) => conversation.id === conversationId
@@ -161,7 +168,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           }
           break;
         case "UPDATE":
-          console.log('UPDATE event triggered'); // Add this line
+          console.log("UPDATE event triggered"); // Add this line
           setConversations((prev) =>
             prev.map((conversation) =>
               conversation.messages.some(
@@ -180,7 +187,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           );
           break;
         case "DELETE":
-          console.log('DELETE event triggered'); // Add this line
+          console.log("DELETE event triggered"); // Add this line
           setConversations((prev) =>
             prev.filter((conversation) =>
               conversation.messages.some(
@@ -243,6 +250,9 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           (phoneNumber) =>
             phoneNumber.phone_number_id === message.phone_number_id
         );
+
+        console.log("access token", WHATSAPP_ACCESS_TOKEN);
+        console.log("phone number", phoneNumber?.wa_id);
 
         let body = JSON.stringify({
           messaging_product: "whatsapp",
@@ -339,6 +349,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             },
           });
         } else {
+          
           body = JSON.stringify({
             messaging_product: "whatsapp",
             to: contacts.find(
@@ -349,6 +360,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
               body: message.content,
             },
           });
+          console.log("body", body);
         }
         const response = await fetch(
           `https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/messages`,
@@ -410,17 +422,20 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
     [currentProject?.project_id, showAlert]
   );
 
-  const deleteMessage = useCallback(async (messageId: number) => {
-    const { error } = await supabase
-      .from("messages")
-      .delete()
-      .eq("message_id", messageId);
+  const deleteMessage = useCallback(
+    async (messageId: number) => {
+      const { error } = await supabase
+        .from("messages")
+        .delete()
+        .eq("message_id", messageId);
 
-    if (error) {
-      console.error("Error deleting message:", error);
-      showAlert("Error deleting message", "error");
-    }
-  }, [showAlert]);
+      if (error) {
+        console.error("Error deleting message:", error);
+        showAlert("Error deleting message", "error");
+      }
+    },
+    [showAlert]
+  );
 
   const fetchCampaignReadMessagesCount = useCallback(
     async (campaignId: number) => {

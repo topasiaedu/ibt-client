@@ -57,16 +57,20 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
       } else if (payload.eventType === "UPDATE") {
         setContacts((prev) =>
           prev.map((contact) =>
-            contact.contact_id === payload.new.contact_id ? payload.new : contact
+            contact.contact_id === payload.new.contact_id
+              ? payload.new
+              : contact
           )
         );
       } else if (payload.eventType === "DELETE") {
         setContacts((prev) =>
-          prev.filter((contact) => contact.contact_id !== payload.old.contact_id)
+          prev.filter(
+            (contact) => contact.contact_id !== payload.old.contact_id
+          )
         );
       }
-    }
-    
+    };
+
     const subscription = supabase
       .channel("contacts")
       .on(
@@ -89,7 +93,14 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       const { data, error } = await supabase
         .from("contacts")
-        .insert([{ ...contact, project_id: currentProject?.project_id }]);
+        .insert([
+          {
+            name: contact.name,
+            wa_id: contact.wa_id,
+            project_id: currentProject?.project_id,
+          },
+        ])
+        .select("*");
       if (error) {
         console.error("Error adding contact:", error);
         return null;
@@ -139,8 +150,6 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
 
     return contacts?.[0] || null;
   }, []);
-
-  
 
   const contextValue = useMemo(
     () => ({

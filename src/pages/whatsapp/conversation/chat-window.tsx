@@ -33,6 +33,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
       mediaType = "audio";
     }
 
+    console.log("Contact", conversation.contact.contact_id)
     // Add message to conversation
     const data: MessageInsert = {
       contact_id: conversation.contact.contact_id,
