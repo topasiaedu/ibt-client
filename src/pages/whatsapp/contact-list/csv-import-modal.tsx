@@ -5,7 +5,7 @@ import React, { ChangeEvent, useState } from 'react';
 import { BsFiletypeCsv, BsTextareaResize } from "react-icons/bs";
 import { MdCloudUpload } from "react-icons/md";
 import { Textarea } from 'flowbite-react';
-import { useContactContext, Contact } from '../../../context/ContactContext';
+import { useContactContext, Contact, ContactInsert } from '../../../context/ContactContext';
 import { useProjectContext } from '../../../context/ProjectContext';
 import { useContactListContext, ContactList } from '../../../context/ContactListContext';
 import { useAlertContext } from '../../../context/AlertContext';
@@ -67,8 +67,9 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
               addContactToContactList(contact_list.contact_list_id, data.contact_id)
             } else {
               // Add the contact to the contacts table
-              addContact({ name: contact.name, wa_id: contact.phone } as Contact)
+              addContact({ name: contact.name, wa_id: contact.phone } as ContactInsert)
                 .then((response) => {
+                  console.log("Contact added: ", response);
                   if (!response) return;
                   addContactToContactList(contact_list.contact_list_id, response.contact_id);
                 }).catch((error) => {
@@ -94,6 +95,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({ contact_list }) =
 
       // Remove Empty Contacts
       const filteredContactsArray = contactsArray.filter((contact) => contact.phone !== '');
+      console.log("Total Contacts: ", filteredContactsArray.length)
 
       await contactsArray.forEach(async (contact) => {
         const tempContact = { name: contact.name || 'Unknown', wa_id: contact.phone } as Contact;

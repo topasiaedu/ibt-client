@@ -16,7 +16,7 @@ export type ContactInsert = Database["public"]["Tables"]["contacts"]["Insert"];
 
 interface ContactContextProps {
   contacts: Contact[];
-  addContact: (contact: Contact) => Promise<Contact | null>;
+  addContact: (contact: ContactInsert) => Promise<Contact | null>;
   updateContact: (contact: Contact) => void;
   deleteContact: (contactId: number) => void;
   findContact: (contact: Contact) => Promise<Contact | null>;
@@ -89,8 +89,10 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
   }, [currentProject]);
 
   const addContact = useCallback(
-    async (contact: Contact) => {
+    async (contact: ContactInsert) => {
       setLoading(true);
+
+      console.log("Adding contact: ", contact);
       const { data, error } = await supabase
         .from("contacts")
         .insert([
@@ -100,7 +102,7 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
             project_id: currentProject?.project_id,
           },
         ])
-        .select("*");
+        .select();
       if (error) {
         console.error("Error adding contact:", error);
         return null;
