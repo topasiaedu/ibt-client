@@ -13,7 +13,7 @@ import { useProjectContext } from "./ProjectContext";
 import { useAlertContext } from "./AlertContext";
 import isEqual from "lodash/isEqual"; // Add this import
 
-export type WhatsAppBusinessAccount = Database["public"]["Tables"]["whatsapp_business_accounts"]["Row"];
+export type WhatsAppBusinessAccount = Database["public"]["Tables"]["whatsapp_business_accounts"]["Row"]
 export type WhatsAppBusinessAccounts = {
   whatsapp_business_accounts: WhatsAppBusinessAccount[];
 };
@@ -57,6 +57,8 @@ export const WhatsAppBusinessAccountProvider: React.FC<PropsWithChildren<{}>> = 
         showAlert("Error fetching WhatsApp Business Accounts", "error");
         return;
       }
+
+      console.log("Fetching WhatsApp Business Accounts", whatsAppBusinessAccounts);
 
       setWhatsAppBusinessAccounts((prevWhatsAppBusinessAccounts) => {
         if (!isEqual(prevWhatsAppBusinessAccounts, whatsAppBusinessAccounts)) {

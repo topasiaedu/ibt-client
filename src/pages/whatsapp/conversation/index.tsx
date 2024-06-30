@@ -26,6 +26,18 @@ const ConversationPage: React.FC = function () {
     setSelectedConversation(conversation);
   };
 
+  const handleUnreadConversation = (conversation: Conversation) => {
+    // Mark the first inbound message as UNREAD
+    const firstInboundMessage = conversation.messages.find((message) => message.direction === "inbound");
+    if (firstInboundMessage) {
+      console.log(firstInboundMessage);
+      updateMessage({
+        ...firstInboundMessage,
+        status: "UNREAD"
+      });
+    }
+  }
+
   useEffect(() => {
     if (!selectedConversation) {
       setSelectedConversation(conversations[0]);
@@ -54,7 +66,7 @@ const ConversationPage: React.FC = function () {
     setSelectedConversation(undefined);
   }, [currentProject]);
 
-  if (loading || !conversations) {
+  if (loading || !conversations || !conversations.length) {
     return (
       <LoadingPage />
     );
@@ -81,6 +93,7 @@ const ConversationPage: React.FC = function () {
           conversations={conversations}
           onSelectConversation={handleSelectConversation}
           selectedConversation={selectedConversation}
+          onMarkAsUnread={handleUnreadConversation}
         />
         {selectedConversation && (<ChatWindow conversation={selectedConversation} />)}
         {selectedConversation && (<ContactProfile contact={selectedConversation.contact} close_at={selectedConversation.close_at} />)}

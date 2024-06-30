@@ -20,7 +20,7 @@ const ContactListPage: FC = function () {
   const { contacts, loading } = useContactContext();
   const [searchValue, setSearchValue] = React.useState("");
 
-  if (loading) {
+  if (loading || !contacts || !contacts.length) {
     return <LoadingPage />;
   }
 

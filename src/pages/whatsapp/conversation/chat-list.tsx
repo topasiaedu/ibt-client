@@ -1,41 +1,42 @@
+import React, { useState } from "react";
 import { Badge, Dropdown, Label, TextInput } from "flowbite-react";
-import React from "react";
 import { Conversation } from "../../../context/MessagesContext";
 
 interface ChatListProps {
   conversations: Conversation[];
   onSelectConversation: (conversation: Conversation) => void;
   selectedConversation: Conversation | undefined; // ID of the selected conversation
+  onMarkAsUnread: (conversation: Conversation) => void;
 }
 
 const ChatList: React.FC<ChatListProps> = ({
   conversations,
   onSelectConversation,
   selectedConversation,
+  onMarkAsUnread,
 }) => {
   const [phoneNumbers, setPhoneNumbers] = React.useState<string[]>([]);
   const [selectedPhoneNumber, setSelectedPhoneNumber] =
     React.useState<string>("");
   const [search, setSearch] = React.useState<string>("");
+  const [contextMenuVisible, setContextMenuVisible] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const [contextMenuConversation, setContextMenuConversation] = useState<
+    Conversation | undefined
+  >(undefined);
 
   // Get all unique phone numbers
   conversations.forEach((conversation) => {
-    // This checks if the phone number is already in the list.
     if (!phoneNumbers.includes(conversation.phone_number.number)) {
-      // Use the callback form of setPhoneNumbers to ensure the phoneNumbers array is current at the time of the update.
       setPhoneNumbers((prevPhoneNumbers) => {
-        // Further check inside the updater function to avoid race conditions
         if (!prevPhoneNumbers.includes(conversation.phone_number.number)) {
-          // Return a new array with the new number added
           return [...prevPhoneNumbers, conversation.phone_number.number];
         }
-        // If the number is already included, return the previous state
         return prevPhoneNumbers;
       });
     }
   });
 
-  // Convert the last message time to a human-readable format and add 8 hour to match GMT+8
   const lastMessageTime = (time: string) => {
     const date = new Date(time);
     date.setHours(date.getHours() + 8);
@@ -47,8 +48,31 @@ const ChatList: React.FC<ChatListProps> = ({
     });
   };
 
+  const handleContextMenu = (
+    event: React.MouseEvent,
+    conversation: Conversation
+  ) => {
+    event.preventDefault();
+    setContextMenuConversation(conversation);
+    setMenuPosition({ x: event.clientX, y: event.clientY });
+    setContextMenuVisible(true);
+  };
+
+  const handleClick = () => {
+    setContextMenuVisible(false);
+  };
+
+  const handleMenuOptionClick = (option: string) => {
+    if (option === "Mark as Unread" && contextMenuConversation !== undefined) {
+      onMarkAsUnread(contextMenuConversation);
+    }
+    setContextMenuVisible(false);
+  };
+
   return (
-    <div className="overflow-y-auto h-full divide-gray-200 dark:divide-gray-700">
+    <div
+      className="overflow-y-auto h-full divide-gray-200 dark:divide-gray-700"
+      onClick={handleClick}>
       <div className="p-4 bg-white dark:bg-gray-800 flex justify-between items-center space-x-4">
         <form className="lg:pr-3">
           <Label htmlFor="users-search" className="sr-only">
@@ -98,7 +122,8 @@ const ChatList: React.FC<ChatListProps> = ({
                   ? "bg-gray-200 dark:bg-gray-700"
                   : ""
               }`}
-              onClick={() => onSelectConversation(conversation)}>
+              onClick={() => onSelectConversation(conversation)}
+              onContextMenu={(e) => handleContextMenu(e, conversation)}>
               <div className="flex justify-between 2xl:space-x-4 items-center">
                 <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
                   <div className="min-w-0 flex-1 w-fit">
@@ -128,6 +153,25 @@ const ChatList: React.FC<ChatListProps> = ({
             </li>
           ))}
       </ul>
+      {contextMenuVisible && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-0"
+          onClick={handleClick}>
+          <div
+            className="absolute z-10 bg-white dark:bg-gray-800 shadow-lg rounded-lg"
+            style={{ top: menuPosition.y, left: menuPosition.x }}>
+            <ul>
+              <li>
+                <button
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => handleMenuOptionClick("Mark as Unread")}>
+                  Mark as Unread
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

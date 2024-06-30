@@ -34,7 +34,7 @@ const CampaignListPage: React.FC = function () {
     ),
   };
 
-  if (loading) {
+  if (loading || !campaigns || !campaigns.length) {
     return <LoadingPage />;
   }
 

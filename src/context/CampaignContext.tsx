@@ -95,9 +95,21 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
       )
       .subscribe();
 
+    const subscriptionMessages = supabase
+      .channel("messages")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "messages" },
+        (payload) => {
+          fetchCampaigns();
+        }
+      )
+      .subscribe();
+
     setLoading(false);
     return () => {
       subscription.unsubscribe();
+      subscriptionMessages.unsubscribe();
     };
   }, [currentProject, showAlert]);
 
@@ -141,7 +153,10 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
   const deleteCampaign = useCallback(
     async (campaignId: number) => {
       try {
-        await supabase.from("campaign_phone_numbers").delete().eq("campaign_id", campaignId);
+        await supabase
+          .from("campaign_phone_numbers")
+          .delete()
+          .eq("campaign_id", campaignId);
 
         await supabase.from("campaigns").delete().eq("campaign_id", campaignId);
 

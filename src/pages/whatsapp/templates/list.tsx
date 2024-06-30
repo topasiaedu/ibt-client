@@ -29,7 +29,7 @@ const TemplateListPage: React.FC = function () {
     ),
   };
 
-  if (loading) {
+  if (loading || !templates || !templates.length) {
     return <LoadingPage />
   }
 

@@ -251,9 +251,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             phoneNumber.phone_number_id === message.phone_number_id
         );
 
-        console.log("access token", WHATSAPP_ACCESS_TOKEN);
-        console.log("phone number", phoneNumber?.wa_id);
-
         let body = JSON.stringify({
           messaging_product: "whatsapp",
           to: contacts.find(
@@ -326,7 +323,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             {
               method: "POST",
               headers: {
-                Authorization: WHATSAPP_ACCESS_TOKEN,
+                Authorization: phoneNumber?.wa_id === '378967558625481' ? "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN_2 : "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN,
               },
               body: form,
             }

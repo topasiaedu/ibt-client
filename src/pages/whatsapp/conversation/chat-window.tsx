@@ -1,26 +1,33 @@
-
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { useEffect, useRef, useState } from "react";
-import { useMessagesContext, MessageInsert, Conversation, Message } from "../../../context/MessagesContext";
+import {
+  useMessagesContext,
+  MessageInsert,
+  Conversation,
+  Message,
+} from "../../../context/MessagesContext";
 import MessageComponent from "../../../components/MessageComponent";
 import { IoAddOutline } from "react-icons/io5";
 import { CiMicrophoneOn } from "react-icons/ci";
 import { CiMicrophoneOff } from "react-icons/ci";
 // import { useAlertContext } from "../../../context/AlertContext";
+import Picker from "emoji-picker-react";
+import { MdOutlineEmojiEmotions } from "react-icons/md";
 
 interface ChatWindowProps {
   conversation: Conversation;
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
-  const [input, setInput] = React.useState("")
+  const [input, setInput] = React.useState("");
   const { addMessage } = useMessagesContext();
-  const [file, setFile] = React.useState<File | null>(null)
+  const [file, setFile] = React.useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
+  const [openEmoji, setOpenEmoji] = useState(false);
 
   const handleSubmit = async () => {
     let mediaType = "text";
@@ -28,12 +35,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     // Check if its video | image | audio | document
     if (file) {
       const fileType = file.type.split("/")[0];
-      mediaType = fileType === "image" ? "image" : fileType === "video" ? "video" : "document";
+      mediaType =
+        fileType === "image"
+          ? "image"
+          : fileType === "video"
+          ? "video"
+          : "document";
     } else if (audioFile) {
       mediaType = "audio";
     }
 
-    console.log("Contact", conversation.contact.contact_id)
+    console.log("Contact", conversation.contact.contact_id);
     // Add message to conversation
     const data: MessageInsert = {
       contact_id: conversation.contact.contact_id,
@@ -47,11 +59,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     };
 
     if (file) {
-      addMessage(data, file)
+      addMessage(data, file);
     } else if (audioFile) {
-      addMessage(data, audioFile)
+      addMessage(data, audioFile);
     } else {
-      addMessage(data)
+      addMessage(data);
     }
 
     // Clear input field
@@ -74,7 +86,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
       e.preventDefault();
       handleSubmit();
     }
-  }
+  };
   useEffect(() => {
     // Create a URL whenever there's a new audio file
     if (audioFile) {
@@ -86,7 +98,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
         URL.revokeObjectURL(url);
       };
     }
-  }, [audioFile]);  // Dependency array ensures this runs only if audioFile changes
+  }, [audioFile]); // Dependency array ensures this runs only if audioFile changes
 
   const startRecording = async () => {
     // Clear any previous data
@@ -95,11 +107,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
 
-        const options = { mimeType: 'audio/webm' }; // Record initially in audio/webm
+        const options = { mimeType: "audio/webm" }; // Record initially in audio/webm
         if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-          console.error(`${options.mimeType} is not supported by this browser.`);
+          console.error(
+            `${options.mimeType} is not supported by this browser.`
+          );
           return;
         }
 
@@ -112,16 +128,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
         };
 
         mediaRecorder.current.onstop = async () => {
-          const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+          const audioBlob = new Blob(audioChunks.current, {
+            type: "audio/webm",
+          });
           const oggBlob = await convertAudioBlobToOgg(audioBlob); // Convert to OGG format
-          const file = new File([oggBlob], 'recording.ogg', { type: 'audio/ogg; codecs=opus' });
+          const file = new File([oggBlob], "recording.ogg", {
+            type: "audio/ogg; codecs=opus",
+          });
           setAudioFile(file);
         };
 
         mediaRecorder.current.start();
         setRecording(true);
       } catch (err) {
-        console.error('Failed to start recording:', err);
+        console.error("Failed to start recording:", err);
       }
     } else {
       console.error("getUserMedia not supported on this browser");
@@ -143,7 +163,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     const audioBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
       fileReader.onload = (event) => {
         if (event.target) {
-          audioContext.decodeAudioData(event.target.result as ArrayBuffer, resolve, reject);
+          audioContext.decodeAudioData(
+            event.target.result as ArrayBuffer,
+            resolve,
+            reject
+          );
         }
       };
       fileReader.onerror = reject;
@@ -154,7 +178,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
       const audioCtx = new OfflineAudioContext({
         numberOfChannels: audioBuffer.numberOfChannels,
         length: audioBuffer.length,
-        sampleRate: audioBuffer.sampleRate
+        sampleRate: audioBuffer.sampleRate,
       });
 
       const source = audioCtx.createBufferSource();
@@ -162,7 +186,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
       audioCtx.oncomplete = (event) => {
         const renderedBuffer = event.renderedBuffer;
         renderedBuffer.copyFromChannel(audioBuffer.getChannelData(0), 0);
-        const blob = new Blob([renderedBuffer.getChannelData(0)], { type: 'audio/ogg; codecs=opus' });
+        const blob = new Blob([renderedBuffer.getChannelData(0)], {
+          type: "audio/ogg; codecs=opus",
+        });
         resolve(blob);
       };
 
@@ -173,31 +199,56 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     return oggBlob;
   };
 
+  const onEmojiClick = (emojiObject: any, e:any) => {
+    console.log("Emoji clicked", emojiObject);
+    console.log("Event", e);
+    setInput(input + emojiObject.emoji);
+  };
 
   return (
-    <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full flex flex-col">
+    <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full flex flex-col relative">
       {/* Chat Messages */}
       {/* Scroll to the bottom of the chat window */}
       <div className="flex flex-grow gap-4 xl:h-[calc(100vh-15rem)] overflow-y-auto scrollToBottom flex-col">
         {[...conversation.messages].reverse().map((message, index) => (
-          <div key={conversation.id + '' + index}>
+          <div key={conversation.id + "" + index}>
             {generateMessage(message)}
           </div>
         ))}
       </div>
       {/* Chatroom Input */}
-      <label htmlFor="chat" className="sr-only">Your message</label>
+      <label htmlFor="chat" className="sr-only">
+        Your message
+      </label>
       {file && (
         <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700">
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-500">{file.name}</span>
           </div>
-          <button type="button" className="p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" onClick={() => setFile(null)}>
-            <svg className="w-5 h-5 rtl:rotate-90" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" clipRule="evenodd" d="M10 1a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9zm4.293 5.293a1 1 0 0 1 1.414 1.414L11.414 10l3.293 3.293a1 1 0 0 1-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 0 1-1.414-1.414L8.586 10 5.293 6.707a1 1 0 0 1 1.414-1.414L10 8.586l3.293-3.293z" />
+          <button
+            type="button"
+            className="p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
+            onClick={() => setFile(null)}>
+            <svg
+              className="w-5 h-5 rtl:rotate-90"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M10 1a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9zm4.293 5.293a1 1 0 0 1 1.414 1.414L11.414 10l3.293 3.293a1 1 0 0 1-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 0 1-1.414-1.414L8.586 10 5.293 6.707a1 1 0 0 1 1.414-1.414L10 8.586l3.293-3.293z"
+              />
             </svg>
             <span className="sr-only">Remove attachment</span>
           </button>
+        </div>
+      )}
+
+      {openEmoji && (
+        <div className={`absolute bottom-24 left-45 z-10 ${openEmoji ? "" : "hidden"}`}>  
+          <Picker onEmojiClick={onEmojiClick} />
         </div>
       )}
 
@@ -205,34 +256,66 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
         <label className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
           <IoAddOutline className="w-5 h-5" />
           <span className="sr-only">Upload File</span>
-          <input type="file" className="sr-only" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-        </label>
-
-        <button type="button" className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
-          {recording ? <CiMicrophoneOff className="w-5 h-5" onClick={stopRecording} /> : <CiMicrophoneOn className="w-5 h-5" onClick={startRecording} />}
+          <input
+            type="file"
+            className="sr-only"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+        </label>{" "}
+        <button
+          type="button"
+          className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
+          onClick={() => setOpenEmoji(!openEmoji)}>
+          <MdOutlineEmojiEmotions className="w-5 h-5" />
+          <span className="sr-only">Open Emoji</span>
+        </button>
+        <button
+          type="button"
+          className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
+          {recording ? (
+            <CiMicrophoneOff className="w-5 h-5" onClick={stopRecording} />
+          ) : (
+            <CiMicrophoneOn className="w-5 h-5" onClick={startRecording} />
+          )}
           <span className="sr-only">Record Audio</span>
         </button>
-
         {recording && (
-          <button type="button" className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" onClick={stopRecording}>
+          <button
+            type="button"
+            className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
+            onClick={stopRecording}>
             <span className="sr-only">Stop Recording</span>
           </button>
         )}
-
-        {recording && (<span className="text-sm text-gray-500">Recording...</span>)}
-
+        {recording && (
+          <span className="text-sm text-gray-500">Recording...</span>
+        )}
         {audioUrl && (
           <div className="flex items-center space-x-2">
             <audio src={audioUrl} controls className="w-100 h-10" />
-            <button type="button" className="p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" onClick={() => { setAudioFile(null); setAudioUrl(null) }}>
-              <svg className="w-5 h-5 rtl:rotate-90" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" clipRule="evenodd" d="M10 1a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9zm4.293 5.293a1 1 0 0 1 1.414 1.414L11.414 10l3.293 3.293a1 1 0 0 1-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 0 1-1.414-1.414L8.586 10 5.293 6.707a1 1 0 0 1 1.414-1.414L10 8.586l3.293-3.293z" />
+            <button
+              type="button"
+              className="p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
+              onClick={() => {
+                setAudioFile(null);
+                setAudioUrl(null);
+              }}>
+              <svg
+                className="w-5 h-5 rtl:rotate-90"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M10 1a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9zm4.293 5.293a1 1 0 0 1 1.414 1.414L11.414 10l3.293 3.293a1 1 0 0 1-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 0 1-1.414-1.414L8.586 10 5.293 6.707a1 1 0 0 1 1.414-1.414L10 8.586l3.293-3.293z"
+                />
               </svg>
               <span className="sr-only">Remove attachment</span>
             </button>
           </div>
         )}
-
         {!recording && !audioFile && (
           <textarea
             id="chat"
@@ -244,10 +327,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
             onKeyDown={(e) => handleKeyDown(e)}
           />
         )}
-
-
-        <button type="submit" className="inline-flex justify-center p-2 text-blue-600 rounded-full cursor-pointer hover:bg-blue-100 dark:text-blue-500 dark:hover:bg-gray-600" onClick={handleSubmit}>
-          <svg className="w-5 h-5 rotate-90 rtl:-rotate-90" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
+        <button
+          type="submit"
+          className="inline-flex justify-center p-2 text-blue-600 rounded-full cursor-pointer hover:bg-blue-100 dark:text-blue-500 dark:hover:bg-gray-600"
+          onClick={handleSubmit}>
+          <svg
+            className="w-5 h-5 rotate-90 rtl:-rotate-90"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 18 20">
             <path d="m17.914 18.594-8-18a1 1 0 0 0-1.828 0l-8 18a1 1 0 0 0 1.157 1.376L8 18.281V9a1 1 0 0 1 2 0v9.281l6.758 1.689a1 1 0 0 0 1.156-1.376Z" />
           </svg>
           <span className="sr-only">Send message</span>
@@ -258,43 +347,123 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 };
 
 const generateMessage = (message: Message) => {
-  const newDate = new Date(message.created_at || "").toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-    hour12: true
-  })
+  const newDate = new Date(message.created_at || "").toLocaleDateString(
+    "en-US",
+    {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: true,
+    }
+  );
 
   const { message_type } = message;
   if (message_type === "TEMPLATE") {
     // Check if it has video or image
     if (message.media_url) {
       if (message.media_url.includes("mp4")) {
-        return <MessageComponent message={message.content || ""} media={message.media_url || ""} direction={message.direction as 'inbound' | 'outbound' || ""} date={newDate} status={message.status || ""} headerType="VIDEO" />;
+        return (
+          <MessageComponent
+            message={message.content || ""}
+            media={message.media_url || ""}
+            direction={(message.direction as "inbound" | "outbound") || ""}
+            date={newDate}
+            status={message.status || ""}
+            headerType="VIDEO"
+          />
+        );
       } else {
-        return <MessageComponent message={message.content || ""} media={message.media_url || ""} direction={message.direction as 'inbound' | 'outbound' || ""} date={newDate} status={message.status || ""} headerType="IMAGE" />;
+        return (
+          <MessageComponent
+            message={message.content || ""}
+            media={message.media_url || ""}
+            direction={(message.direction as "inbound" | "outbound") || ""}
+            date={newDate}
+            status={message.status || ""}
+            headerType="IMAGE"
+          />
+        );
       }
     } else {
-      return <MessageComponent message={message.content || ""} direction={message.direction as 'inbound' | 'outbound' || ""} date={newDate} status={message.status || ""} />;
+      return (
+        <MessageComponent
+          message={message.content || ""}
+          direction={(message.direction as "inbound" | "outbound") || ""}
+          date={newDate}
+          status={message.status || ""}
+        />
+      );
     }
   }
 
   switch (message_type) {
     case "text":
-      return <MessageComponent message={message.content || ""} direction={message.direction as 'inbound' | 'outbound' || ""} date={newDate} status={message.status || ""} />;
+      return (
+        <MessageComponent
+          message={message.content || ""}
+          direction={(message.direction as "inbound" | "outbound") || ""}
+          date={newDate}
+          status={message.status || ""}
+        />
+      );
     case "image":
-      return <MessageComponent message={message.content || ""} media={message.media_url || ""} direction={message.direction as 'inbound' | 'outbound' || ""} date={newDate} status={message.status || ""} headerType="IMAGE" />;
+      return (
+        <MessageComponent
+          message={message.content || ""}
+          media={message.media_url || ""}
+          direction={(message.direction as "inbound" | "outbound") || ""}
+          date={newDate}
+          status={message.status || ""}
+          headerType="IMAGE"
+        />
+      );
     case "sticker":
-      return <MessageComponent message={message.content || ""} media={message.media_url || ""} direction={message.direction as 'inbound' | 'outbound' || ""} date={newDate} status={message.status || ""} headerType="IMAGE" />;
+      return (
+        <MessageComponent
+          message={message.content || ""}
+          media={message.media_url || ""}
+          direction={(message.direction as "inbound" | "outbound") || ""}
+          date={newDate}
+          status={message.status || ""}
+          headerType="IMAGE"
+        />
+      );
     case "video":
-      return <MessageComponent message={message.content || ""} media={message.media_url || ""} direction={message.direction as 'inbound' | 'outbound' || ""} date={newDate} status={message.status || ""} headerType="VIDEO" />;
+      return (
+        <MessageComponent
+          message={message.content || ""}
+          media={message.media_url || ""}
+          direction={(message.direction as "inbound" | "outbound") || ""}
+          date={newDate}
+          status={message.status || ""}
+          headerType="VIDEO"
+        />
+      );
     case "audio":
-      return <MessageComponent message={message.content || ""} media={message.media_url || ""} direction={message.direction as 'inbound' | 'outbound' || ""} date={newDate} status={message.status || ""} headerType="AUDIO" />;
+      return (
+        <MessageComponent
+          message={message.content || ""}
+          media={message.media_url || ""}
+          direction={(message.direction as "inbound" | "outbound") || ""}
+          date={newDate}
+          status={message.status || ""}
+          headerType="AUDIO"
+        />
+      );
     case "document":
-      return <MessageComponent message={message.content || ""} media={message.media_url || ""} direction={message.direction as 'inbound' | 'outbound' || ""} date={newDate} status={message.status || ""} headerType="DOCUMENT" />;
+      return (
+        <MessageComponent
+          message={message.content || ""}
+          media={message.media_url || ""}
+          direction={(message.direction as "inbound" | "outbound") || ""}
+          date={newDate}
+          status={message.status || ""}
+          headerType="DOCUMENT"
+        />
+      );
     // case "voice":
     //   return <VoiceMessage />;
     // case "file":
@@ -304,5 +473,5 @@ const generateMessage = (message: Message) => {
     default:
       return null;
   }
-}
+};
 export default ChatWindow;
