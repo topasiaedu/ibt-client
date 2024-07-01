@@ -15,6 +15,7 @@ import { useTemplateContext, Templates } from "../../../context/TemplateContext"
 import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusinessAccountContext";
 import { useProjectContext } from "../../../context/ProjectContext";
 import LoadingPage from "../../pages/loading";
+import EditTemplateModal from "./edit-template-modal";
 
 const TemplateListPage: React.FC = function () {
   const { templates,  loading } = useTemplateContext();
@@ -99,6 +100,7 @@ const TemplatesTable: React.FC<Templates> = function ({ templates }) {
         <Table.HeadCell>WABA</Table.HeadCell>
         <Table.HeadCell>Category</Table.HeadCell>
         <Table.HeadCell>Status</Table.HeadCell>
+        <Table.HeadCell>Action</Table.HeadCell>
       </Table.Head>
       <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
         {templates.map((template) => (
@@ -111,6 +113,9 @@ const TemplatesTable: React.FC<Templates> = function ({ templates }) {
                 {getStatusIndicator(template.status)}
                 {template.status}
               </div>
+            </Table.Cell>
+            <Table.Cell>
+              <EditTemplateModal template={template} />
             </Table.Cell>
           </Table.Row>
         ))}

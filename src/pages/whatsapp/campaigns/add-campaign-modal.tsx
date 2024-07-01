@@ -9,7 +9,7 @@ import {
   Select,
   TextInput,
 } from "flowbite-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { HiPlus } from "react-icons/hi";
 import { useAlertContext } from "../../../context/AlertContext";
 import {
@@ -23,9 +23,24 @@ import {
 } from "../../../context/ContactListContext";
 import { usePhoneNumberContext } from "../../../context/PhoneNumberContext";
 import { useProjectContext } from "../../../context/ProjectContext";
-import { Template, useTemplateContext } from "../../../context/TemplateContext";
+import {
+  Template,
+  TemplateButton,
+  useTemplateContext,
+} from "../../../context/TemplateContext";
 import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusinessAccountContext";
 import { supabase } from "../../../utils/supabaseClient";
+import MessageComponent from "../../../components/MessageComponent";
+
+const currentDate = new Date().toLocaleDateString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+  hour12: true,
+});
 
 const AddCampaignModal: React.FC = function () {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,8 +64,17 @@ const AddCampaignModal: React.FC = function () {
   );
   const { addCampaignPhoneNumber } = useCampaignPhoneNumberContext();
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<JSX.Element | null>(null);
+  const [headerData, setHeaderData] = useState<string>("");
+  const [bodyData, setBodyData] = useState<string>("");
+  const [footerData, setFooterData] = useState<string>("");
+  const [buttons, setButtons] = useState<TemplateButton[]>([]);
+  const [headerType, setHeaderType] = useState<string>("TEXT");
+  const currentDate = new Date();
 
-  if ( postDate && postTime) {console.log("DATETIME", replaceTimeInDate(postDate, postTime).toString());}
+  if (postDate && postTime) {
+    console.log("DATETIME", replaceTimeInDate(postDate, postTime).toString());
+  }
   // console.log("DATETIME", addTimeToDate(postDate, postTime).toString());
   const wabaPhoneNumber = whatsAppBusinessAccounts
     .map((waba) => {
@@ -104,7 +128,6 @@ const AddCampaignModal: React.FC = function () {
       postDate,
       postTime
     ).toISOString();
-    
 
     let template_payload = {
       name: selectedTemplate?.name,
@@ -254,6 +277,92 @@ const AddCampaignModal: React.FC = function () {
     showAlert("Campaign created successfully", "success");
   };
 
+  const generatePreview = () => {
+    if (headerType === "IMAGE" && file) {
+      return setPreview(
+        <MessageComponent
+          message={bodyData}
+          footer={footerData}
+          date={currentDate.toString()}
+          media={URL.createObjectURL(file) || headerData}
+          buttons={buttons.map((button: any) => button.text)}
+          headerType="IMAGE"
+        />
+      );
+    } else if (headerType === "TEXT") {
+      return setPreview(
+        <MessageComponent
+          header={headerData}
+          message={bodyData}
+          footer={footerData}
+          date={currentDate.toString()}
+          buttons={buttons.map((button: any) => button.text)}
+        />
+      );
+    } else if (headerType === "VIDEO" && file) {
+      return setPreview(
+        <MessageComponent
+          message={bodyData}
+          footer={footerData}
+          date={currentDate.toString()}
+          media={URL.createObjectURL(file)}
+          buttons={buttons.map((button: any) => button.text)}
+          headerType="VIDEO"
+        />
+      );
+    } else if (headerType === "DOCUMENT") {
+      return setPreview(
+        <MessageComponent
+          message={bodyData}
+          footer={footerData}
+          date={currentDate.toString()}
+          media={headerData}
+          buttons={buttons.map((button: any) => button.text)}
+          headerType="DOCUMENT"
+        />
+      );
+    } else {
+      return setPreview(
+        <MessageComponent
+          message={bodyData}
+          footer={footerData}
+          date={currentDate.toString()}
+          buttons={buttons.map((button: any) => button.text)}
+        />
+      );
+    }
+  };
+
+  useEffect(() => {
+    generatePreview();
+  }, [headerData, bodyData, footerData, buttons, headerType, file]);
+
+  useEffect(() => {
+    if (selectedTemplate) {
+      setHeaderData("");
+      setBodyData("");
+      setFooterData("");
+      setButtons([]);
+      setFile(null);
+
+      const selectedTemplateComponents = selectedTemplate?.components as any;
+
+      selectedTemplateComponents.data.forEach((component: any) => {
+        console.log("COMPONENT", component);
+        if (component.type === "HEADER") {
+          setHeaderData(component.example.header_handle[0]);
+          setHeaderType(component.format);
+        } else if (component.type === "BODY") {
+          setBodyData(component.text);
+        } else if (component.type === "FOOTER") {
+          setFooterData(component.text);
+        } else if (component.type === "BUTTONS") {
+          setButtons(component.buttons);
+        }
+      });
+    }
+  }, [selectedTemplate]);
+
   return (
     <>
       <Button color="primary" onClick={() => setIsOpen(true)}>
@@ -267,7 +376,7 @@ const AddCampaignModal: React.FC = function () {
           <strong>Add new campaign</strong>
         </Modal.Header>
         <Modal.Body>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div className="col-span-1">
               <div className="mb-4">
                 <Label htmlFor="name">Name</Label>
@@ -465,19 +574,25 @@ const AddCampaignModal: React.FC = function () {
                 )}
             </div>
 
-            {/* <div className="col-span-1">
+            <div className="col-span-1">
               <div className="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-800 border-[14px] rounded-[2.5rem] h-[600px] w-[300px] shadow-xl">
                 <div className="w-[148px] h-[18px] bg-gray-800 top-0 rounded-b-[1rem] left-1/2 -translate-x-1/2 absolute"></div>
                 <div className="h-[46px] w-[3px] bg-gray-800 absolute -start-[17px] top-[124px] rounded-s-lg"></div>
                 <div className="h-[46px] w-[3px] bg-gray-800 absolute -start-[17px] top-[178px] rounded-s-lg"></div>
                 <div className="h-[64px] w-[3px] bg-gray-800 absolute -end-[17px] top-[142px] rounded-e-lg"></div>
-                <div className="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-white">
-                  <div className="p-6">
-                    {selectedTemplate && selectedTemplate.components && generatePreview(selectedTemplate, selectedTemplate.components)}
-                  </div>
+                <div className="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-white overflow-y-auto hide-scrollbar p-6">
+                  {preview ? (
+                    preview
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Preview will be shown here
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div> */}
+            </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
@@ -587,4 +702,3 @@ function replaceTimeInDate(date: Date, timeString: string): Date {
 
   return newDate;
 }
-
