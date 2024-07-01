@@ -20,9 +20,19 @@ export type Campaigns = { campaigns: Campaign[] };
 export type CampaignInsert =
   Database["public"]["Tables"]["campaigns"]["Insert"];
 
+export type CampaignList =
+  Database["public"]["Tables"]["campaign_lists"]["Row"];
+
+export type CampaignListInsert =
+  Database["public"]["Tables"]["campaign_lists"]["Insert"];
+
 interface CampaignContextType {
   campaigns: Campaign[];
-  addCampaign: (campaign: CampaignInsert) => Promise<Campaign | undefined>;
+  addCampaign: (
+    campaign: CampaignInsert,
+    includes: any,
+    excludes: any
+  ) => Promise<any>;
   updateCampaign: (campaign: Campaign) => void;
   deleteCampaign: (campaignId: number) => void;
   loading: boolean;
@@ -114,13 +124,13 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
   }, [currentProject, showAlert]);
 
   const addCampaign = useCallback(
-    async (campaign: CampaignInsert) => {
+    async (campaign: CampaignInsert, includes: any, excludes: any) => {
       setLoading(true);
       const { data, error } = await supabase
         .from("campaigns")
         .insert([{ ...campaign, project_id: currentProject?.project_id }])
         .select();
-      console.log("data", data);
+
       if (error) {
         console.error("Error adding campaign:", error);
         showAlert("Error adding campaign", "error");
@@ -128,8 +138,45 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
         return;
       }
 
+      // Add the excludes and includes to the campaign_list for each entry, it could be contact list or contact
+      const campaign_id = data[0].campaign_id;
+      const campaignListInserts = [
+        ...includes.map((include: any) => ({
+          campaign_id,
+          contact_list_id: include.contact_id ? undefined : include.id,
+          contact_id: include.contact_id ? include.id : undefined,
+          type: include.contact_id ? "include-contact" : "include-list",
+        })),
+        ...excludes.map((exclude: any) => ({
+          campaign_id,
+          contact_list_id: exclude.contact_id ? undefined : exclude.id,
+          contact_id: exclude.contact_id ? exclude.id : undefined,
+          type: exclude.contact_id ? "exclude-contact" : "exclude-list",
+        })),
+      ];
+
+      console.log(campaignListInserts);
+      const { data: campaignlistData, error: campaignListError } =
+        await supabase.from("campaign_lists").insert(campaignListInserts);
+
+      if (campaignListError) {
+        console.error("Error adding campaign list:", campaignListError);
+        showAlert("Error adding campaign list", "error");
+        setLoading(false);
+
+        await supabase
+          .from("campaigns")
+          .delete()
+          .eq("campaign_id", campaign_id);
+        return;
+      }
+
+      // Add Phone Numbers too
+
+      
+      showAlert("Campaign added successfully", "success");
       setLoading(false);
-      return data![0];
+      return data[0];
     },
     [currentProject, showAlert]
   );

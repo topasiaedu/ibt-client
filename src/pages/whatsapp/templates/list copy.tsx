@@ -16,7 +16,6 @@ import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusi
 import { useProjectContext } from "../../../context/ProjectContext";
 import LoadingPage from "../../pages/loading";
 import EditTemplateModal from "./edit-template-modal";
-import TemplateApprovalModal from "./contact-list-member-modal";
 
 const TemplateListPage: React.FC = function () {
   const { templates, loading } = useTemplateContext();
@@ -92,20 +91,17 @@ const TemplateListPage: React.FC = function () {
 };
 
 interface GroupedTemplates {
-  [key: string]: Template[];
+  [name: string]: Template[];
 }
 
 const TemplatesTable: React.FC<{ templates: Template[] }> = function ({ templates }) {
   const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
 
   const groupedTemplates: GroupedTemplates = templates.reduce((acc: GroupedTemplates, template: Template) => {
-    if (!acc[template.name + template.category]) {
-      acc[template.name + template.category] = [];
+    if (!acc[template.name]) {
+      acc[template.name] = [];
     }
-    const alreadyExists = acc[template.name + template.category].some(t => t.account_id === template.account_id);
-    if (!alreadyExists) {
-      acc[template.name + template.category].push(template);
-    }
+    acc[template.name].push(template);
     return acc;
   }, {});
 
@@ -121,12 +117,11 @@ const TemplatesTable: React.FC<{ templates: Template[] }> = function ({ template
     return `${approved}/${total} Approved`;
   };
 
-  console.log(groupedTemplates);
-
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
       <Table.Head className="bg-gray-100 dark:bg-gray-700">
         <Table.HeadCell>Name</Table.HeadCell>
+        <Table.HeadCell>WABA</Table.HeadCell>
         <Table.HeadCell>Category</Table.HeadCell>
         <Table.HeadCell>Status</Table.HeadCell>
         <Table.HeadCell>Action</Table.HeadCell>
@@ -134,12 +129,16 @@ const TemplatesTable: React.FC<{ templates: Template[] }> = function ({ template
       <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
         {Object.entries(groupedTemplates).map(([name, templates]) => (
           <Table.Row key={name} className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Table.Cell>{templates[0].name}</Table.Cell>
+            <Table.Cell>{name}</Table.Cell>
+            <Table.Cell>{whatsAppBusinessAccounts.find((waba) => waba.account_id === templates[0].account_id)?.name}</Table.Cell>
             <Table.Cell>{templates[0].category}</Table.Cell>
             <Table.Cell>
-              <div className="flex items-center gap-x-2">
+              <div className="flex items-center">
+                {getStatusIndicator('APPROVED')} {/* Assuming you want to show an indicator for the overall status */}
                 {getStatusSummary(templates)}
-                <TemplateApprovalModal templates={templates} />
+                <button className="ml-2 text-blue-500" onClick={() => alert(`Statuses: ${templates.map(t => t.status).join(', ')}`)}>
+                  View All
+                </button>
               </div>
             </Table.Cell>
             <Table.Cell>
@@ -150,6 +149,22 @@ const TemplatesTable: React.FC<{ templates: Template[] }> = function ({ template
       </Table.Body>
     </Table>
   );
+};
+
+const getStatusIndicator = (status: string) => {
+  // Pending, Approved, Draft, Rejected
+  switch (status) {
+    case 'PENDING':
+      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-yellow-400" />;
+    case 'APPROVED':
+      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-green-400" />;
+    case 'DRAFT':
+      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-blue-400" />;
+    case 'REJECTED':
+      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-red-400" />;
+    default:
+      return <div className="mr-2 h-2.5 w-2.5 rounded-full bg-gray-400" />;
+  }
 };
 
 export default TemplateListPage;

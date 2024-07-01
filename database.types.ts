@@ -60,22 +60,101 @@ export type Database = {
           },
         ]
       }
-      campaign_contacts: {
+      business_manager: {
+        Row: {
+          access_token: string
+          created_at: string
+          id: string
+          name: string
+          wa_bm_id: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          id?: string
+          name: string
+          wa_bm_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          id?: string
+          name?: string
+          wa_bm_id?: string | null
+        }
+        Relationships: []
+      }
+      campaign_lists: {
+        Row: {
+          campaign_id: number | null
+          contact_id: number | null
+          contact_list_id: number | null
+          created_at: string
+          id: string
+          type: string | null
+        }
+        Insert: {
+          campaign_id?: number | null
+          contact_id?: number | null
+          contact_list_id?: number | null
+          created_at?: string
+          id?: string
+          type?: string | null
+        }
+        Update: {
+          campaign_id?: number | null
+          contact_id?: number | null
+          contact_list_id?: number | null
+          created_at?: string
+          id?: string
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_list_contact_list_id_fkey"
+            columns: ["contact_list_id"]
+            isOneToOne: false
+            referencedRelation: "contact_lists"
+            referencedColumns: ["contact_list_id"]
+          },
+          {
+            foreignKeyName: "campaign_lists_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["campaign_id"]
+          },
+          {
+            foreignKeyName: "campaign_lists_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["contact_id"]
+          },
+        ]
+      }
+      campaign_logs: {
         Row: {
           campaign_id: number
           contact_id: number
+          created_at: string | null
+          id: string
           sent_at: string | null
           status: string
         }
         Insert: {
           campaign_id: number
           contact_id: number
+          created_at?: string | null
+          id?: string
           sent_at?: string | null
           status: string
         }
         Update: {
           campaign_id?: number
           contact_id?: number
+          created_at?: string | null
+          id?: string
           sent_at?: string | null
           status?: string
         }
@@ -135,7 +214,7 @@ export type Database = {
       campaigns: {
         Row: {
           campaign_id: number
-          contact_list_id: number
+          contact_list_id: number | null
           created_at: string | null
           failed: number | null
           name: string
@@ -152,7 +231,7 @@ export type Database = {
         }
         Insert: {
           campaign_id?: number
-          contact_list_id: number
+          contact_list_id?: number | null
           created_at?: string | null
           failed?: number | null
           name: string
@@ -169,7 +248,7 @@ export type Database = {
         }
         Update: {
           campaign_id?: number
-          contact_list_id?: number
+          contact_list_id?: number | null
           created_at?: string | null
           failed?: number | null
           name?: string
@@ -411,7 +490,7 @@ export type Database = {
           content: string | null
           created_at: string | null
           direction: string | null
-          errors: Json | null
+          error: Json | null
           media_url: string | null
           message_id: number
           message_type: string
@@ -419,6 +498,7 @@ export type Database = {
           project_id: number | null
           status: string | null
           wa_message_id: string | null
+          workflow_id: string | null
         }
         Insert: {
           campaign_id?: number | null
@@ -426,7 +506,7 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           direction?: string | null
-          errors?: Json | null
+          error?: Json | null
           media_url?: string | null
           message_id?: number
           message_type: string
@@ -434,6 +514,7 @@ export type Database = {
           project_id?: number | null
           status?: string | null
           wa_message_id?: string | null
+          workflow_id?: string | null
         }
         Update: {
           campaign_id?: number | null
@@ -441,7 +522,7 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           direction?: string | null
-          errors?: Json | null
+          error?: Json | null
           media_url?: string | null
           message_id?: number
           message_type?: string
@@ -449,6 +530,7 @@ export type Database = {
           project_id?: number | null
           status?: string | null
           wa_message_id?: string | null
+          workflow_id?: string | null
         }
         Relationships: [
           {
@@ -464,6 +546,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "project"
             referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "messages_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "public_messages_campaign_id_fkey"
@@ -680,6 +769,7 @@ export type Database = {
       whatsapp_business_accounts: {
         Row: {
           account_id: number
+          business_manager_id: string | null
           created_at: string | null
           currency: string | null
           message_template_namespace: string | null
@@ -691,6 +781,7 @@ export type Database = {
         }
         Insert: {
           account_id?: number
+          business_manager_id?: string | null
           created_at?: string | null
           currency?: string | null
           message_template_namespace?: string | null
@@ -702,6 +793,7 @@ export type Database = {
         }
         Update: {
           account_id?: number
+          business_manager_id?: string | null
           created_at?: string | null
           currency?: string | null
           message_template_namespace?: string | null
@@ -718,6 +810,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "project"
             referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "whatsapp_business_accounts_business_manager_id_fkey"
+            columns: ["business_manager_id"]
+            isOneToOne: false
+            referencedRelation: "business_manager"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -880,6 +979,33 @@ export type Database = {
           whatsapp_business_account: Json
           last_message: Json
         }[]
+      }
+      fetch_workflows: {
+        Args: {
+          project_id_param: number
+          start_date: string
+          end_date: string
+        }
+        Returns: {
+          canvas_state: Json
+          created_at: string
+          description: string
+          id: string
+          name: string
+          project_id: number
+          run: boolean
+          total_read: number
+          total_sent: number
+          total_failed: number
+          total_unique_contacts: number
+          triggers: Json
+          actions: Json
+          phone_numbers: Json
+        }[]
+      }
+      get_triggers_with_details: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
     }
     Enums: {

@@ -18,9 +18,6 @@ export type Templates = { templates: Template[] };
 export type TemplateInsert =
   Database["public"]["Tables"]["templates"]["Insert"];
 
-const WHATSAPP_ACCESS_TOKEN =
-  "Bearer EAAFZCUSsuZBkQBO7vI52BiAVIVDPsZAATo0KbTLYdZBQ7hCq59lPYf5FYz792HlEN13MCPGDaVP93VYZASXz9ZBNXaiATyIToimwDx0tcCB2sz0TwklEoof3K0mZASJtcYugK1hfdnJGJ1pnRXtnTGmlXiIgkyQe0ZC2DOh4qZAeRhJ9nd9hgKKedub4eaCgvZBWrOHBa3NadCqdlZCx0zO";
-
 export type Component = {
   type: string;
   format: string | null;
@@ -133,53 +130,60 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        const components = template.components as any;
-
-        const body = JSON.stringify({
-          name: template.name,
-          category: template.category,
-          language: template.language,
-          components: components?.data,
-        });
-
-        console.log("body", body);
-        console.log("waba", waba.waba_id);
-
-        const response = await fetch(
-          `https://graph.facebook.com/v19.0/${waba.waba_id}/message_templates`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: WHATSAPP_ACCESS_TOKEN,
-            },
-            body: body,
-          }
+        // Get all waba under the same project
+        const wabaIds = whatsAppBusinessAccounts.map((waba) =>
+          waba.project_id === currentProject?.project_id
+            ? waba.account_id
+            : null
         );
-        const responseData = await response.json();
-        const templateId = responseData.id;
 
-        if (!response.ok) {
-          console.error("Error adding template:", response.statusText);
-          showAlert("Error adding template", "error");
-          return;
-        }
+        wabaIds.forEach(async (wabaId) => {
+          const components = template.components as any;
 
-        // Add template to database
-        const { error } = await supabase
-          .from("templates")
-          .insert([
+          const body = JSON.stringify({
+            name: template.name,
+            category: template.category,
+            language: template.language,
+            components: components?.data,
+          });
+
+          const response = await fetch(
+            `https://graph.facebook.com/v19.0/${wabaId}/message_templates`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization:
+                  wabaId?.toString() === "337124179489470"
+                    ? "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN_2
+                    : "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN,
+              },
+              body: body,
+            }
+          );
+          const responseData = await response.json();
+          const templateId = responseData.id;
+
+          if (!response.ok) {
+            console.error("Error adding template:", response.statusText);
+            showAlert("Error adding template", "error");
+            return;
+          }
+
+          // Add template to database
+          const { error } = await supabase.from("templates").insert([
             {
               ...template,
-              account_id: waba.account_id,
+              account_id: wabaId,
               wa_template_id: templateId,
             },
           ]);
 
-        if (error) {
-          console.error("Error adding template:", error);
-          showAlert("Error adding template", "error");
-        }
+          if (error) {
+            console.error("Error adding template:", error);
+            showAlert("Error adding template", "error");
+          }
+        });
       } catch (error) {
         console.error("Error adding template:", error);
         showAlert("Error adding template", "error");

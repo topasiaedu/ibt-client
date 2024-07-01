@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import {
+  Badge,
   Button,
   Card,
   Datepicker,
@@ -31,6 +32,7 @@ import {
 import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusinessAccountContext";
 import { supabase } from "../../../utils/supabaseClient";
 import MessageComponent from "../../../components/MessageComponent";
+import { Contact, useContactContext } from "../../../context/ContactContext";
 
 const currentDate = new Date().toLocaleDateString("en-US", {
   month: "short",
@@ -47,13 +49,12 @@ const AddCampaignModal: React.FC = function () {
   const { addCampaign, loading } = useCampaignContext();
   const { templates } = useTemplateContext();
   const { contactLists } = useContactListContext();
+  const { contacts } = useContactContext();
   const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
   const { phoneNumbers } = usePhoneNumberContext();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
     null
   );
-  const [selectedContactList, setSelectedContactList] =
-    useState<ContactList | null>(null);
   const [campaignName, setCampaignName] = useState<string>("");
   const [postDate, setPostDate] = useState<Date>(new Date());
   const [postTime, setPostTime] = useState<string>("");
@@ -71,6 +72,19 @@ const AddCampaignModal: React.FC = function () {
   const [buttons, setButtons] = useState<TemplateButton[]>([]);
   const [headerType, setHeaderType] = useState<string>("TEXT");
   const currentDate = new Date();
+
+  const [includeInput, setIncludeInput] = useState<string>("");
+  const [selectedIncludes, setSelectedIncludes] = useState<any[]>([]);
+  const [filteredContactLists, setFilteredContactLists] =
+    useState<ContactList[]>(contactLists);
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>(contacts);
+
+  const [excludeInput, setExcludeInput] = useState<string>("");
+  const [selectedExcludes, setSelectedExcludes] = useState<any[]>([]);
+  const [filteredExcludeContactLists, setFilteredExcludeContactLists] =
+    useState<ContactList[]>(contactLists);
+  const [filteredExcludeContacts, setFilteredExcludeContacts] =
+    useState<Contact[]>(contacts);
 
   if (postDate && postTime) {
     console.log("DATETIME", replaceTimeInDate(postDate, postTime).toString());
@@ -104,6 +118,7 @@ const AddCampaignModal: React.FC = function () {
     .flat()
     .filter((item) => item !== null);
 
+  console.log("Includes, Excludes", selectedIncludes, selectedExcludes);
   const handleAddCampaign = async () => {
     if (selectedWabaPhoneNumber.length === 0) {
       showAlert(
@@ -113,12 +128,7 @@ const AddCampaignModal: React.FC = function () {
       return;
     }
 
-    if (
-      !selectedTemplate ||
-      !selectedContactList ||
-      !campaignName ||
-      !postTime
-    ) {
+    if (!selectedTemplate || !campaignName || !postTime) {
       showAlert("Please fill in all the fields", "error");
       return;
     }
@@ -246,7 +256,6 @@ const AddCampaignModal: React.FC = function () {
     const formData: CampaignInsert = {
       name: campaignName,
       template_id: selectedTemplate?.template_id || 0,
-      contact_list_id: selectedContactList?.contact_list_id || 0,
       post_time: combinedDateTimeString,
       template_payload: template_payload,
       status: "PENDING",
@@ -254,7 +263,11 @@ const AddCampaignModal: React.FC = function () {
       project_id: currentProject?.project_id || 5,
     };
 
-    const createdCampaign = await addCampaign(formData);
+    const createdCampaign = await addCampaign(
+      formData,
+      selectedIncludes,
+      selectedExcludes
+    );
 
     if (createdCampaign) {
       // Add the campaign phone number
@@ -272,7 +285,6 @@ const AddCampaignModal: React.FC = function () {
     setPostTime("");
     setPostDate(new Date());
     setSelectedTemplate(null);
-    setSelectedContactList(null);
     setSelectedWabaPhoneNumber([]);
     showAlert("Campaign created successfully", "success");
   };
@@ -362,6 +374,71 @@ const AddCampaignModal: React.FC = function () {
       });
     }
   }, [selectedTemplate]);
+
+  const handleIncludeInputChange = (e: { target: { value: any } }) => {
+    const value = e.target.value;
+    setFilteredContactLists(
+      contactLists.filter(
+        (contactList) =>
+          contactList.name.toLowerCase().includes(value.toLowerCase()) &&
+          !selectedIncludes.find((c) => c.id === contactList.contact_list_id)
+      )
+    );
+
+    setFilteredContacts(
+      contacts.filter(
+        (contact) =>
+          (contact.name.toLowerCase().includes(value.toLowerCase()) ||
+            contact.wa_id.toLowerCase().includes(value.toLowerCase())) &&
+          !selectedIncludes.find((c) => c.id === contact.contact_id)
+      )
+    );
+    setIncludeInput(value);
+  };
+
+  const handleIncludeClick = (include: any, type: string) => {
+    // type is either "list" or "contact"
+    const title = include.name;
+    const id = type === "list" ? include.contact_list_id : include.contact_id;
+    setSelectedIncludes([...selectedIncludes, { id, title, type }]);
+    setIncludeInput("");
+  };
+
+  const removeIncludes = (includes: any) => {
+    setSelectedIncludes((prev) => prev.filter((c) => c.id !== includes.id));
+  };
+  const handleExcludeInputChange = (e: { target: { value: any } }) => {
+    const value = e.target.value;
+    setFilteredExcludeContactLists(
+      contactLists.filter(
+        (contactList) =>
+          contactList.name.toLowerCase().includes(value.toLowerCase()) &&
+          !selectedExcludes.find((c) => c.id === contactList.contact_list_id)
+      )
+    );
+
+    setFilteredExcludeContacts(
+      contacts.filter(
+        (contact) =>
+          (contact.name.toLowerCase().includes(value.toLowerCase()) ||
+            contact.wa_id.toLowerCase().includes(value.toLowerCase())) &&
+          !selectedExcludes.find((c) => c.id === contact.contact_id)
+      )
+    );
+    setExcludeInput(value);
+  };
+
+  const handleExcludeClick = (include: any, type: string) => {
+    // type is either "list" or "contact"
+    const title = include.name;
+    const id = type === "list" ? include.contact_list_id : include.contact_id;
+    setSelectedExcludes([...selectedExcludes, { id, title, type }]);
+    setExcludeInput("");
+  };
+
+  const removeExcludes = (includes: any) => {
+    setSelectedExcludes((prev) => prev.filter((c) => c.id !== includes.id));
+  };
 
   return (
     <>
@@ -493,29 +570,116 @@ const AddCampaignModal: React.FC = function () {
                 </div>
               </div>
               <div>
-                <Label htmlFor="contactList">Contact List</Label>
-                <div className="mt-1">
-                  <Select
-                    id="contactList"
-                    name="contactList"
-                    onChange={(e) =>
-                      setSelectedContactList(
-                        contactLists.find(
-                          (contactList) =>
-                            contactList.contact_list_id ===
-                            parseInt(e.target.value)
-                        ) ?? null
-                      )
-                    }>
-                    <option value="">Select contact list</option>
-                    {contactLists.map((contactList) => (
-                      <option
-                        key={contactList.contact_list_id}
-                        value={contactList.contact_list_id}>
-                        {contactList.name}
-                      </option>
-                    ))}
-                  </Select>
+                <div className="mt-4">
+                  <Label htmlFor="category">
+                    Include Contact List or Contact
+                  </Label>
+                  <div className="relative">
+                    <div className="custom-input flex items-center flex-wrap block w-full border disabled:cursor-not-allowed disabled:opacity-50 bg-gray-50 border-gray-300 text-gray-900 focus:border-cyan-500 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-cyan-500 dark:focus:ring-cyan-500 p-2.5 text-sm rounded-lg">
+                      {selectedIncludes.map((includes, index) => (
+                        <Badge
+                          key={"Card" + includes + index}
+                          color="info"
+                          className="mr-2 mb-1 flex items-center">
+                          {includes.title}
+                          <span
+                            className="ml-1 cursor-pointer"
+                            onClick={() => removeIncludes(includes)}>
+                            &times;
+                          </span>
+                        </Badge>
+                      ))}
+                      <input
+                        id="category"
+                        name="category"
+                        placeholder="Enter category"
+                        value={includeInput}
+                        onChange={handleIncludeInputChange}
+                        autoComplete="off"
+                        className="flex-grow border-none focus:ring-0 focus:outline-none dark:bg-gray-700 bg-gray-50"
+                      />
+                    </div>
+                    {includeInput && (
+                      <ul className="absolute left-0 right-0 bg-white border border-gray-200 z-10 max-h-60 overflow-y-auto mt-1 dark:border-gray-800 dark:bg-gray-800">
+                        {filteredContactLists.map((contactList) => (
+                          <li
+                            key={contactList.contact_list_id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                            onClick={() =>
+                              handleIncludeClick(contactList, "list")
+                            }>
+                            {contactList.name}
+                          </li>
+                        ))}
+                        {filteredContacts.map((contact) => (
+                          <li
+                            key={contact.contact_id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                            onClick={() =>
+                              handleIncludeClick(contact, "contact")
+                            }>
+                            {contact.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <Label htmlFor="exclude">
+                    Exclude Contact List or Contact
+                  </Label>
+                  <div className="relative">
+                    <div className="custom-input flex items-center flex-wrap block w-full border disabled:cursor-not-allowed disabled:opacity-50 bg-gray-50 border-gray-300 text-gray-900 focus:border-cyan-500 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-cyan-500 dark:focus:ring-cyan-500 p-2.5 text-sm rounded-lg">
+                      {selectedExcludes.map((excludes, index) => (
+                        <Badge
+                          key={"Card" + excludes + index}
+                          color="info"
+                          className="mr-2 mb-1 flex items-center">
+                          {excludes.title}
+                          <span
+                            className="ml-1 cursor-pointer"
+                            onClick={() => removeExcludes(excludes)}>
+                            &times;
+                          </span>
+                        </Badge>
+                      ))}
+                      <input
+                        id="exclude"
+                        name="exclude"
+                        placeholder="Enter exclude"
+                        value={excludeInput}
+                        onChange={handleExcludeInputChange}
+                        autoComplete="off"
+                        className="flex-grow border-none focus:ring-0 focus:outline-none dark:bg-gray-700 bg-gray-50"
+                      />
+                    </div>
+                    {excludeInput && (
+                      <ul className="absolute left-0 right-0 bg-white border border-gray-200 z-10 max-h-60 overflow-y-auto mt-1 dark:border-gray-800 dark:bg-gray-800">
+                        {filteredExcludeContactLists.map((contactList) => (
+                          <li
+                            key={contactList.contact_list_id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                            onClick={() =>
+                              handleExcludeClick(contactList, "list")
+                            }>
+                            {contactList.name}
+                          </li>
+                        ))}
+                        {filteredExcludeContacts.map((contact) => (
+                          <li
+                            key={contact.contact_id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                            onClick={() =>
+                              handleExcludeClick(contact, "contact")
+                            }>
+                            {contact.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
