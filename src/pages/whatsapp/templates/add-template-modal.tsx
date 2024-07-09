@@ -269,7 +269,7 @@ const AddTemplateModal: React.FC = function () {
                   </p>
                 </div>
               </div>
-              <div className="mt-6">
+              {/* <div className="mt-6">
                 <Label htmlFor="whatsAppBusinessAccount">
                   WhatsApp Business Account
                 </Label>
@@ -302,7 +302,7 @@ const AddTemplateModal: React.FC = function () {
                       ))}
                   </Select>
                 </div>
-              </div>
+              </div> */}
 
               {/* Category Select: MARKETING, UTILITY,  */}
               <div className="mt-6">

@@ -1,30 +1,23 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import {
   Button,
+  Card,
   Label,
   Modal,
-  TextInput,
-  Select,
-  FileInput,
-  Textarea,
-  Card,
+  Select, Textarea,
+  TextInput
 } from "flowbite-react";
 import React, { useEffect, useState } from "react";
 import { HiPlus } from "react-icons/hi";
-import {
-  useWhatsAppBusinessAccountContext,
-  WhatsAppBusinessAccount,
-} from "../../../context/WhatsAppBusinessAccountContext";
-import {
-  useTemplateContext,
-  TemplateInsert,
-  TemplateButton,
-  Template,
-} from "../../../context/TemplateContext";
-import { useProjectContext } from "../../../context/ProjectContext";
-import { supabase } from "../../../utils/supabaseClient";
 import MessageComponent from "../../../components/MessageComponent";
-import { useAlertContext } from "../../../context/AlertContext";
+import { useProjectContext } from "../../../context/ProjectContext";
+import {
+  Template,
+  TemplateButton
+} from "../../../context/TemplateContext";
+import {
+  useWhatsAppBusinessAccountContext
+} from "../../../context/WhatsAppBusinessAccountContext";
 
 const currentDate = new Date().toLocaleDateString("en-US", {
   month: "short",
@@ -152,7 +145,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
 
       generatePreview();
     }
-  }, [generatePreview, template]);
+  }, [template]);
 
   return (
     <>

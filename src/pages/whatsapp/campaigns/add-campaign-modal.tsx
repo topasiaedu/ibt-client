@@ -86,10 +86,6 @@ const AddCampaignModal: React.FC = function () {
   const [filteredExcludeContacts, setFilteredExcludeContacts] =
     useState<Contact[]>(contacts);
 
-  if (postDate && postTime) {
-    console.log("DATETIME", replaceTimeInDate(postDate, postTime).toString());
-  }
-  // console.log("DATETIME", addTimeToDate(postDate, postTime).toString());
   const wabaPhoneNumber = whatsAppBusinessAccounts
     .map((waba) => {
       return phoneNumbers.map((phoneNumber) => {
@@ -118,7 +114,6 @@ const AddCampaignModal: React.FC = function () {
     .flat()
     .filter((item) => item !== null);
 
-  console.log("Includes, Excludes", selectedIncludes, selectedExcludes);
   const handleAddCampaign = async () => {
     if (selectedWabaPhoneNumber.length === 0) {
       showAlert(

@@ -58,7 +58,6 @@ export const CampaignPhoneNumberProvider: React.FC<PropsWithChildren<{}>> = ({
 
       setCampaignPhoneNumbers((prevCampaignPhoneNumbers) => {
         if (!isEqual(prevCampaignPhoneNumbers, campaignPhoneNumbers)) {
-          console.log("Updating campaign phone numbers state");
           return campaignPhoneNumbers;
         }
         return prevCampaignPhoneNumbers;

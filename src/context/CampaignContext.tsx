@@ -65,7 +65,6 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
 
       setCampaigns((prevCampaigns) => {
         if (!isEqual(prevCampaigns, campaigns)) {
-          console.log("Updating campaigns state");
           return campaigns;
         }
         return prevCampaigns;

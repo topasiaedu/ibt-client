@@ -65,12 +65,13 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
   const { phoneNumbers } = usePhoneNumberContext();
   const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
 
-  console.log("MessagesProvider render"); // Add this line to log renders
-
   useEffect(() => {
     setLoading(true);
 
     const fetchConversations = async () => {
+      // Set timer to do benchmarking
+      console.time("fetchConversations");
+      
       if (!currentProject) return;
       // CREATE OR REPLACE FUNCTION fetch_conversations(project_id_param INT)
 
@@ -79,6 +80,8 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
       });
 
       if (error) {
+        // Benchmarking
+        console.timeEnd("fetchConversations");
         console.error("Error fetching conversations:", error);
         return;
       }
@@ -88,8 +91,9 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
       const conversations = data as Conversation[];
 
       setConversations((prevConversations) => {
+        // Benchmarking
+        console.timeEnd("fetchConversations");
         if (!isEqual(prevConversations, conversations)) {
-          console.log("Updating campaigns state");
           return conversations;
         }
         return prevConversations;
@@ -101,7 +105,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
     const handleChanges = (payload: any) => {
       switch (payload.eventType) {
         case "INSERT":
-          console.log("INSERT event triggered"); // Add this line
           const conversationId = `${payload.new.contact_id}-${payload.new.phone_number_id}`;
           const existingConversation = conversations.find(
             (conversation) => conversation.id === conversationId
@@ -168,7 +171,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           }
           break;
         case "UPDATE":
-          console.log("UPDATE event triggered"); // Add this line
           setConversations((prev) =>
             prev.map((conversation) =>
               conversation.messages.some(
@@ -187,7 +189,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           );
           break;
         case "DELETE":
-          console.log("DELETE event triggered"); // Add this line
           setConversations((prev) =>
             prev.filter((conversation) =>
               conversation.messages.some(
@@ -276,8 +277,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             return;
           }
 
-          console.log("Random File Name", randomFileName);
-
           // Check if there is caption for the file
           if (message.content) {
             body = JSON.stringify({
@@ -313,10 +312,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           const form = new FormData();
           form.append("messaging_product", "whatsapp");
           // form.append('file', file);
-          // form.append('type', file.type || 'audio/mpeg'); // Explicitly setting MIME type
-
-          // console log out file in the form data
-          console.log("form", form.get("file"));
 
           const response = await fetch(
             `https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/media`,
@@ -329,11 +324,8 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             }
           );
 
-          console.log("response", response);
-
           const data = await response.json();
 
-          console.log("data", data);
 
           body = JSON.stringify({
             messaging_product: "whatsapp",
@@ -357,7 +349,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
               body: message.content,
             },
           });
-          console.log("body", body);
         }
         const response = await fetch(
           `https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/messages`,

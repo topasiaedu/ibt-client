@@ -71,7 +71,6 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
 
       setTemplates((prevTemplates) => {
         if (!isEqual(prevTemplates, templates)) {
-          console.log("Updating templates state");
           return templates!;
         }
         return prevTemplates;
@@ -81,16 +80,29 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
     fetchTemplates();
 
     const handleChanges = (payload: any) => {
+      console.log("Template changes:", payload.eventType);
       if (payload.eventType === "INSERT") {
-        setTemplates((prev) => [payload.new, ...prev]);
+        const new_templates = [...templates, payload.new];
+        setTemplates((prev) => {
+          if (!isEqual(prev, new_templates)) {
+            return new_templates;
+          }
+          return prev;
+        });
       } else if (payload.eventType === "UPDATE") {
-        setTemplates((prev) =>
-          prev.map((template) =>
-            template.template_id === payload.new.template_id
-              ? payload.new
-              : template
-          )
+        const old_templates = templates;
+        const new_templates = old_templates.map((template) =>
+          template.template_id === payload.new.template_id
+            ? payload.new
+            : template
         );
+
+        setTemplates((prev) => {
+          if (!isEqual(prev, new_templates)) {
+            return new_templates;
+          }
+          return prev;
+        });
       } else if (payload.eventType === "DELETE") {
         setTemplates((prev) =>
           prev.filter(
@@ -122,7 +134,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
       try {
         // Fetch Waba ID using template.account_id
         const waba = whatsAppBusinessAccounts.find(
-          (waba) => waba.account_id === template.account_id
+          (waba) => waba.project_id === currentProject?.project_id
         );
 
         if (!waba) {
@@ -131,16 +143,16 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Get all waba under the same project
-        const wabaIds = whatsAppBusinessAccounts.map((waba) =>
-          waba.project_id === currentProject?.project_id
-            ? waba.account_id
-            : null
+        const wabas = whatsAppBusinessAccounts.map((waba) =>
+
+          waba.project_id === currentProject?.project_id ? waba : null
         );
 
-        wabaIds.forEach(async (wabaId) => {
+        wabas.forEach(async (waba) => {
           const components = template.components as any;
 
           const body = JSON.stringify({
+            messaging_product: "whatsapp",
             name: template.name,
             category: template.category,
             language: template.language,
@@ -148,13 +160,13 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
           });
 
           const response = await fetch(
-            `https://graph.facebook.com/v19.0/${wabaId}/message_templates`,
+            `https://graph.facebook.com/v19.0/${waba?.waba_id}/message_templates`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 Authorization:
-                  wabaId?.toString() === "337124179489470"
+                  waba?.waba_id === "337124179489470" || waba?.waba_id === "377358032119390"
                     ? "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN_2
                     : "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN,
               },
@@ -165,7 +177,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
           const templateId = responseData.id;
 
           if (!response.ok) {
-            console.error("Error adding template:", response.statusText);
+            console.error("Error adding template:", response.body);
             showAlert("Error adding template", "error");
             return;
           }
@@ -174,7 +186,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
           const { error } = await supabase.from("templates").insert([
             {
               ...template,
-              account_id: wabaId,
+              account_id: waba?.account_id,
               wa_template_id: templateId,
             },
           ]);

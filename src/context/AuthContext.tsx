@@ -25,8 +25,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("AuthProvider useEffect triggered");
-
     const fetchUser = async () => {
       const {
         data: { user },
@@ -40,7 +38,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       // Only update state if the new user is different from the current one
       setUser((prevUser: any) => {
         if (!isEqual(prevUser, user)) {
-          console.log("Updating user state");
           return user;
         }
         return prevUser;
@@ -55,7 +52,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
         // Only update state if the new session user is different from the current user
         setUser((prevUser: any) => {
           if (!isEqual(prevUser, session?.user)) {
-            console.log("Updating user state from session change");
             return session?.user || null;
           }
           return prevUser;
@@ -70,7 +66,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    console.log("signIn function called");
     setLoading(true); // Consider setting loading to true to indicate starting the sign-in process
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -84,7 +79,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
     // Only update state if the new user is different from the current one
     setUser((prevUser: any) => {
       if (!isEqual(prevUser, data.user)) {
-        console.log("Updating user state after sign in");
         return data.user;
       }
       return prevUser;
@@ -94,7 +88,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const signOut = useCallback(async () => {
-    console.log("signOut function called");
     setLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -107,7 +100,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
-    console.log("signUp function called");
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
@@ -118,7 +110,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
     // Only update state if the new user is different from the current one
     setUser((prevUser: any) => {
       if (!isEqual(prevUser, data.user)) {
-        console.log("Updating user state after sign up");
         return data.user;
       }
       return prevUser;
@@ -131,8 +122,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
     () => ({ user, signIn, signOut, signUp, loading }),
     [user, signIn, signOut, signUp, loading]
   );
-
-  console.log("AuthProvider render", { contextValue });
 
   return (
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>

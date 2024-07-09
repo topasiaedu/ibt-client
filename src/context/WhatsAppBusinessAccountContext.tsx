@@ -58,11 +58,8 @@ export const WhatsAppBusinessAccountProvider: React.FC<PropsWithChildren<{}>> = 
         return;
       }
 
-      console.log("Fetching WhatsApp Business Accounts", whatsAppBusinessAccounts);
-
       setWhatsAppBusinessAccounts((prevWhatsAppBusinessAccounts) => {
         if (!isEqual(prevWhatsAppBusinessAccounts, whatsAppBusinessAccounts)) {
-          console.log("Updating WhatsApp Business Accounts state");
           return whatsAppBusinessAccounts!;
         }
         return prevWhatsAppBusinessAccounts;

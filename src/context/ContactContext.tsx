@@ -9,6 +9,7 @@ import React, {
 import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
+import isEqual from "lodash.isequal";
 
 export type Contact = Database["public"]["Tables"]["contacts"]["Row"];
 export type Contacts = { contacts: Contact[] };
@@ -46,7 +47,12 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setContacts(contacts!);
+      setContacts((prevContacts) => {
+        if (isEqual(prevContacts, contacts)) {
+          return prevContacts;
+        }
+        return contacts;
+      });
     };
 
     fetchContacts();

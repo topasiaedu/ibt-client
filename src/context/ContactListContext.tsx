@@ -10,6 +10,7 @@ import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
 import { Contact } from "./ContactContext";
+import isEqual from "lodash.isequal";
 
 export type ContactListMember =
   Database["public"]["Tables"]["contact_list_members"]["Row"] & {
@@ -68,7 +69,12 @@ export function ContactListProvider({
         console.error("Error fetching contactLists:", error);
         return;
       }
-      setContactLists(contactLists!);
+      setContactLists((prevContactLists) => {
+        if (isEqual(prevContactLists, contactLists)) {
+          return prevContactLists;
+        }
+        return contactLists;
+      });
     };
 
     fetchContactLists();
@@ -210,8 +216,8 @@ export function ContactListProvider({
       loading,
     ]
   );
-// Add the whyDidYouRender property after defining the component
-(ContactListProvider as any).whyDidYouRender = true; // Add this line
+  // Add the whyDidYouRender property after defining the component
+  (ContactListProvider as any).whyDidYouRender = true; // Add this line
   return (
     <ContactListContext.Provider value={contextValue}>
       {children}

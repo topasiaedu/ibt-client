@@ -32,6 +32,7 @@ const TemplateListPage: React.FC = function () {
   };
 
   if (loading || !templates || !templates.length) {
+    console.log("Loading templates..., templates: ", templates);
     return <LoadingPage />
   }
 
@@ -120,8 +121,6 @@ const TemplatesTable: React.FC<{ templates: Template[] }> = function ({ template
 
     return `${approved}/${total} Approved`;
   };
-
-  console.log(groupedTemplates);
 
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
