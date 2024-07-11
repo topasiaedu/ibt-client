@@ -32,7 +32,6 @@ const TemplateListPage: React.FC = function () {
   };
 
   if (loading || !templates || !templates.length) {
-    console.log("Loading templates..., templates: ", templates);
     return <LoadingPage />
   }
 

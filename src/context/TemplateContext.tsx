@@ -62,7 +62,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
         .from("templates")
         .select("*")
         .in("account_id", wabaIds)
-        .order("template_id", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching templates:", error);
@@ -80,7 +80,6 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
     fetchTemplates();
 
     const handleChanges = (payload: any) => {
-      console.log("Template changes:", payload.eventType);
       if (payload.eventType === "INSERT") {
         const new_templates = [...templates, payload.new];
         setTemplates((prev) => {
@@ -90,16 +89,14 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
           return prev;
         });
       } else if (payload.eventType === "UPDATE") {
-        const old_templates = templates;
-        const new_templates = old_templates.map((template) =>
-          template.template_id === payload.new.template_id
-            ? payload.new
-            : template
-        );
-
         setTemplates((prev) => {
-          if (!isEqual(prev, new_templates)) {
-            return new_templates;
+          const updated_templates = prev.map((template) =>
+            template.template_id === payload.new.template_id
+              ? payload.new
+              : template
+          );
+          if (!isEqual(prev, updated_templates)) {
+            return updated_templates;
           }
           return prev;
         });
