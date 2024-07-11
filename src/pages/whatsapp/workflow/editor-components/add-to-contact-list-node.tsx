@@ -7,6 +7,8 @@ import { useFlowContext } from "../../../../context/FlowContext";
 
 export type AddToContactListData = {
   listId?: string;
+  listIds?: number[];
+  currentIndex: number;
 };
 
 export default function AddToContactListNode(
@@ -15,11 +17,11 @@ export default function AddToContactListNode(
   const [listId, setListId] = React.useState(props.data?.listId ?? "");
   const { contactLists } = useContactListContext();
   const { removeNode, updateNodeData } = useFlowContext();
-  const [listIds, setListIds] = React.useState<any[]>([]);
+  const [lists, setLists] = React.useState<any[]>([]);
   const [listIdInput, setListIdInput] = React.useState<string>("");
 
   const removeListId = (listId: string) => {
-    setListIds((prev) => prev.filter((c) => c !== listId));
+    setLists((prev) => prev.filter((c) => c !== listId));
   };
 
   const handleListIdInputChange = (e: { target: { value: any } }) => {
@@ -29,13 +31,13 @@ export default function AddToContactListNode(
 
   const handleListIdKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && listIdInput.trim() !== "") {
-      setListIds((prev) => [...prev, listIdInput]);
+      setLists((prev) => [...prev, listIdInput]);
       setListIdInput("");
     }
   };
 
   const handleContactListClick = (contactList: any) => {
-    setListIds((prev) => [...prev, contactList]);
+    setLists((prev) => [...prev, contactList]);
     setListIdInput("");
   };
 
@@ -49,6 +51,18 @@ export default function AddToContactListNode(
     debouncedUpdateNodeData(props.id, { listId });
   }, [listId, debouncedUpdateNodeData, props.id]);
 
+  useEffect(() => {
+    if (props.data?.listIds) {
+      var lists: any[] = [];
+
+      props.data.listIds.forEach((listId) => {
+        lists.push(contactLists.find((c) => c.contact_list_id === listId));
+      });
+      setLists(lists);
+    }
+    
+  }, [props.data?.listIds]);
+
   return (
     <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg max-w-sm flex flex-col gap-2">
       <h1 className="text-lg font-semibold">Add to Contact List Node</h1>
@@ -60,7 +74,7 @@ export default function AddToContactListNode(
       <Label htmlFor="listId">ListIds</Label>
       <div className="relative">
         <div className="custom-input flex items-center flex-wrap block w-full border disabled:cursor-not-allowed disabled:opacity-50 bg-gray-50 border-gray-300 text-gray-900 focus:border-cyan-500 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-cyan-500 dark:focus:ring-cyan-500 p-2.5 text-sm rounded-lg">
-          {listIds.map((listId, index) => (
+          {lists.map((listId, index) => (
             <Badge
               key={listId + index}
               color="info"
