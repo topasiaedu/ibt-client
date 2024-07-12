@@ -5,61 +5,91 @@ import ChatList from "./chat-list";
 import ChatWindow from "./chat-window";
 import ContactProfile from "./contact-profile";
 import LoadingPage from "../../pages/loading";
-import { useMessagesContext, Conversation } from "../../../context/MessagesContext";
+import { useMessagesContext } from "../../../context/MessagesContext";
 import { useProjectContext } from "../../../context/ProjectContext";
+import {
+  useConversationContext,
+  Conversation,
+} from "../../../context/ConversationContext";
 
 const ConversationPage: React.FC = function () {
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | undefined>(undefined);
-  const { conversations, loading, updateMessage } = useMessagesContext();
+  const [selectedConversation, setSelectedConversation] = useState<
+    Conversation | undefined
+  >(undefined);
+  const { updateMessage, setCurrentConversationId, messages } =
+    useMessagesContext();
   const { currentProject } = useProjectContext();
+  const { conversations, loading, updateConversation } =
+    useConversationContext();
 
   const handleSelectConversation = (conversation: Conversation) => {
-    for (const message of conversation.messages) {
+    setCurrentConversationId(conversation.id);
+
+    // Mark all messages as read
+    for (const message of messages) {
       if (message.status !== "READ" && message.direction === "inbound") {
         updateMessage({
           ...message,
-          status: "READ"
+          status: "READ",
         });
       }
     }
-    conversation.unread_messages = 0;
+
+    updateConversation({
+      id: conversation.id,
+      phone_number_id: conversation.phone_number_id,
+      contact_id: conversation.contact_id,
+      project_id: conversation.project_id,
+      last_message_id: conversation.last_message_id,
+      close_at: conversation.close_at,
+      unread_messages: 0,
+    });
     setSelectedConversation(conversation);
   };
 
   const handleUnreadConversation = (conversation: Conversation) => {
     // Mark the first inbound message as UNREAD
-    const firstInboundMessage = conversation.messages.find((message) => message.direction === "inbound");
+    const firstInboundMessage = messages.find(
+      (message) => message.direction === "inbound"
+    );
     if (firstInboundMessage) {
       console.log(firstInboundMessage);
       updateMessage({
         ...firstInboundMessage,
-        status: "UNREAD"
+        status: "UNREAD",
       });
     }
-  }
+    
+    updateConversation({
+      id: conversation.id,
+      phone_number_id: conversation.phone_number_id,
+      contact_id: conversation.contact_id,
+      project_id: conversation.project_id,
+      last_message_id: conversation.last_message_id,
+      close_at: conversation.close_at,
+      unread_messages: 1,
+    });
+  };
 
   useEffect(() => {
-    if (!selectedConversation) {
-      setSelectedConversation(conversations[0]);
-    }
     if (selectedConversation) {
-      const updatedConversation = conversations.find((conversation) => conversation.id === selectedConversation.id);
+      const updatedConversation = conversations.find(
+        (conversation) => conversation.id === selectedConversation.id
+      );
       if (updatedConversation) {
         // Mark all messages as read
-        for (const message of updatedConversation.messages) {
+        for (const message of messages) {
           if (message.status !== "READ" && message.direction === "inbound") {
             updateMessage({
               ...message,
-              status: "READ"
+              status: "READ",
             });
           }
         }
         setSelectedConversation(updatedConversation);
       }
     }
-
-  }, [conversations, selectedConversation, updateMessage]);
-
+  }, [conversations, messages, selectedConversation, updateMessage]);
 
   // If current project is changed, reset selected conversation
   useEffect(() => {
@@ -67,9 +97,7 @@ const ConversationPage: React.FC = function () {
   }, [currentProject]);
 
   if (loading || !conversations || !conversations.length) {
-    return (
-      <LoadingPage />
-    );
+    return <LoadingPage />;
   }
 
   if (!conversations.length) {
@@ -77,14 +105,14 @@ const ConversationPage: React.FC = function () {
       <NavbarSidebarLayout>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <h1 className="text-2xl font-bold dark:text-white">No conversations found</h1>
+            <h1 className="text-2xl font-bold dark:text-white">
+              No conversations found
+            </h1>
           </div>
         </div>
       </NavbarSidebarLayout>
     );
   }
-
-
 
   return (
     <NavbarSidebarLayout>
@@ -95,13 +123,26 @@ const ConversationPage: React.FC = function () {
           selectedConversation={selectedConversation}
           onMarkAsUnread={handleUnreadConversation}
         />
-        {selectedConversation && (<ChatWindow conversation={selectedConversation} />)}
-        {selectedConversation && (<ContactProfile contact={selectedConversation.contact} close_at={selectedConversation.close_at} />)}
+        {selectedConversation && (
+          <ChatWindow conversation={selectedConversation} messages={messages} />
+        )}
+        {selectedConversation && (
+          <ContactProfile
+            contact={selectedConversation.contact}
+            close_at={selectedConversation.close_at}
+          />
+        )}
         {!selectedConversation && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-            <img alt="" src="/images/illustrations/404.svg" className="lg:max-w-md" />
-              <h1 className="text-2xl font-bold dark:text-white">Select a conversation to start chatting</h1>
+              <img
+                alt=""
+                src="/images/illustrations/404.svg"
+                className="lg:max-w-md"
+              />
+              <h1 className="text-2xl font-bold dark:text-white">
+                Select a conversation to start chatting
+              </h1>
             </div>
           </div>
         )}
@@ -109,8 +150,5 @@ const ConversationPage: React.FC = function () {
     </NavbarSidebarLayout>
   );
 };
-
-
-
 
 export default ConversationPage;

@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   useMessagesContext,
   MessageInsert,
-  Conversation,
   Message,
 } from "../../../context/MessagesContext";
 import MessageComponent from "../../../components/MessageComponent";
@@ -13,12 +12,14 @@ import { CiMicrophoneOff } from "react-icons/ci";
 // import { useAlertContext } from "../../../context/AlertContext";
 import Picker from "emoji-picker-react";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
+import { Conversation } from "../../../context/ConversationContext";
 
 interface ChatWindowProps {
   conversation: Conversation;
+  messages: Message[];
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
   const [input, setInput] = React.useState("");
   const { addMessage } = useMessagesContext();
   const [file, setFile] = React.useState<File | null>(null);
@@ -45,7 +46,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
       mediaType = "audio";
     }
 
-    console.log("Contact", conversation.contact.contact_id);
     // Add message to conversation
     const data: MessageInsert = {
       contact_id: conversation.contact.contact_id,
@@ -59,11 +59,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     };
 
     if (file) {
-      addMessage(data, file);
+      addMessage(data, conversation.id, file);
     } else if (audioFile) {
-      addMessage(data, audioFile);
+      addMessage(data, conversation.id, audioFile);
     } else {
-      addMessage(data);
+      addMessage(data, conversation.id);
     }
 
     // Clear input field
@@ -79,7 +79,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     if (chatWindow) {
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
-  }, [conversation.messages.length]);
+  }, [messages.length]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -199,7 +199,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
     return oggBlob;
   };
 
-  const onEmojiClick = (emojiObject: any, e:any) => {
+  const onEmojiClick = (emojiObject: any, e: any) => {
     console.log("Emoji clicked", emojiObject);
     console.log("Event", e);
     setInput(input + emojiObject.emoji);
@@ -210,7 +210,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
       {/* Chat Messages */}
       {/* Scroll to the bottom of the chat window */}
       <div className="flex flex-grow gap-4 xl:h-[calc(100vh-15rem)] overflow-y-auto scrollToBottom flex-col">
-        {[...conversation.messages].reverse().map((message, index) => (
+        {[...messages].reverse().map((message, index) => (
           <div key={conversation.id + "" + index}>
             {generateMessage(message)}
           </div>
@@ -247,7 +247,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
       )}
 
       {openEmoji && (
-        <div className={`absolute bottom-24 left-45 z-10 ${openEmoji ? "" : "hidden"}`}>  
+        <div
+          className={`absolute bottom-24 left-45 z-10 ${
+            openEmoji ? "" : "hidden"
+          }`}>
           <Picker onEmojiClick={onEmojiClick} />
         </div>
       )}

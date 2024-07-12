@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Badge, Dropdown, Label, TextInput } from "flowbite-react";
-import { Conversation } from "../../../context/MessagesContext";
+import { Conversation } from "../../../context/ConversationContext";
 
 interface ChatListProps {
   conversations: Conversation[];
@@ -103,11 +103,11 @@ const ChatList: React.FC<ChatListProps> = ({
       </div>
       <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto flex-grow">
         {conversations
-          .sort(
-            (a, b) =>
-              new Date(b.last_message_time).getTime() -
-              new Date(a.last_message_time).getTime()
-          )
+          // .sort(
+          //   (a, b) =>
+          //     new Date(b.last_message_time).getTime() -
+          //     new Date(a.last_message_time).getTime()
+          // )
           .filter(
             (conversation) =>
               (conversation.phone_number.number.includes(selectedPhoneNumber) ||
@@ -128,7 +128,8 @@ const ChatList: React.FC<ChatListProps> = ({
                 <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
                   <div className="min-w-0 flex-1 w-fit">
                     <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
-                      {conversation.contact.wa_id}{" "}
+                      {conversation.contact.name}{" "}
+                      {conversation.contact.wa_id}
                       <Badge color="primary">
                         {conversation.phone_number.number}
                       </Badge>
@@ -140,7 +141,7 @@ const ChatList: React.FC<ChatListProps> = ({
                     </p>
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                       Last seen:{" "}
-                      {lastMessageTime(conversation.last_message_time)}
+                      {conversation.last_message.created_at}
                     </p>
                   </div>
                   {conversation.unread_messages > 0 && (

@@ -80,6 +80,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
     fetchTemplates();
 
     const handleChanges = (payload: any) => {
+      console.log("Subscription payload:", payload.eventType);
       if (payload.eventType === "INSERT") {
         const new_templates = [...templates, payload.new];
         setTemplates((prev) => {

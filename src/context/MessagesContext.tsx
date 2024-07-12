@@ -11,13 +11,10 @@ import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
 import { useAlertContext } from "./AlertContext";
-import { Contact, useContactContext } from "./ContactContext";
-import { PhoneNumber, usePhoneNumberContext } from "./PhoneNumberContext";
-import {
-  WhatsAppBusinessAccount,
-  useWhatsAppBusinessAccountContext,
-} from "./WhatsAppBusinessAccountContext";
-import isEqual from "lodash/isEqual"; // Import lodash's isEqual for deep comparison
+import { useContactContext } from "./ContactContext";
+import { usePhoneNumberContext } from "./PhoneNumberContext";
+import { useWhatsAppBusinessAccountContext } from "./WhatsAppBusinessAccountContext";
+import isEqual from "lodash.isequal";
 
 export type Message = Database["public"]["Tables"]["messages"]["Row"];
 export type Messages = { messages: Message[] };
@@ -26,30 +23,21 @@ export type MessageInsert = Database["public"]["Tables"]["messages"]["Insert"];
 const WHATSAPP_ACCESS_TOKEN =
   "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN;
 
-export type Conversation = {
-  id: string;
-  contact: Contact;
-  messages: Message[];
-  phone_number: PhoneNumber;
-  whatsapp_business_account: WhatsAppBusinessAccount;
-  last_message_time: string;
-  last_message: Message;
-  unread_messages: number;
-  close_at: string | null;
-};
-
 interface MessagesContextType {
-  conversations: Conversation[];
-  addConversation: (conversation: Conversation) => void;
-  updateConversation: (conversation: Conversation) => void;
-  deleteConversation: (conversationId: number) => void;
-  addMessage: (message: MessageInsert, file?: File) => void;
+  messages: Message[];
+  addMessage: (
+    message: MessageInsert,
+    conversation_id: string,
+    file?: File
+  ) => void;
   updateMessage: (message: Message) => void;
   deleteMessage: (messageId: number) => void;
   fetchCampaignReadMessagesCount: (
     campaignId: number
   ) => Promise<number | undefined>;
   loading: boolean;
+  currentConversationId: string | null;
+  setCurrentConversationId: (conversationId: string | null) => void;
 }
 
 const MessagesContext = createContext<MessagesContextType>(undefined!);
@@ -57,7 +45,10 @@ const MessagesContext = createContext<MessagesContextType>(undefined!);
 export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
   children,
 }) => {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<
+    string | null
+  >(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { currentProject } = useProjectContext();
   const { showAlert } = useAlertContext();
@@ -68,135 +59,52 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
   useEffect(() => {
     setLoading(true);
 
-    const fetchConversations = async () => {
-      // Set timer to do benchmarking
-      console.time("fetchConversations");
-      
-      if (!currentProject) return;
-      // CREATE OR REPLACE FUNCTION fetch_conversations(project_id_param INT)
+    const fetchMessages = async () => {
+      if (!currentConversationId) return;
 
-      const { data, error } = await supabase.rpc("fetch_conversations", {
-        project_id_param: currentProject.project_id,
-      });
+      const { data: messages, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", currentConversationId)
+        .order("message_id", { ascending: false });
 
       if (error) {
-        // Benchmarking
-        console.timeEnd("fetchConversations");
-        console.error("Error fetching conversations:", error);
+        console.error("Error fetching messages:", error);
         return;
       }
 
-      if (!data) return;
-
-      const conversations = data as Conversation[];
-
-      setConversations((prevConversations) => {
-        // Benchmarking
-        console.timeEnd("fetchConversations");
-        if (!isEqual(prevConversations, conversations)) {
-          return conversations;
-        }
-        return prevConversations;
+      setMessages((prevMessages) => {
+        if (isEqual(prevMessages, messages)) return prevMessages;
+        return messages;
       });
     };
 
-    fetchConversations();
+    fetchMessages();
 
     const handleChanges = (payload: any) => {
-      switch (payload.eventType) {
-        case "INSERT":
-          const conversationId = `${payload.new.contact_id}-${payload.new.phone_number_id}`;
-          const existingConversation = conversations.find(
-            (conversation) => conversation.id === conversationId
+      console.log("Inside handleChanges, event type: ", payload.eventType);
+      if (payload.eventType === "INSERT") {
+        if (payload.new.conversation_id === currentConversationId) {
+          setMessages((prev) => [payload.new, ...prev]);
+        }
+      } else if (payload.eventType === "UPDATE") {
+        setMessages((prev) => {
+          const updatedMessages = prev.map((message) =>
+            message.message_id === payload.new.message_id
+              ? payload.new
+              : message
           );
-
-          if (existingConversation) {
-            const newConversation = {
-              ...existingConversation,
-              messages: [payload.new, ...existingConversation.messages],
-              last_message_time: payload.new.created_at,
-              last_message: payload.new,
-              unread_messages:
-                payload.new.status === "READ" &&
-                payload.new.direction === "inbound"
-                  ? 0
-                  : existingConversation.unread_messages + 1,
-            };
-
-            const newConversations = conversations.map((conversation) =>
-              conversation.id === conversationId
-                ? newConversation
-                : conversation
-            );
-            setConversations(newConversations);
-          } else {
-            // If conversation does not exist, create a new conversation
-            const contact = contacts.find(
-              (contact) => contact.contact_id === payload.new.contact_id
-            );
-            const phoneNumber = phoneNumbers.find(
-              (phoneNumber) =>
-                phoneNumber.phone_number_id === payload.new.phone_number_id
-            );
-            const whatsappBusinessAccount = whatsAppBusinessAccounts.find(
-              (whatsappBusinessAccount) =>
-                whatsappBusinessAccount.account_id === phoneNumber?.waba_id
-            );
-            const lastMessageTime = payload.new.created_at;
-            const lastMessage = payload.new.content;
-            const unreadMessages =
-              payload.new.status === "READ" &&
-              payload.new.direction === "inbound"
-                ? 0
-                : 1;
-
-            if (!contact || !phoneNumber || !whatsappBusinessAccount) return;
-
-            const newConversations = [
-              {
-                id: `${payload.new.contact_id}-${payload.new.phone_number_id}`,
-                contact,
-                messages: [payload.new],
-                phone_number: phoneNumber,
-                whatsapp_business_account: whatsappBusinessAccount,
-                last_message_time: lastMessageTime,
-                last_message: lastMessage,
-                unread_messages: unreadMessages,
-                close_at: null,
-              },
-              ...conversations,
-            ];
-
-            setConversations(newConversations);
+          if (!isEqual(prev, updatedMessages)) {
+            return updatedMessages;
           }
-          break;
-        case "UPDATE":
-          setConversations((prev) =>
-            prev.map((conversation) =>
-              conversation.messages.some(
-                (message) => message.message_id === payload.new.message_id
-              )
-                ? {
-                    ...conversation,
-                    messages: conversation.messages.map((message) =>
-                      message.message_id === payload.new.message_id
-                        ? payload.new
-                        : message
-                    ),
-                  }
-                : conversation
-            )
-          );
-          break;
-        case "DELETE":
-          setConversations((prev) =>
-            prev.filter((conversation) =>
-              conversation.messages.some(
-                (message) => message.message_id !== payload.old.message_id
-              )
-            )
-          );
-          break;
+          return prev;
+        });
+      } else if (payload.eventType === "DELETE") {
+        setMessages((prev) =>
+          prev.filter(
+            (message) => message.message_id !== payload.old.message_id
+          )
+        );
       }
     };
 
@@ -217,35 +125,14 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
     };
   }, [
     contacts,
-    conversations,
+    currentConversationId,
     currentProject,
     phoneNumbers,
     whatsAppBusinessAccounts,
   ]);
 
-  const addConversation = useCallback((conversation: Conversation) => {
-    setConversations((prev) => [conversation, ...prev]);
-  }, []);
-  const updateConversation = useCallback((conversation: Conversation) => {
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.contact.contact_id === conversation.contact.contact_id
-          ? conversation
-          : c
-      )
-    );
-  }, []);
-
-  const deleteConversation = useCallback((conversationId: number) => {
-    setConversations((prev) =>
-      prev.filter(
-        (conversation) => conversation.contact.contact_id !== conversationId
-      )
-    );
-  }, []);
-
   const addMessage = useCallback(
-    async (message: MessageInsert, file?: File) => {
+    async (message: MessageInsert, conversation_id: string, file?: File) => {
       try {
         const phoneNumber = phoneNumbers.find(
           (phoneNumber) =>
@@ -318,14 +205,16 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             {
               method: "POST",
               headers: {
-                Authorization: phoneNumber?.wa_id === '378967558625481' ? "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN_2 : "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN,
+                Authorization:
+                  phoneNumber?.wa_id === "378967558625481"
+                    ? "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN_2
+                    : "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN,
               },
               body: form,
             }
           );
 
           const data = await response.json();
-
 
           body = JSON.stringify({
             messaging_product: "whatsapp",
@@ -338,7 +227,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             },
           });
         } else {
-          
           body = JSON.stringify({
             messaging_product: "whatsapp",
             to: contacts.find(
@@ -371,19 +259,43 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
         }
 
         // Add message to database
-        const { error } = await supabase.from("messages").insert({
-          ...message,
-          project_id: currentProject?.project_id,
-          wa_message_id: data.messages[0].id,
-          media_url: file
-            ? `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`
-            : null,
-        });
+        const { data: newMessage, error } = await supabase
+          .from("messages")
+          .insert({
+            ...message,
+            project_id: currentProject?.project_id,
+            wa_message_id: data.messages[0].id,
+            conversation_id: conversation_id,
+            media_url: file
+              ? `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`
+              : null,
+          })
+          .select()
+          .single();
 
         if (error) {
           console.error("Error sending message:", error);
           showAlert("Error sending message", "error");
         }
+
+        // Update last_message_id and updated_at in the conversation
+        const { data: updatedConversation, error: updateConversationError } =
+          await supabase
+            .from("conversations")
+            .update({
+              last_message_id: newMessage?.message_id,
+              updated_at: new Date(),
+            })
+            .eq("id", conversation_id);
+
+        if (updateConversationError) {
+          console.error(
+            "Error updating conversation with last_message_id:",
+            updateConversationError
+          );
+          return;
+        }
+
       } catch (error) {
         console.error("Error sending message:", error);
         showAlert("Error sending message", "error");
@@ -446,26 +358,23 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
 
   const contextValue = useMemo(
     () => ({
-      conversations,
-      addConversation,
-      updateConversation,
-      deleteConversation,
+      messages,
       addMessage,
       updateMessage,
       deleteMessage,
       fetchCampaignReadMessagesCount,
       loading,
+      currentConversationId,
+      setCurrentConversationId,
     }),
     [
-      conversations,
-      loading,
-      addConversation,
-      updateConversation,
-      deleteConversation,
+      messages,
       addMessage,
       updateMessage,
       deleteMessage,
       fetchCampaignReadMessagesCount,
+      loading,
+      currentConversationId,
     ]
   );
 
