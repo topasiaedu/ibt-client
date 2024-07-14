@@ -141,7 +141,7 @@ const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
           <Checkbox id="select-all-campaigns" name="select-all-campaigns" />
         </Table.HeadCell> */}
         <Table.HeadCell>Name</Table.HeadCell>
-        <Table.HeadCell>Contact List</Table.HeadCell>
+        {/* <Table.HeadCell>Contact List</Table.HeadCell> */}
         <Table.HeadCell>Template</Table.HeadCell>
         <Table.HeadCell>Scheduled Time</Table.HeadCell>
         <Table.HeadCell>Status</Table.HeadCell>
@@ -158,14 +158,14 @@ const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
             key={campaign.campaign_id}
             className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Table.Cell>{campaign.name}</Table.Cell>
-            <Table.Cell>
+            {/* <Table.Cell>
               {
                 contactLists.find(
                   (contactList) =>
                     contactList.contact_list_id === campaign.contact_list_id
                 )?.name
               }
-            </Table.Cell>
+            </Table.Cell> */}
             <Table.Cell>
               {
                 templates.find(
