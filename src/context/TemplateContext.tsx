@@ -51,6 +51,30 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
   const { showAlert } = useAlertContext();
   const { currentProject } = useProjectContext();
 
+  const handleChanges = useCallback((payload: any) => {
+    console.log("Subscription payload:", payload.eventType);
+
+    setTemplates((prev) => {
+      let newTemplates = prev;
+
+      if (payload.eventType === "INSERT") {
+        newTemplates = [...prev, payload.new];
+      } else if (payload.eventType === "UPDATE") {
+        newTemplates = prev.map((template) =>
+          template.template_id === payload.new.template_id
+            ? payload.new
+            : template
+        );
+      } else if (payload.eventType === "DELETE") {
+        newTemplates = prev.filter(
+          (template) => template.template_id !== payload.old.template_id
+        );
+      }
+
+      return isEqual(prev, newTemplates) ? prev : newTemplates;
+    });
+  }, []);
+
   useEffect(() => {
     setLoading(true);
     const fetchTemplates = async () => {
@@ -78,37 +102,6 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchTemplates();
-
-    const handleChanges = (payload: any) => {
-      console.log("Subscription payload:", payload.eventType);
-      if (payload.eventType === "INSERT") {
-        const new_templates = [...templates, payload.new];
-        setTemplates((prev) => {
-          if (!isEqual(prev, new_templates)) {
-            return new_templates;
-          }
-          return prev;
-        });
-      } else if (payload.eventType === "UPDATE") {
-        setTemplates((prev) => {
-          const updated_templates = prev.map((template) =>
-            template.template_id === payload.new.template_id
-              ? payload.new
-              : template
-          );
-          if (!isEqual(prev, updated_templates)) {
-            return updated_templates;
-          }
-          return prev;
-        });
-      } else if (payload.eventType === "DELETE") {
-        setTemplates((prev) =>
-          prev.filter(
-            (template) => template.template_id !== payload.old.template_id
-          )
-        );
-      }
-    };
 
     const subscription = supabase
       .channel("templates")
@@ -142,7 +135,6 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
 
         // Get all waba under the same project
         const wabas = whatsAppBusinessAccounts.map((waba) =>
-
           waba.project_id === currentProject?.project_id ? waba : null
         );
 
@@ -164,7 +156,8 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
               headers: {
                 "Content-Type": "application/json",
                 Authorization:
-                  waba?.waba_id === "337124179489470" || waba?.waba_id === "377358032119390"
+                  waba?.waba_id === "337124179489470" ||
+                  waba?.waba_id === "377358032119390"
                     ? "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN_2
                     : "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN,
               },

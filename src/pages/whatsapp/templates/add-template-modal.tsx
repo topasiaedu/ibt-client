@@ -9,7 +9,7 @@ import {
   Textarea,
   Card,
 } from "flowbite-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { HiPlus } from "react-icons/hi";
 import {
   useWhatsAppBusinessAccountContext,
@@ -57,6 +57,11 @@ const AddTemplateModal: React.FC = function () {
   const [preview, setPreview] = useState<JSX.Element | null>(null);
 
   const handleAddTemplate = async () => {
+    if (selectedCategory === "" || selectedLanguage === "" || !templateName) {
+      showAlert("Please fill all the fields", "error");
+      return;
+    }
+
     const template: TemplateInsert = {
       account_id: selectedWhatsappBusinessAccount?.account_id ?? null,
       category: selectedCategory,
@@ -66,6 +71,8 @@ const AddTemplateModal: React.FC = function () {
       status: "PENDING",
     };
 
+
+    console.log("Template: ", template);
     let components: any[] = [];
 
     // If footer has data, add it to the components
@@ -154,7 +161,7 @@ const AddTemplateModal: React.FC = function () {
     showAlert("Template added successfully", "success");
   };
 
-  const generatePreview = () => {
+  const generatePreview = useCallback(() => {
     // Check if the body data has any {{1}} or {{2}} or so on, replace them with the example data with the appropriate value from the input fields
     const bodyDataMatches = bodyData.match(/{{\d+}}/g);
     let newBodyData = bodyData;
@@ -232,11 +239,11 @@ const AddTemplateModal: React.FC = function () {
         )
       );
     }
-  };
+  }, [bodyData, buttons, file, footerData, headerData, headerType]);
 
   useEffect(() => {
     generatePreview();
-  }, [headerData, bodyData, footerData, buttons, file, headerType]);
+  }, [headerData, bodyData, footerData, buttons, file, headerType, generatePreview]);
 
   return (
     <>
@@ -269,40 +276,6 @@ const AddTemplateModal: React.FC = function () {
                   </p>
                 </div>
               </div>
-              {/* <div className="mt-6">
-                <Label htmlFor="whatsAppBusinessAccount">
-                  WhatsApp Business Account
-                </Label>
-                <div className="mt-1">
-                  <Select
-                    id="whatsAppBusinessAccount"
-                    name="whatsAppBusinessAccount"
-                    onChange={(e) =>
-                      setSelectedWhatsappBusinessAccount(
-                        whatsAppBusinessAccounts.find(
-                          (whatsAppBusinessAccount) =>
-                            whatsAppBusinessAccount.account_id ===
-                            parseInt(e.target.value)
-                        ) || null
-                      )
-                    }>
-                    <option value="">Select WhatsApp Business Account</option>
-                    {whatsAppBusinessAccounts
-                      .filter(
-                        (whatsAppBusinessAccount) =>
-                          whatsAppBusinessAccount.project_id ===
-                          currentProject?.project_id
-                      )
-                      .map((whatsAppBusinessAccount) => (
-                        <option
-                          key={whatsAppBusinessAccount.account_id}
-                          value={whatsAppBusinessAccount.account_id}>
-                          {whatsAppBusinessAccount.name}
-                        </option>
-                      ))}
-                  </Select>
-                </div>
-              </div> */}
 
               {/* Category Select: MARKETING, UTILITY,  */}
               <div className="mt-6">
@@ -401,6 +374,7 @@ const AddTemplateModal: React.FC = function () {
                     <TextInput
                       id={`bodyData${index}`}
                       name={`bodyData${index}`}
+                      onKeyUp={generatePreview}
                       placeholder={`Body Data ${index + 1}`}
                     />
                   </div>
