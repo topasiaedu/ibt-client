@@ -117,6 +117,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProject, user]);
 
   //Save the latest state into localStorage

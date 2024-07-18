@@ -50,137 +50,87 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
       setImporting(true);
       const reader = new FileReader();
       reader.readAsText(file);
-      reader.onload = () => {
+      reader.onload = async () => {
         const contacts = reader.result as string;
-        // Skip the first line (header)
-
-        const contactsArray = contacts
-          .split("\n")
-          .slice(1)
-          .map((contact) => {
-            const [name, phone] = contact.split(",");
-            return { name, phone, project_id: currentProject?.project_id };
-          });
-
-        contactsArray.forEach((contact) => {
-          setProgress(
-            Math.round(
-              (contactsArray.indexOf(contact) / contactsArray.length) * 100
-            )
-          );
-          console.log("Adding contact: ", contact);
-          const tempContact = {
-            name: contact.name,
-            wa_id: contact.phone,
-          } as Contact;
-          // Check if the contact already exists
-          findContact(tempContact).then((data) => {
-            if (data) {
-              // Add the contact to the contact list
-              addContactToContactList(
-                contact_list.contact_list_id,
-                data.contact_id
-              );
-            } else {
-              // Add the contact to the contacts table
-              addContact({
-                name: contact.name,
-                wa_id: contact.phone,
-              } as ContactInsert)
-                .then((response) => {
-                  console.log("Contact added: ", response);
-                  if (!response) return;
-                  addContactToContactList(
-                    contact_list.contact_list_id,
-                    response.contact_id
-                  );
-                })
-                .catch((error) => {
-                  console.error("Failed to add contact:", error);
-                  showAlert("Failed to add contact", "error");
-                });
-            }
-          });
+        const contactsArray = contacts.split("\n").slice(1).map((contact) => {
+          const [name, phone] = contact.split(",");
+          return { name, phone, project_id: currentProject?.project_id };
         });
+  
+        for (let i = 0; i < contactsArray.length; i++) {
+          const contact = contactsArray[i];
+          const tempContact = { name: contact.name, wa_id: contact.phone } as Contact;
+          
+          // Check if the contact already exists
+          const data = await findContact(tempContact);
+          if (data) {
+            // Add the contact to the contact list
+            await addContactToContactList(contact_list.contact_list_id, data.contact_id);
+          } else {
+            // Add the contact to the contacts table
+            const response = await addContact({ name: contact.name, wa_id: contact.phone } as ContactInsert);
+            if (response) {
+              await addContactToContactList(contact_list.contact_list_id, response.contact_id);
+            }
+          }
+  
+          // Update progress
+          setProgress(Math.round(((i + 1) / contactsArray.length) * 100));
+        }
+  
+        setImporting(false);
+        // Reload the page
+        window.location.reload();
       };
-      setImporting(false);
     } else {
       setImporting(true);
-      // Split the form input by new line and comma
       const contacts = formInput;
       const contactsArray = contacts.split("\n").map((contact) => {
         const parts = contact.split(",");
-        // Check if contact has both name and phone or just phone
         const phone = parts[0].trim();
-        const name = parts.length === 2 ? parts[1].trim() : undefined; // or '' if you prefer an empty string over undefined
-
+        const name = parts.length === 2 ? parts[1].trim() : undefined;
         return { name, phone };
       });
-
-      // Remove Empty Contacts
-      const filteredContactsArray = contactsArray.filter(
-        (contact) => contact.phone !== ""
-      );
+  
+      const filteredContactsArray = contactsArray.filter((contact) => contact.phone !== "");
       console.log("Total Contacts: ", filteredContactsArray.length);
-
-      await contactsArray.forEach(async (contact) => {
-        setProgress(
-          Math.round(
-            (contactsArray.indexOf(contact) / contactsArray.length) * 100
-          )
-        );
-        const tempContact = {
-          name: contact.name || "Unknown",
-          wa_id: contact.phone,
-        } as Contact;
-        // Check if the contact already exists
-        await findContact(tempContact).then(async (data) => {
-          if (data) {
-            // Add the contact to the contact list
-            await addContactToContactList(
-              contact_list.contact_list_id,
-              data.contact_id
-            );
-          } else {
-            // Adjust here for potentially undefined name
-            const createContactData: Contact = {
-              wa_id: contact.phone,
-              name: "",
-              phone: null,
-              email: null,
-              contact_id: 0,
-              created_at: new Date().toISOString(),
-              last_contacted_by: null,
-              project_id: null,
-            };
-            if (contact.name) createContactData.name = contact.name;
-
-            // Add the contact to the contacts table
-            await addContact(createContactData)
-              .then((response) => {
-                if (!response) return;
-                addContactToContactList(
-                  contact_list.contact_list_id,
-                  response.contact_id
-                );
-              })
-              .catch((error) => {
-                console.error("Failed to add contact:", error);
-              });
+  
+      for (let i = 0; i < filteredContactsArray.length; i++) {
+        const contact = filteredContactsArray[i];
+        const tempContact = { name: contact.name || "Unknown", wa_id: contact.phone } as Contact;
+  
+        const data = await findContact(tempContact);
+        if (data) {
+          await addContactToContactList(contact_list.contact_list_id, data.contact_id);
+        } else {
+          const createContactData: Contact = {
+            wa_id: contact.phone,
+            name: contact.name || "",
+            phone: null,
+            email: null,
+            contact_id: 0,
+            created_at: new Date().toISOString(),
+            last_contacted_by: null,
+            project_id: null,
+          };
+  
+          const response = await addContact(createContactData);
+          if (response) {
+            await addContactToContactList(contact_list.contact_list_id, response.contact_id);
           }
-        });
-
-        // once all contacts are added, close the modal
-        if (contactsArray.indexOf(contact) === contactsArray.length - 1) {
-          setOpen(false);
-          // Refresh the page
-          window.location.reload();
         }
-      });
+  
+        // Update progress
+        setProgress(Math.round(((i + 1) / filteredContactsArray.length) * 100));
+      }
+  
       setImporting(false);
+      // Reload the page
+      window.location.reload();
     }
     setLoading(false);
   };
+  
 
   return (
     <>
