@@ -15,6 +15,7 @@ import isEqual from "lodash/isEqual"; // Import lodash's isEqual for deep compar
 
 export type Campaign = Database["public"]["Tables"]["campaigns"]["Row"] & {
   read_count: number;
+  total_contacts: number;
 };
 export type Campaigns = { campaigns: Campaign[] };
 export type CampaignInsert =

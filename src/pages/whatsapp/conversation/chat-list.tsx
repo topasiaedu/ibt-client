@@ -128,11 +128,13 @@ const ChatList: React.FC<ChatListProps> = ({
                 <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
                   <div className="min-w-0 flex-1 w-fit">
                     <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
-                      {conversation.contact.name}{" "}
-                      {conversation.contact.wa_id}
+                      {conversation.contact.name}
                       <Badge color="primary">
                         {conversation.phone_number.number}
                       </Badge>
+                    </p>
+                    <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
+                      {conversation.contact.wa_id}
                     </p>
                     <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
                       {conversation.last_message.message_type === "text"
@@ -141,7 +143,10 @@ const ChatList: React.FC<ChatListProps> = ({
                     </p>
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                       Last seen:{" "}
-                      {conversation.last_message.created_at}
+                      {conversation.last_message.created_at &&
+                        new Date(
+                          conversation.last_message.created_at
+                        ).toLocaleString()}
                     </p>
                   </div>
                   {conversation.unread_messages > 0 && (

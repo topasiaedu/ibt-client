@@ -355,7 +355,6 @@ const AddCampaignModal: React.FC = function () {
       const selectedTemplateComponents = selectedTemplate?.components as any;
 
       selectedTemplateComponents.data.forEach((component: any) => {
-        console.log("COMPONENT", component);
         if (component.type === "HEADER") {
           setHeaderData(component.example.header_handle[0]);
           setHeaderType(component.format);
