@@ -43,15 +43,6 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
     }
   };
 
-  // const handleDownloadSample = () => {
-  //   const link = document.createElement('a');
-  //   link.href = '/example-format.csv'; // Adjust the path if your file is in a subdirectory within the public folder
-  //   link.setAttribute('download', 'example-format.csv'); // This forces the download
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // };
-
   // Handler for import button click
   const handleImport = async () => {
     setLoading(true);
@@ -178,6 +169,13 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
               });
           }
         });
+
+        // once all contacts are added, close the modal
+        if (contactsArray.indexOf(contact) === contactsArray.length - 1) {
+          setOpen(false);
+          // Refresh the page
+          window.location.reload();
+        }
       });
       setImporting(false);
     }

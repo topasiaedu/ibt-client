@@ -133,7 +133,7 @@ const ConversationPage: React.FC = function () {
           />
         )}
         {!selectedConversation && (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full col-span-3">
             <div className="text-center">
               <img
                 alt=""

@@ -13,9 +13,8 @@ import NavbarSidebarLayout from "../../../layouts/navbar-sidebar";
 import AddCampaignModal from "./add-campaign-modal";
 import {
   Campaigns,
-  useCampaignContext,
+useCampaignContext,
 } from "../../../context/CampaignContext";
-import { useContactListContext } from "../../../context/ContactListContext";
 import { useTemplateContext } from "../../../context/TemplateContext";
 import LoadingPage from "../../pages/loading";
 import { BsFillCalendarDateFill } from "react-icons/bs";
@@ -34,7 +33,7 @@ const CampaignListPage: React.FC = function () {
     ),
   };
 
-  if (loading || !campaigns || !campaigns.length) {
+  if (loading) {
     return <LoadingPage />;
   }
 
@@ -128,7 +127,6 @@ const CampaignListPage: React.FC = function () {
 
 const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
   const { templates } = useTemplateContext();
-  const { contactLists } = useContactListContext();
   const { deleteCampaign } = useCampaignContext();
 
   return (

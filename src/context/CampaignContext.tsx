@@ -155,8 +155,7 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
         })),
       ];
 
-      console.log(campaignListInserts);
-      const { data: campaignlistData, error: campaignListError } =
+      const { error: campaignListError } =
         await supabase.from("campaign_lists").insert(campaignListInserts);
 
       if (campaignListError) {

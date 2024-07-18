@@ -114,19 +114,66 @@ export function ContactListProvider({
       )
       .subscribe();
 
-    const contactListMembersSubscription = supabase
-      .channel("contact_list_members")
+    const handleChangesContactListMember = (payload: any) => {
+      switch (payload.event) {
+        case "INSERT":
+          setContactLists((prev) => {
+            const contactList = prev.find(
+              (c) => c.contact_list_id === payload.record.contact_list_id
+            );
+            if (!contactList) return prev;
+            return [
+              ...prev.filter(
+                (c) => c.contact_list_id !== payload.record.contact_list_id
+              ),
+              {
+                ...contactList,
+                contact_list_members: [
+                  payload.record,
+                  ...contactList.contact_list_members,
+                ],
+              },
+            ];
+          });
+          break;
+        case "DELETE":
+          setContactLists((prev) => {
+            const contactList = prev.find(
+              (c) => c.contact_list_id === payload.record.contact_list_id
+            );
+            if (!contactList) return prev;
+            return [
+              {
+                ...contactList,
+                contact_list_members: contactList.contact_list_members.filter(
+                  (clm) => clm.contact_id !== payload.record.contact_id
+                ),
+              },
+              ...prev.filter(
+                (c) => c.contact_list_id !== payload.record.contact_list_id
+              ),
+            ];
+          });
+          break;
+      }
+    };
+
+    const subscriptionContactListMember = supabase
+      .channel("contact_lists")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "contact_list_members" },
-        (payload) => {}
-      );
+        (payload) => {
+          handleChangesContactListMember(payload);
+        }
+      )
+      .subscribe();
 
     setLoading(false);
 
     return () => {
       subscription.unsubscribe();
-      contactListMembersSubscription.unsubscribe();
+      subscriptionContactListMember.unsubscribe();
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

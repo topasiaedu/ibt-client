@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import { MdDelete } from "react-icons/md";
 import { CiViewTable } from "react-icons/ci";
 import { useContactListContext, ContactList } from "../../../context/ContactListContext";
+import { useAlertContext } from "../../../context/AlertContext";
 
 interface ContactListMemberModalProps {
   contact_list: ContactList;
@@ -16,9 +17,11 @@ interface ContactListMemberModalProps {
 const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function ({ contact_list }) {
   const [isOpen, setOpen] = useState(false);
   const { removeContactFromContactList } = useContactListContext();
+  const { showAlert } = useAlertContext();
 
   const handleRemoveContact = async (contact_id: number) => {
     await removeContactFromContactList(contact_list.contact_list_id, contact_id);
+    showAlert("Contact removed from contact list", "success");
   }
 
   // Rerender if contact_list changes

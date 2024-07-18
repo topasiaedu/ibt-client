@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Badge, Dropdown, Label, TextInput } from "flowbite-react";
 import { Conversation } from "../../../context/ConversationContext";
+import { PhoneNumber } from "../../../context/PhoneNumberContext";
 
 interface ChatListProps {
   conversations: Conversation[];
@@ -15,9 +16,9 @@ const ChatList: React.FC<ChatListProps> = ({
   selectedConversation,
   onMarkAsUnread,
 }) => {
-  const [phoneNumbers, setPhoneNumbers] = React.useState<string[]>([]);
+  const [phoneNumbers, setPhoneNumbers] = React.useState<PhoneNumber[]>([]);
   const [selectedPhoneNumber, setSelectedPhoneNumber] =
-    React.useState<string>("");
+    React.useState<PhoneNumber | null>(null);
   const [search, setSearch] = React.useState<string>("");
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -25,28 +26,30 @@ const ChatList: React.FC<ChatListProps> = ({
     Conversation | undefined
   >(undefined);
 
-  // Get all unique phone numbers
-  conversations.forEach((conversation) => {
-    if (!phoneNumbers.includes(conversation.phone_number.number)) {
-      setPhoneNumbers((prevPhoneNumbers) => {
-        if (!prevPhoneNumbers.includes(conversation.phone_number.number)) {
-          return [...prevPhoneNumbers, conversation.phone_number.number];
-        }
-        return prevPhoneNumbers;
-      });
-    }
-  });
+  useEffect(() => {
+    const uniquePhoneNumbers = new Set(
+      phoneNumbers.map((phone) => phone.number)
+    );
 
-  const lastMessageTime = (time: string) => {
-    const date = new Date(time);
-    date.setHours(date.getHours() + 8);
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
+    conversations.forEach((conversation) => {
+      uniquePhoneNumbers.add(conversation.phone_number.number);
     });
-  };
+
+    const newPhoneNumbers = [...uniquePhoneNumbers]
+      .map(
+        (number) =>
+          conversations.find(
+            (conversation) => conversation.phone_number.number === number
+          )?.phone_number
+      )
+      .filter(
+        (phoneNumber): phoneNumber is NonNullable<typeof phoneNumber> =>
+          phoneNumber !== null
+      );
+
+    setPhoneNumbers(newPhoneNumbers);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations]);
 
   const handleContextMenu = (
     event: React.MouseEvent,
@@ -88,15 +91,17 @@ const ChatList: React.FC<ChatListProps> = ({
             />
           </div>
         </form>
-        <Dropdown label={selectedPhoneNumber || "All"} dismissOnClick={true}>
-          <Dropdown.Item onClick={() => setSelectedPhoneNumber("")}>
+        <Dropdown
+          label={selectedPhoneNumber?.name || "All"}
+          dismissOnClick={true}>
+          <Dropdown.Item onClick={() => setSelectedPhoneNumber(null)}>
             All
           </Dropdown.Item>
           {phoneNumbers.map((phoneNumber, index) => (
             <Dropdown.Item
               key={index}
               onClick={() => setSelectedPhoneNumber(phoneNumber)}>
-              {phoneNumber}
+              {phoneNumber.name} ({phoneNumber.number})
             </Dropdown.Item>
           ))}
         </Dropdown>
@@ -108,12 +113,18 @@ const ChatList: React.FC<ChatListProps> = ({
           //     new Date(b.last_message_time).getTime() -
           //     new Date(a.last_message_time).getTime()
           // )
-          .filter(
-            (conversation) =>
-              (conversation.phone_number.number.includes(selectedPhoneNumber) ||
-                selectedPhoneNumber === "") &&
-              conversation.contact.wa_id.includes(search)
-          )
+          .filter((conversation) => {
+            // Check for search and selected phone number
+            const searchMatch =
+              conversation.contact.name
+                .toLowerCase()
+                .includes(search.toLowerCase()) ||
+              conversation.contact.wa_id.includes(search);
+            const phoneNumberMatch =
+              selectedPhoneNumber === null ||
+              conversation.phone_number.number === selectedPhoneNumber.number;
+            return searchMatch && phoneNumberMatch;
+          })
           .map((conversation, index) => (
             <li
               key={index}

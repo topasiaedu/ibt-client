@@ -650,6 +650,7 @@ export type Database = {
       }
       phone_numbers: {
         Row: {
+          phone: any
           created_at: string | null
           name: string | null
           number: string

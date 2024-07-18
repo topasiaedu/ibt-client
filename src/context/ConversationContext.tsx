@@ -44,8 +44,6 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const { currentProject } = useProjectContext();
   const { showAlert } = useAlertContext();
-  const { contacts } = useContactContext();
-  const { phoneNumbers } = usePhoneNumberContext();
 
   useEffect(() => {
     setLoading(true);

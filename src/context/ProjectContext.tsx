@@ -9,6 +9,7 @@ import React, {
 import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useAuthContext } from "./AuthContext";
+import isEqual from "lodash.isequal";
 
 export type Project = Database["public"]["Tables"]["project"]["Row"];
 export type Projects = { projects: Project[] };
@@ -64,7 +65,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setProjects(projects!);
+      setProjects((prev) => {
+        if (isEqual(prev, projects)) {
+          return prev;
+        }
+
+        return projects!;
+      });
       if (!currentProject && projects!.length > 0) {
         setCurrentProject(projects![0]);
       }
@@ -76,13 +83,17 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       if (payload.eventType === "INSERT") {
         setProjects((prev) => [...prev, payload.new]);
       } else if (payload.eventType === "UPDATE") {
-        setProjects((prev) =>
-          prev.map((project) =>
-            project.project_id === payload.new.project_id
-              ? payload.new
-              : project
-          )
+        const updatedProjects = projects.map((project) =>
+          project.project_id === payload.new.project_id ? payload.new : project
         );
+
+        setProjects((prev) => {
+          if (!isEqual(prev, updatedProjects)) {
+            return updatedProjects;
+          }
+
+          return prev;
+        });
       } else if (payload.eventType === "DELETE") {
         setProjects((prev) =>
           prev.filter(

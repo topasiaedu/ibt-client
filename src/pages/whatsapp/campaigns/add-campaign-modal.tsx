@@ -34,16 +34,6 @@ import { supabase } from "../../../utils/supabaseClient";
 import MessageComponent from "../../../components/MessageComponent";
 import { Contact, useContactContext } from "../../../context/ContactContext";
 
-const currentDate = new Date().toLocaleDateString("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-  hour: "numeric",
-  minute: "numeric",
-  second: "numeric",
-  hour12: true,
-});
-
 const AddCampaignModal: React.FC = function () {
   const [isOpen, setIsOpen] = useState(false);
   const { addCampaign, loading } = useCampaignContext();
@@ -85,6 +75,8 @@ const AddCampaignModal: React.FC = function () {
     useState<ContactList[]>(contactLists);
   const [filteredExcludeContacts, setFilteredExcludeContacts] =
     useState<Contact[]>(contacts);
+
+  console.log("selectedTemplate", selectedTemplate);
 
   const wabaPhoneNumber = whatsAppBusinessAccounts
     .map((waba) => {
@@ -211,7 +203,7 @@ const AddCampaignModal: React.FC = function () {
             .map((component: any) => {
               if (!component.example) {
                 showAlert("Please fill in all the fields", "error");
-                return;
+                return [];
               }
               return component.example.body_text[0].map(
                 (body_text: any, index: number) => {
@@ -342,6 +334,7 @@ const AddCampaignModal: React.FC = function () {
 
   useEffect(() => {
     generatePreview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [headerData, bodyData, footerData, buttons, headerType, file]);
 
   useEffect(() => {
@@ -355,7 +348,25 @@ const AddCampaignModal: React.FC = function () {
       const selectedTemplateComponents = selectedTemplate?.components as any;
 
       selectedTemplateComponents.data.forEach((component: any) => {
-        if (component.type === "HEADER") {
+        if (component.type === "HEADER" && component.format === "TEXT") {
+          setHeaderData(component.text);
+          setHeaderType(component.format);
+        } else if (
+          component.type === "HEADER" &&
+          component.format === "IMAGE"
+        ) {
+          setHeaderData(component.example.header_handle[0]);
+          setHeaderType(component.format);
+        } else if (
+          component.type === "HEADER" &&
+          component.format === "VIDEO"
+        ) {
+          setHeaderData(component.example.header_handle[0]);
+          setHeaderType(component.format);
+        } else if (
+          component.type === "HEADER" &&
+          component.format === "DOCUMENT"
+        ) {
           setHeaderData(component.example.header_handle[0]);
           setHeaderType(component.format);
         } else if (component.type === "BODY") {
