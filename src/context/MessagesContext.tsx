@@ -28,6 +28,7 @@ interface MessagesContextType {
   addMessage: (
     message: MessageInsert,
     conversation_id: string,
+    to: string,
     file?: File
   ) => void;
   updateMessage: (message: Message) => void;
@@ -132,7 +133,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
   ]);
 
   const addMessage = useCallback(
-    async (message: MessageInsert, conversation_id: string, file?: File) => {
+    async (message: MessageInsert, conversation_id: string, to:string, file?: File) => {
       try {
         const phoneNumber = phoneNumbers.find(
           (phoneNumber) =>
@@ -141,9 +142,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
 
         let body = JSON.stringify({
           messaging_product: "whatsapp",
-          to: contacts.find(
-            (contact) => contact.contact_id === message.contact_id
-          )?.wa_id,
+          to: to,
         });
 
         let randomFileName = Math.random().toString(36).substring(7);
@@ -168,9 +167,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           if (message.content) {
             body = JSON.stringify({
               messaging_product: "whatsapp",
-              to: contacts.find(
-                (contact) => contact.contact_id === message.contact_id
-              )?.wa_id,
+              to:to,
               type: message.message_type,
               [message.message_type]: {
                 link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
@@ -180,9 +177,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           } else {
             body = JSON.stringify({
               messaging_product: "whatsapp",
-              to: contacts.find(
-                (contact) => contact.contact_id === message.contact_id
-              )?.wa_id,
+              to: to,
               type: message.message_type,
               [message.message_type]: {
                 link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
@@ -218,9 +213,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
 
           body = JSON.stringify({
             messaging_product: "whatsapp",
-            to: contacts.find(
-              (contact) => contact.contact_id === message.contact_id
-            )?.wa_id,
+            to: to,
             type: "audio",
             audio: {
               id: data.id,
@@ -229,9 +222,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
         } else {
           body = JSON.stringify({
             messaging_product: "whatsapp",
-            to: contacts.find(
-              (contact) => contact.contact_id === message.contact_id
-            )?.wa_id,
+            to: to,
             type: "text",
             text: {
               body: message.content,
@@ -249,11 +240,13 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             body: body,
           }
         );
+        
 
         const data = await response.json();
 
         if (!response.ok) {
-          console.error("Error sending message:", response.statusText);
+          console.error("Payload:", body, WHATSAPP_ACCESS_TOKEN);
+          console.error("Error sending message:", response);
           showAlert("Error sending message", "error");
           return;
         }

@@ -46,9 +46,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
       mediaType = "audio";
     }
 
+    console.log("Conversation", conversation);
     // Add message to conversation
     const data: MessageInsert = {
-      contact_id: conversation.contact.contact_id,
+      contact_id: conversation.contact_id,
       direction: "outbound",
       content: input,
       created_at: new Date().toISOString(),
@@ -59,11 +60,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
     };
 
     if (file) {
-      addMessage(data, conversation.id, file);
+      addMessage(data, conversation.id, conversation.contact.wa_id, file);
     } else if (audioFile) {
-      addMessage(data, conversation.id, audioFile);
+      addMessage(data, conversation.id, conversation.contact.wa_id, audioFile);
     } else {
-      addMessage(data, conversation.id);
+      addMessage(data, conversation.id, conversation.contact.wa_id);
     }
 
     // Clear input field
