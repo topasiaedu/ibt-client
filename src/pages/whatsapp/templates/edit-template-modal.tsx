@@ -4,20 +4,16 @@ import {
   Card,
   Label,
   Modal,
-  Select, Textarea,
-  TextInput
+  Select,
+  Textarea,
+  TextInput,
 } from "flowbite-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { HiPlus } from "react-icons/hi";
 import MessageComponent from "../../../components/MessageComponent";
 import { useProjectContext } from "../../../context/ProjectContext";
-import {
-  Template,
-  TemplateButton
-} from "../../../context/TemplateContext";
-import {
-  useWhatsAppBusinessAccountContext
-} from "../../../context/WhatsAppBusinessAccountContext";
+import { Template, TemplateButton } from "../../../context/TemplateContext";
+import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusinessAccountContext";
 
 const currentDate = new Date().toLocaleDateString("en-US", {
   month: "short",
@@ -45,8 +41,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
   const [preview, setPreview] = useState<JSX.Element | null>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const generatePreview = () => {
-    // Check if the body data has any {{1}} or {{2}} or so on, replace them with the example data with the appropriate value from the input fields
+  const generatePreview = useCallback(() => {
     const bodyDataMatches = bodyData.match(/{{\d+}}/g);
     let newBodyData = bodyData;
     if (bodyDataMatches) {
@@ -59,61 +54,70 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
         newBodyData = newBodyData.replace(match, domInputValue || "");
       });
     }
+
     const buttonTexts = buttons.map((button) => button.text) || [];
-    if (headerType === "IMAGE") {
-      return setPreview(
-        <MessageComponent
-          message={newBodyData}
-          footer={footerData}
-          date={currentDate}
-          media={headerData}
-          buttons={buttonTexts}
-          headerType="IMAGE"
-        />
-      );
-    } else if (headerType === "TEXT") {
-      return setPreview(
-        <MessageComponent
-          header={headerData}
-          message={newBodyData}
-          footer={footerData}
-          date={currentDate}
-          buttons={buttonTexts}
-        />
-      );
-    } else if (headerType === "VIDEO") {
-      return setPreview(
-        <MessageComponent
-          message={newBodyData}
-          footer={footerData}
-          date={currentDate}
-          media={headerData}
-          buttons={buttonTexts}
-          headerType="VIDEO"
-        />
-      );
-    } else if (headerType === "DOCUMENT") {
-      return setPreview(
-        <MessageComponent
-          message={newBodyData}
-          footer={footerData}
-          date={currentDate}
-          media={headerData}
-          buttons={buttonTexts}
-          headerType="DOCUMENT"
-        />
-      );
-    } else {
-      return setPreview(
-        <MessageComponent
-          message={newBodyData}
-          footer={footerData}
-          date={currentDate}
-          buttons={buttonTexts}
-        />
-      );
+
+    let previewContent;
+    switch (headerType) {
+      case "IMAGE":
+        previewContent = (
+          <MessageComponent
+            message={newBodyData}
+            footer={footerData}
+            date={currentDate}
+            media={headerData}
+            buttons={buttonTexts}
+            headerType="IMAGE"
+          />
+        );
+        break;
+      case "TEXT":
+        previewContent = (
+          <MessageComponent
+            header={headerData}
+            message={newBodyData}
+            footer={footerData}
+            date={currentDate}
+            buttons={buttonTexts}
+          />
+        );
+        break;
+      case "VIDEO":
+        previewContent = (
+          <MessageComponent
+            message={newBodyData}
+            footer={footerData}
+            date={currentDate}
+            media={headerData}
+            buttons={buttonTexts}
+            headerType="VIDEO"
+          />
+        );
+        break;
+      case "DOCUMENT":
+        previewContent = (
+          <MessageComponent
+            message={newBodyData}
+            footer={footerData}
+            date={currentDate}
+            media={headerData}
+            buttons={buttonTexts}
+            headerType="DOCUMENT"
+          />
+        );
+        break;
+      default:
+        previewContent = (
+          <MessageComponent
+            message={newBodyData}
+            footer={footerData}
+            date={currentDate}
+            buttons={buttonTexts}
+          />
+        );
     }
-  };
+    setPreview(previewContent);
+  }, [bodyData, buttons, footerData, headerData, headerType]);
 
   useEffect(() => {
     if (template) {
@@ -125,7 +129,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
           case "HEADER":
             setHeaderType(component.format);
             if (component.format === "IMAGE" && component.example) {
-              setHeaderData(component.example.header_handle[0])
+              setHeaderData(component.example.header_handle[0]);
             }
             // setHeaderData(component.headerData);
             break;
@@ -135,7 +139,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
           case "FOOTER":
             setFooterData(component.text);
             break;
-          case "BUTTON":
+          case "BUTTONS":
             setButtons(component.buttons);
             break;
           default:
@@ -144,8 +148,11 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
       });
 
       generatePreview();
+    } else if (preview === null) {
+      generatePreview();
     }
-  }, [template]);
+
+  }, [generatePreview, preview, template]);
 
   return (
     <>
@@ -303,7 +310,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
                   />
                 </div>
               </div>
-      
+
               {/* Render Button Fields */}
               {buttons.map((button, index) => (
                 <Card key={index} className="mt-6">
@@ -315,13 +322,6 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
                         ({button.type})
                       </span>
                     </p>
-                    <Button
-                      color="red"
-                      onClick={() =>
-                        setButtons((prev) => prev.filter((_, i) => i !== index))
-                      }>
-                      Delete
-                    </Button>
                   </div>
                   <Label htmlFor="buttonText">Button Text</Label>
                   <div className="">
@@ -329,15 +329,8 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
                       id="buttonText"
                       name="buttonText"
                       placeholder="Button Text"
-                      onChange={(e) =>
-                        setButtons((prev) =>
-                          prev.map((button, i) =>
-                            i === index
-                              ? { ...button, text: e.target.value }
-                              : button
-                          )
-                        )
-                      }
+                      value={button.text || ""}
+                      disabled
                     />
                   </div>
                   {button.type === "URL" && (
@@ -348,15 +341,8 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
                           id="buttonUrl"
                           name="buttonUrl"
                           placeholder="Button URL"
-                          onChange={(e) =>
-                            setButtons((prev) =>
-                              prev.map((button, i) =>
-                                i === index
-                                  ? { ...button, url: e.target.value }
-                                  : button
-                              )
-                            )
-                          }
+                          value={button.url || ""}
+                          disabled
                         />
                       </div>
                     </>
