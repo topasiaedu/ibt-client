@@ -36,6 +36,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
   const [headerType, setHeaderType] = useState<string>("");
   const [headerData, setHeaderData] = useState<string>("");
   const [bodyData, setBodyData] = useState<string>("");
+  const [bodyParams, setBodyParams] = useState<string[]>([]);
   const [footerData, setFooterData] = useState<string>("");
   const { currentProject } = useProjectContext();
   const [preview, setPreview] = useState<JSX.Element | null>(null);
@@ -44,14 +45,17 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
   const generatePreview = useCallback(() => {
     const bodyDataMatches = bodyData.match(/{{\d+}}/g);
     let newBodyData = bodyData;
+
+    if (template.name === "je_coaching_july_reminder_2") {
+      console.log("bodyDataMatches", bodyData);
+    }
+
     if (bodyDataMatches) {
-      bodyDataMatches.forEach((match) => {
-        const domInputValue = (
-          document.getElementById(
-            `bodyData${parseInt(match.replace(/[{}]/g, "")) - 1}`
-          ) as HTMLInputElement
-        )?.value;
-        newBodyData = newBodyData.replace(match, domInputValue || "");
+      bodyDataMatches.forEach((match, index) => {
+        newBodyData = newBodyData.replace(
+          match,
+          bodyParams[index] || index.toString()
+        );
       });
     }
 
@@ -135,6 +139,9 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
             break;
           case "BODY":
             setBodyData(component.text);
+            if (component.example) {
+              setBodyParams(component.example.body_text);
+            }
             break;
           case "FOOTER":
             setFooterData(component.text);
@@ -148,11 +155,8 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
       });
 
       generatePreview();
-    } else if (preview === null) {
-      generatePreview();
     }
-
-  }, [generatePreview, preview, template]);
+  }, [generatePreview, template]);
 
   return (
     <>
