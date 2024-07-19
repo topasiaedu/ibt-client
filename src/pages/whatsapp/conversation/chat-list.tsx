@@ -48,7 +48,7 @@ const ChatList: React.FC<ChatListProps> = ({
       );
 
     setPhoneNumbers(newPhoneNumbers);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations]);
 
   const handleContextMenu = (
@@ -147,18 +147,22 @@ const ChatList: React.FC<ChatListProps> = ({
                     <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
                       {conversation.contact.wa_id}
                     </p>
-                    <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                      {conversation.last_message.message_type === "text"
-                        ? conversation.last_message.content
-                        : conversation.last_message.message_type}
-                    </p>
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Last seen:{" "}
-                      {conversation.last_message.created_at &&
-                        new Date(
-                          conversation.last_message.created_at
-                        ).toLocaleString()}
-                    </p>
+                    {conversation.last_message_id && (
+                      <>
+                        <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
+                          {conversation.last_message.message_type === "text"
+                            ? conversation.last_message.content
+                            : conversation.last_message.message_type}
+                        </p>
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          Last seen:{" "}
+                          {conversation.last_message.created_at &&
+                            new Date(
+                              conversation.last_message.created_at
+                            ).toLocaleString()}
+                        </p>
+                      </>
+                    )}
                   </div>
                   {conversation.unread_messages > 0 && (
                     <Badge color="primary">
