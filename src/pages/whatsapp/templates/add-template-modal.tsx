@@ -65,6 +65,7 @@ const AddTemplateModal: React.FC = function () {
     const template: TemplateInsert = {
       account_id: selectedWhatsappBusinessAccount?.account_id ?? null,
       category: selectedCategory,
+      components: {},
       language: selectedLanguage,
       name: templateName,
       wa_template_id: null,

@@ -231,12 +231,7 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       }
     });
 
-    // Save the workflow
-    // Check if the workflow is new or existing by checking the id ( id = '1' means new )
-    // If the workflow is new, create a new workflow
-    // If the workflow is existing, update the workflow
-    // If the workflow is existing, delete all the triggers and actions and recreate them
-    // If the workflow is existing, update the triggers and actions
+    // Filter workflow, trigger, and action nodes
     const workflowNodes = nodes.filter((node) =>
       connectedNodes.includes(node.id)
     );
@@ -251,6 +246,7 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       showAlert("Workflow node not found", "error");
       return;
     }
+
     const workflowData = {
       id: currentWorkflowId || "1",
       name: workflowNode.data.name,
@@ -260,21 +256,28 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       canvas_state: { nodes, edges } as unknown as Json | undefined,
       project_id: currentProject?.project_id,
     };
-    const triggerData = triggerNodes.map((node) => {
-      if (node.type === "webhook" && node.data) {
-        (
-          node.data as { url: string }
-        ).url = `https://ibts.whatsgenie.com/ibt/webhook/${currentWorkflowId}`;
-      }
-      return {
-        id: node.id,
-        type: node.type,
-        details: node.data,
-        workflow_id: currentWorkflowId,
-        project_id: currentProject?.project_id,
-        active: true,
-      } as TriggerInsert;
-    });
+
+    // Prepare trigger data
+    const prepareTriggerData = (workflowId: string) => {
+      return triggerNodes.map((node) => {
+        if (node.type === "webhook" && node.data) {
+          (
+            node.data as { url: string }
+          ).url = `https://ibts.whatsgenie.com/ibt/webhook/${workflowId}`;
+        }
+        return {
+          id: node.id,
+          type: node.type,
+          details: node.data,
+          workflow_id: workflowId,
+          project_id: currentProject?.project_id,
+          active: true,
+        } as TriggerInsert;
+      });
+    };
+
+    const triggerData = prepareTriggerData(currentWorkflowId);
+
     const actionData = actionNodes.map((node, index) => {
       return {
         id: node.id,
@@ -287,7 +290,7 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       } as ActionInsert;
     });
 
-    if (workflowData.id !== "1" || currentWorkflowId !== "") {
+    if (workflowData.id !== "1" || currentWorkflowId) {
       // Update the workflow
       const workflow: WorkflowUpdate = {
         id: workflowData.id,
@@ -298,7 +301,7 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       };
       await updateWorkflow(workflow, workflowData.phone_numbers);
 
-      // Update Delete and Create the triggers and actions
+      // Update or deactivate existing triggers and actions
       const existingTriggers = workflows.find(
         (workflow) => workflow.id === currentWorkflowId
       )?.trigger;
@@ -307,7 +310,6 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       )?.actions;
 
       if (existingTriggers) {
-        // Update those that are existing
         triggerData.forEach((trigger) => {
           if (
             existingTriggers.map((trigger) => trigger.id).includes(trigger.id)
@@ -316,7 +318,6 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
           }
         });
 
-        // Change active to false for those that are not in the new triggers
         existingTriggers.forEach((trigger) => {
           if (!triggerData.map((trigger) => trigger.id).includes(trigger.id)) {
             updateTrigger({ ...trigger, active: false });
@@ -324,23 +325,7 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
         });
       }
 
-      if (existingActions) {
-        // Update those that are existing
-        actionData.forEach((action) => {
-          if (existingActions.map((action) => action.id).includes(action.id)) {
-            updateAction(action);
-          }
-        });
-
-        // Change active to false for those that are not in the new actions
-        existingActions.forEach((action) => {
-          if (!actionData.map((action) => action.id).includes(action.id)) {
-            updateAction({ ...action, active: false });
-          }
-        });
-      }
-
-      // Create the triggers and actions that are new
+      // Create new triggers
       triggerData.forEach((trigger) => {
         if (
           !existingTriggers?.map((trigger) => trigger.id).includes(trigger.id)
@@ -348,6 +333,23 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
           createTrigger(trigger);
         }
       });
+
+      // Update or deactivate existing actions
+      if (existingActions) {
+        actionData.forEach((action) => {
+          if (existingActions.map((action) => action.id).includes(action.id)) {
+            updateAction(action);
+          }
+        });
+
+        existingActions.forEach((action) => {
+          if (!actionData.map((action) => action.id).includes(action.id)) {
+            updateAction({ ...action, active: false });
+          }
+        });
+      }
+
+      // Create new actions
       actionData.forEach((action) => {
         if (!existingActions?.map((action) => action.id).includes(action.id)) {
           createAction(action);
@@ -355,7 +357,7 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       });
     } else {
       // Create the workflow
-      const workflow = await createWorkflow(
+      const newWorkflowId = await createWorkflow(
         {
           name: workflowData.name,
           description: workflowData.description,
@@ -365,32 +367,28 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
         },
         workflowData.phone_numbers
       );
-      if (!workflow) {
+      if (!newWorkflowId) {
         showAlert("Workflow not saved", "error");
         return;
       }
+
+      // Prepare trigger data with the new workflow ID
+      const newTriggerData = prepareTriggerData(newWorkflowId);
+
       // Create the triggers
-      for (const trigger of triggerData) {
-        // Replace the workflow id with the new workflow id
-        trigger.workflow_id = workflow;
-        if (trigger.type === "webhook" && trigger.details) {
-          (
-            trigger.details as { url: string }
-          ).url = `https://ibts.whatsgenie.com/ibt/webhook/${workflow}`;
-        }
+      for (const trigger of newTriggerData) {
         await createTrigger(trigger);
       }
+
       // Create the actions
       for (const action of actionData) {
-        // Replace the workflow id with the new workflow id
-        action.workflow_id = workflow;
+        action.workflow_id = newWorkflowId;
         await createAction(action);
       }
 
-      // Redirect the user to /whatsapp/workflow
-      // window.location.href = `/whatsapp/workflow`;
-      setCurrentWorkflowId(workflow);
+      setCurrentWorkflowId(newWorkflowId);
     }
+
     showAlert("Workflow saved", "success");
   };
 

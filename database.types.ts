@@ -225,7 +225,7 @@ export type Database = {
           read: number
           sent: number
           status: string | null
-          template_id: number | null
+          template_id: number
           template_payload: Json | null
           updated_at: string | null
         }
@@ -242,7 +242,7 @@ export type Database = {
           read?: number
           sent?: number
           status?: string | null
-          template_id?: number | null
+          template_id: number
           template_payload?: Json | null
           updated_at?: string | null
         }
@@ -259,7 +259,7 @@ export type Database = {
           read?: number
           sent?: number
           status?: string | null
-          template_id?: number | null
+          template_id?: number
           template_payload?: Json | null
           updated_at?: string | null
         }
@@ -417,7 +417,7 @@ export type Database = {
           contact_id: number
           created_at: string
           id: string
-          last_message_id: number
+          last_message_id: number | null
           phone_number_id: number
           project_id: number
           unread_messages: number
@@ -429,7 +429,7 @@ export type Database = {
           contact_id: number
           created_at?: string
           id?: string
-          last_message_id: number
+          last_message_id?: number | null
           phone_number_id: number
           project_id: number
           unread_messages?: number
@@ -441,7 +441,7 @@ export type Database = {
           contact_id?: number
           created_at?: string
           id?: string
-          last_message_id?: number
+          last_message_id?: number | null
           phone_number_id?: number
           project_id?: number
           unread_messages?: number
@@ -648,16 +648,47 @@ export type Database = {
           },
         ]
       }
+      pemni_vip_logs: {
+        Row: {
+          contact_id: number
+          created_at: string
+          id: string
+          password: string | null
+          status: string
+        }
+        Insert: {
+          contact_id: number
+          created_at?: string
+          id?: string
+          password?: string | null
+          status?: string
+        }
+        Update: {
+          contact_id?: number
+          created_at?: string
+          id?: string
+          password?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pemni_vip_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["contact_id"]
+          },
+        ]
+      }
       phone_numbers: {
         Row: {
-          phone: any
           created_at: string | null
           name: string | null
           number: string
           phone_number_id: number
           quality_rating: string | null
           throughput_level: string | null
-          wa_id: string | null
+          wa_id: string
           waba_id: number | null
         }
         Insert: {
@@ -667,7 +698,7 @@ export type Database = {
           phone_number_id?: number
           quality_rating?: string | null
           throughput_level?: string | null
-          wa_id?: string | null
+          wa_id: string
           waba_id?: number | null
         }
         Update: {
@@ -677,7 +708,7 @@ export type Database = {
           phone_number_id?: number
           quality_rating?: string | null
           throughput_level?: string | null
-          wa_id?: string | null
+          wa_id?: string
           waba_id?: number | null
         }
         Relationships: [
@@ -757,7 +788,7 @@ export type Database = {
         Row: {
           account_id: number | null
           category: string
-          components: Json | null
+          components: Json
           created_at: string | null
           language: string
           name: string
@@ -769,7 +800,7 @@ export type Database = {
         Insert: {
           account_id?: number | null
           category?: string
-          components?: Json | null
+          components: Json
           created_at?: string | null
           language: string
           name: string
@@ -781,7 +812,7 @@ export type Database = {
         Update: {
           account_id?: number | null
           category?: string
-          components?: Json | null
+          components?: Json
           created_at?: string | null
           language?: string
           name?: string
@@ -1044,6 +1075,7 @@ export type Database = {
           post_time: string
           sent: number
           failed: number
+          total_contacts: number
         }[]
       }
       fetch_conversations: {
