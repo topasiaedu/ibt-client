@@ -42,7 +42,8 @@ export const PemniVipLogsProvider: React.FC<PropsWithChildren<{}>> = ({
     const fetchPemniVipLogs = async () => {
       const { data: pemniVipLogs, error } = await supabase
         .from("pemni_vip_logs")
-        .select("*, contact:contact_id(*)");
+        .select("*, contact:contact_id(*)")
+        .order("created_at", { ascending: false });
 
       if (error) {
         showAlert(error.message, "error");
