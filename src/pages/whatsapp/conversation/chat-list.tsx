@@ -115,15 +115,16 @@ const ChatList: React.FC<ChatListProps> = ({
           // )
           .filter((conversation) => {
             // Check for search and selected phone number
-            const searchMatch =
+            const nameMatch =
+              conversation.contact.name !== null &&
               conversation.contact.name
                 .toLowerCase()
-                .includes(search.toLowerCase()) ||
-              conversation.contact.wa_id.includes(search);
+                .includes(search.toLowerCase());
+            const waIdMatch = conversation.contact.wa_id.includes(search);
             const phoneNumberMatch =
               selectedPhoneNumber === null ||
               conversation.phone_number.number === selectedPhoneNumber.number;
-            return searchMatch && phoneNumberMatch;
+            return nameMatch || waIdMatch || phoneNumberMatch;
           })
           .map((conversation, index) => (
             <li
@@ -150,9 +151,7 @@ const ChatList: React.FC<ChatListProps> = ({
                     {conversation.last_message_id && (
                       <>
                         <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                          {conversation.last_message.message_type === "text"
-                            ? conversation.last_message.content
-                            : conversation.last_message.message_type}
+                          {conversation.last_message.content}
                         </p>
                         <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                           Last seen:{" "}

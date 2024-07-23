@@ -1,4 +1,6 @@
 import React from 'react';
+import { FiAlertCircle } from "react-icons/fi";
+import { Json } from '../../database.types';
 
 interface MessageComponentProps {
   header?: string;
@@ -10,9 +12,10 @@ interface MessageComponentProps {
   status?: string;
   buttons?: (string | null)[]
   headerType?: 'VIDEO' | 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'DOCUMENT';
+  error?: Json;
 }
 
-const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, media, footer, date, direction, status, buttons, headerType }) => {
+const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, media, footer, date, direction, status, buttons, headerType, error }) => {
   const isInbound = direction === 'inbound';
 
   return (
@@ -40,7 +43,13 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, me
             </div>
           )}
         </div>
-        {!isInbound && status && <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status.toLowerCase()}</span>}
+        {!isInbound &&!error && status && <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{status.toLowerCase()}</span>}
+        {error && (
+          <div className="flex items-center gap-2 mt-1">
+            <FiAlertCircle className="text-red-500" />
+            <span className="text-xs font-normal text-red-500">{(error as any).error_data.details}</span>
+          </div>
+        )}
       </div>
     </div>
   );

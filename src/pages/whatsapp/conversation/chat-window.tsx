@@ -411,6 +411,7 @@ const generateMessage = (message: Message) => {
           direction={(message.direction as "inbound" | "outbound") || ""}
           date={newDate}
           status={message.status || ""}
+          error={message.error || ""}
         />
       );
     case "image":
