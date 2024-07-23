@@ -15,7 +15,6 @@ import {
   useContactListContext,
   ContactList,
 } from "../../../context/ContactListContext";
-import { useAlertContext } from "../../../context/AlertContext";
 
 // Defining props type
 interface EditContactListModalProps {
@@ -29,10 +28,8 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
   const [file, setFile] = useState<File | null>(null);
   const { addContact, findContact } = useContactContext();
   const { addContactToContactList } = useContactListContext();
-  const { showAlert } = useAlertContext();
   const [formInput, setFormInput] = useState("");
   const { currentProject } = useProjectContext();
-  const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [completedContacts, setCompletedContacts] = useState(0);
   const [totalContacts, setTotalContacts] = useState(0);
@@ -47,7 +44,6 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
 
   // Handler for import button click
   const handleImport = async () => {
-    setLoading(true);
     if (file) {
       setImporting(true);
       const reader = new FileReader();
@@ -159,7 +155,6 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
       // Reload the page
       window.location.reload();
     }
-    setLoading(false);
   };
 
   return (
@@ -240,6 +235,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
                     value={formInput}
                     onChange={(e) => setFormInput(e.target.value)}
                     className="w-full h-64"
+                    disabled={importing}
                   />
                 </div>
               </Tabs.Item>

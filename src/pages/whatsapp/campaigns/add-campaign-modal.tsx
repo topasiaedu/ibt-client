@@ -277,13 +277,13 @@ const AddCampaignModal: React.FC = function () {
   };
 
   const generatePreview = () => {
-    if (headerType === "IMAGE" && file) {
+    if (headerType === "IMAGE" ) {
       return setPreview(
         <MessageComponent
           message={bodyData}
           footer={footerData}
           date={currentDate.toString()}
-          media={URL.createObjectURL(file) || headerData}
+          media={file ? URL.createObjectURL(file) : headerData}
           buttons={buttons.map((button: any) => button.text)}
           headerType="IMAGE"
         />
@@ -843,10 +843,10 @@ function generateTemplateExampleFields(
                   }}
                 />
                 {/* Write a note saying if left empty will reuse the original one */}
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   If left empty, the original {component.format.toLowerCase()}{" "}
                   will be used
-                </p>
+                </p> */}
               </div>
             </div>
           );
