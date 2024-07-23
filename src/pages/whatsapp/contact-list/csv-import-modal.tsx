@@ -34,6 +34,8 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
   const { currentProject } = useProjectContext();
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [completedContacts, setCompletedContacts] = useState(0);
+  const [totalContacts, setTotalContacts] = useState(0);
   const [importing, setImporting] = useState(false);
 
   // Handler for file input change
@@ -52,32 +54,49 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
       reader.readAsText(file);
       reader.onload = async () => {
         const contacts = reader.result as string;
-        const contactsArray = contacts.split("\n").slice(1).map((contact) => {
-          const [name, phone] = contact.split(",");
-          return { name, phone, project_id: currentProject?.project_id };
-        });
-  
+        const contactsArray = contacts
+          .split("\n")
+          .slice(1)
+          .map((contact) => {
+            const [name, phone] = contact.split(",");
+            return { name, phone, project_id: currentProject?.project_id };
+          });
+        setTotalContacts(contactsArray.length);
+
         for (let i = 0; i < contactsArray.length; i++) {
           const contact = contactsArray[i];
-          const tempContact = { name: contact.name, wa_id: contact.phone } as Contact;
-          
+          const tempContact = {
+            name: contact.name,
+            wa_id: contact.phone,
+          } as Contact;
+
           // Check if the contact already exists
           const data = await findContact(tempContact);
           if (data) {
             // Add the contact to the contact list
-            await addContactToContactList(contact_list.contact_list_id, data.contact_id);
+            await addContactToContactList(
+              contact_list.contact_list_id,
+              data.contact_id
+            );
           } else {
             // Add the contact to the contacts table
-            const response = await addContact({ name: contact.name, wa_id: contact.phone } as ContactInsert);
+            const response = await addContact({
+              name: contact.name,
+              wa_id: contact.phone,
+            } as ContactInsert);
             if (response) {
-              await addContactToContactList(contact_list.contact_list_id, response.contact_id);
+              await addContactToContactList(
+                contact_list.contact_list_id,
+                response.contact_id
+              );
             }
           }
-  
+
           // Update progress
           setProgress(Math.round(((i + 1) / contactsArray.length) * 100));
+          setCompletedContacts(i + 1);
         }
-  
+
         setImporting(false);
         // Reload the page
         window.location.reload();
@@ -91,17 +110,25 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
         const name = parts.length === 2 ? parts[1].trim() : undefined;
         return { name, phone };
       });
-  
-      const filteredContactsArray = contactsArray.filter((contact) => contact.phone !== "");
-      console.log("Total Contacts: ", filteredContactsArray.length);
-  
+
+      const filteredContactsArray = contactsArray.filter(
+        (contact) => contact.phone !== ""
+      );
+      setTotalContacts(filteredContactsArray.length);
+
       for (let i = 0; i < filteredContactsArray.length; i++) {
         const contact = filteredContactsArray[i];
-        const tempContact = { name: contact.name || "Unknown", wa_id: contact.phone } as Contact;
-  
+        const tempContact = {
+          name: contact.name || "Unknown",
+          wa_id: contact.phone,
+        } as Contact;
+
         const data = await findContact(tempContact);
         if (data) {
-          await addContactToContactList(contact_list.contact_list_id, data.contact_id);
+          await addContactToContactList(
+            contact_list.contact_list_id,
+            data.contact_id
+          );
         } else {
           const createContactData: Contact = {
             wa_id: contact.phone,
@@ -113,24 +140,27 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
             last_contacted_by: null,
             project_id: null,
           };
-  
+
           const response = await addContact(createContactData);
           if (response) {
-            await addContactToContactList(contact_list.contact_list_id, response.contact_id);
+            await addContactToContactList(
+              contact_list.contact_list_id,
+              response.contact_id
+            );
           }
         }
-  
+
         // Update progress
         setProgress(Math.round(((i + 1) / filteredContactsArray.length) * 100));
+        setCompletedContacts(i + 1);
       }
-  
+
       setImporting(false);
       // Reload the page
       window.location.reload();
     }
     setLoading(false);
   };
-  
 
   return (
     <>
@@ -227,7 +257,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
                       Importing...
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {progress}%
+                      {progress}% ({completedContacts}/{totalContacts})
                     </p>
                   </div>
                 </div>
