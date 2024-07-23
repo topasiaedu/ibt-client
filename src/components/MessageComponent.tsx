@@ -1,6 +1,7 @@
-import React from 'react';
 import { FiAlertCircle } from "react-icons/fi";
 import { Json } from '../../database.types';
+import React, { useState } from 'react';
+import MediaViewer from './MediaViewer';
 
 interface MessageComponentProps {
   header?: string;
@@ -10,13 +11,20 @@ interface MessageComponentProps {
   date?: string;
   direction?: 'inbound' | 'outbound';
   status?: string;
-  buttons?: (string | null)[]
+  buttons?: (string | null)[];
   headerType?: 'VIDEO' | 'IMAGE' | 'DOCUMENT' | 'AUDIO' | 'DOCUMENT';
   error?: Json;
 }
 
 const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, media, footer, date, direction, status, buttons, headerType, error }) => {
   const isInbound = direction === 'inbound';
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [currentMedia, setCurrentMedia] = useState<{ type: string; src: string } | null>(null);
+
+  const openMediaViewer = (type: string, src: string) => {
+    setCurrentMedia({ type, src });
+    setIsViewerOpen(true);
+  };
 
   return (
     <div className={`flex items-start gap-2.5 ${isInbound ? "" : "flex-row-reverse"} max-w-full break-all`}>
@@ -24,10 +32,41 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, me
         {date && <span className="text-xs font-normal text-gray-500 dark:text-gray-400">{date}</span>}
         <div className={`flex flex-col leading-1.5 p-2 border-gray-200 rounded-bl-xl rounded-br-xl ${isInbound ? "bg-gray-100 dark:bg-gray-700 rounded-tr-xl" : "bg-green-100 dark:bg-green-700 rounded-tl-xl"}`} style={{ width: 'fit-content' }}>
           {header && <span className="text-sm font-semibold text-gray-900 dark:text-white">{header}</span>}
-          {media && headerType === "IMAGE" && <img src={media} alt="media" className="w-full h-40 object-cover rounded-xl" />}
-          {media && headerType === "VIDEO" && <video src={media} controls className="w-full h-40 object-cover rounded-xl" />}
-          {media && headerType === "AUDIO" && <audio src={media} controls />}
-          {media && headerType === "DOCUMENT" && <a href={media} target="_blank" rel="noreferrer" className="text-sm font-semibold text-blue-500">{media}</a>}
+          {media && headerType === "IMAGE" && (
+            <img
+              src={media}
+              alt="media"
+              className="w-full h-40 object-cover rounded-xl cursor-pointer"
+              onClick={() => openMediaViewer('image', media)}
+            />
+          )}
+          {media && headerType === "VIDEO" && (
+            <video
+              src={media}
+              controls
+              className="w-full h-40 object-cover rounded-xl cursor-pointer"
+              onClick={() => openMediaViewer('video', media)}
+            />
+          )}
+          {media && headerType === "AUDIO" && (
+            <audio
+              src={media}
+              controls
+              className="cursor-pointer"
+              onClick={() => openMediaViewer('audio', media)}
+            />
+          )}
+          {media && headerType === "DOCUMENT" && (
+            <a
+              href={media}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-semibold text-blue-500 cursor-pointer"
+              onClick={() => openMediaViewer('document', media)}
+            >
+              {media}
+            </a>
+          )}
 
           {message && (
             <span className="text-sm font-normal text-gray-900 dark:text-white" style={{ whiteSpace: 'pre-wrap' }}>
@@ -51,6 +90,15 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, me
           </div>
         )}
       </div>
+
+      {/* Media Viewer Modal */}
+      {currentMedia && (
+        <MediaViewer
+          isOpen={isViewerOpen}
+          onClose={() => setIsViewerOpen(false)}
+          media={currentMedia}
+        />
+      )}
     </div>
   );
 };

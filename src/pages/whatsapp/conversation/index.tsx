@@ -16,8 +16,12 @@ const ConversationPage: React.FC = function () {
   const [selectedConversation, setSelectedConversation] = useState<
     Conversation | undefined
   >(undefined);
-  const { updateMessage, setCurrentConversationId, messages } =
-    useMessagesContext();
+  const {
+    updateMessage,
+    setCurrentConversationId,
+    messages,
+    loading: messagesLoading,
+  } = useMessagesContext();
   const { currentProject } = useProjectContext();
   const { conversations, loading, updateConversation } =
     useConversationContext();
@@ -59,7 +63,7 @@ const ConversationPage: React.FC = function () {
         status: "UNREAD",
       });
     }
-    
+
     updateConversation({
       id: conversation.id,
       phone_number_id: conversation.phone_number_id,
@@ -123,10 +127,11 @@ const ConversationPage: React.FC = function () {
           selectedConversation={selectedConversation}
           onMarkAsUnread={handleUnreadConversation}
         />
-        {selectedConversation && (
+        {selectedConversation && messages && !messagesLoading && (
           <ChatWindow conversation={selectedConversation} messages={messages} />
         )}
-        {selectedConversation && (
+
+        {selectedConversation && messages && !messagesLoading && (
           <ContactProfile
             contact={selectedConversation.contact}
             close_at={selectedConversation.close_at}
@@ -146,6 +151,8 @@ const ConversationPage: React.FC = function () {
             </div>
           </div>
         )}
+
+        {messagesLoading && <LoadingPage />}
       </div>
     </NavbarSidebarLayout>
   );

@@ -76,10 +76,14 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
 
     fetchConversations();
 
-    const handleChanges = async (payload: any) => {
+    const handleChanges = async (payload :any) => {
       if (payload.eventType === "INSERT") {
         setConversations((prevConversations) => {
-          return [payload.new, ...prevConversations];
+          const newConversations = [payload.new, ...prevConversations];
+          if (isEqual(prevConversations, newConversations)) {
+            return prevConversations;
+          }
+          return newConversations;
         });
       } else if (payload.eventType === "UPDATE") {
         // Fetch contact, phone number, and last message
@@ -105,19 +109,19 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
           return;
         }
 
-        const { data: lastMessage, error } = await supabase
+        const { data: lastMessage, error: lastMessageError } = await supabase
           .from("messages")
           .select("*")
           .eq("message_id", payload.new.last_message_id)
           .single();
 
-        if (error) {
-          console.error("Error fetching last message:", error);
+        if (lastMessageError) {
+          console.error("Error fetching last message:", lastMessageError);
           return;
         }
 
         setConversations((prevConversations) => {
-          return prevConversations.map((conversation) => {
+          const updatedConversations = prevConversations.map((conversation) => {
             if (conversation.id === payload.new.id) {
               return {
                 ...payload.new,
@@ -128,12 +132,22 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
             }
             return conversation;
           });
+
+          if (isEqual(prevConversations, updatedConversations)) {
+            return prevConversations;
+          }
+          return updatedConversations;
         });
       } else if (payload.eventType === "DELETE") {
         setConversations((prevConversations) => {
-          return prevConversations.filter(
+          const filteredConversations = prevConversations.filter(
             (conversation) => conversation.id !== payload.old.id
           );
+
+          if (isEqual(prevConversations, filteredConversations)) {
+            return prevConversations;
+          }
+          return filteredConversations;
         });
       }
     };
