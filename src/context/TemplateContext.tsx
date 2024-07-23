@@ -53,10 +53,10 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
 
   const handleChanges = useCallback((payload: any) => {
     console.log("Subscription payload:", payload.eventType);
-
+  
     setTemplates((prev) => {
       let newTemplates = prev;
-
+  
       if (payload.eventType === "INSERT") {
         newTemplates = [...prev, payload.new];
       } else if (payload.eventType === "UPDATE") {
@@ -70,7 +70,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
           (template) => template.template_id !== payload.old.template_id
         );
       }
-
+  
       return isEqual(prev, newTemplates) ? prev : newTemplates;
     });
   }, []);
