@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Badge, Dropdown, Label, TextInput } from "flowbite-react";
 import { Conversation } from "../../../context/ConversationContext";
 import { PhoneNumber } from "../../../context/PhoneNumberContext";
+import LoadingPage from "../../pages/loading";
 
 interface ChatListProps {
   conversations: Conversation[];
@@ -32,14 +33,18 @@ const ChatList: React.FC<ChatListProps> = ({
     );
 
     conversations.forEach((conversation) => {
-      uniquePhoneNumbers.add(conversation.phone_number.number);
+      if (conversation.phone_number) {
+        uniquePhoneNumbers.add(conversation.phone_number.number);
+      }
     });
 
     const newPhoneNumbers = [...uniquePhoneNumbers]
       .map(
         (number) =>
           conversations.find(
-            (conversation) => conversation.phone_number.number === number
+            (conversation) =>
+              conversation.phone_number &&
+              conversation.phone_number.number === number
           )?.phone_number
       )
       .filter(
@@ -71,6 +76,10 @@ const ChatList: React.FC<ChatListProps> = ({
     }
     setContextMenuVisible(false);
   };
+
+  if (!phoneNumbers || phoneNumbers.length === 0) {
+    return <LoadingPage />;
+  }
 
   return (
     <div
@@ -114,17 +123,23 @@ const ChatList: React.FC<ChatListProps> = ({
           //     new Date(a.last_message_time).getTime()
           // )
           .filter((conversation) => {
-            // Check for search and selected phone number
-            const nameMatch =
-              conversation.contact.name !== null &&
-              conversation.contact.name
-                .toLowerCase()
-                .includes(search.toLowerCase());
-            const waIdMatch = conversation.contact.wa_id.includes(search);
-            const phoneNumberMatch =
-              selectedPhoneNumber === null ||
-              conversation.phone_number.number === selectedPhoneNumber.number;
-            return nameMatch || waIdMatch || phoneNumberMatch;
+            if (conversation.contact) {
+              // Check for search and selected phone number
+              const nameMatch = conversation.contact.name
+                ? conversation.contact.name
+                    .toLowerCase()
+                    .includes(search.toLowerCase())
+                : false;
+              const waIdMatch = conversation.contact.wa_id.includes(search);
+              const phoneNumberMatch = selectedPhoneNumber
+                ? conversation.phone_number.number ===
+                  selectedPhoneNumber.number
+                : true;
+              return nameMatch || waIdMatch || phoneNumberMatch;
+            } else {
+              console.log("No contact found for conversation", conversation);
+              return true;
+            }
           })
           .map((conversation, index) => (
             <li
@@ -140,18 +155,20 @@ const ChatList: React.FC<ChatListProps> = ({
                 <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
                   <div className="min-w-0 flex-1 w-fit">
                     <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
-                      {conversation.contact.name}
+                      {conversation.contact && conversation.contact.name}
                       <Badge color="primary">
-                        {conversation.phone_number.number}
+                        {conversation.phone_number &&
+                          conversation.phone_number.number}
                       </Badge>
                     </p>
                     <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                      {conversation.contact.wa_id}
+                      {conversation.contact && conversation.contact.wa_id}
                     </p>
                     {conversation.last_message_id && (
                       <>
                         <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                          {conversation.last_message.content}
+                          {conversation.last_message &&
+                            conversation.last_message.content}
                         </p>
                         <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                           Last seen:{" "}

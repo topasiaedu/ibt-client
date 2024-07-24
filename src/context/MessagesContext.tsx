@@ -15,6 +15,7 @@ import { useContactContext } from "./ContactContext";
 import { usePhoneNumberContext } from "./PhoneNumberContext";
 import { useWhatsAppBusinessAccountContext } from "./WhatsAppBusinessAccountContext";
 import isEqual from "lodash.isequal";
+import { Conversation } from "./ConversationContext";
 
 export type Message = Database["public"]["Tables"]["messages"]["Row"];
 export type Messages = { messages: Message[] };
@@ -39,6 +40,7 @@ interface MessagesContextType {
   loading: boolean;
   currentConversationId: string | null;
   setCurrentConversationId: (conversationId: string | null) => void;
+  sendReEngagementMessage: (conversation: Conversation) => void;
 }
 
 const MessagesContext = createContext<MessagesContextType>(undefined!);
@@ -133,7 +135,12 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
   ]);
 
   const addMessage = useCallback(
-    async (message: MessageInsert, conversation_id: string, to:string, file?: File) => {
+    async (
+      message: MessageInsert,
+      conversation_id: string,
+      to: string,
+      file?: File
+    ) => {
       try {
         const phoneNumber = phoneNumbers.find(
           (phoneNumber) =>
@@ -167,7 +174,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           if (message.content) {
             body = JSON.stringify({
               messaging_product: "whatsapp",
-              to:to,
+              to: to,
               type: message.message_type,
               [message.message_type]: {
                 link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
@@ -240,7 +247,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             body: body,
           }
         );
-        
 
         const data = await response.json();
 
@@ -272,14 +278,13 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
         }
 
         // Update last_message_id and updated_at in the conversation
-        const { data: updatedConversation, error: updateConversationError } =
-          await supabase
-            .from("conversations")
-            .update({
-              last_message_id: newMessage?.message_id,
-              updated_at: new Date(),
-            })
-            .eq("id", conversation_id);
+        const { error: updateConversationError } = await supabase
+          .from("conversations")
+          .update({
+            last_message_id: newMessage?.message_id,
+            updated_at: new Date(),
+          })
+          .eq("id", conversation_id);
 
         if (updateConversationError) {
           console.error(
@@ -288,13 +293,12 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           );
           return;
         }
-
       } catch (error) {
         console.error("Error sending message:", error);
         showAlert("Error sending message", "error");
       }
     },
-    [contacts, currentProject, phoneNumbers, showAlert]
+    [currentProject, phoneNumbers, showAlert]
   );
 
   const updateMessage = useCallback(
@@ -349,6 +353,103 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
     [currentProject]
   );
 
+  const sendReEngagementMessage = useCallback(
+    async (conversation: Conversation) => {
+      const body = JSON.stringify({
+        messaging_product: "whatsapp",
+        to: conversation.contact?.wa_id,
+        type: "template",
+        template: {
+          name: "pemni_re_engagement_message",
+          language: {
+            code: "zh_CN",
+          },
+          components: [
+            {
+              type: "body",
+              parameters: [
+                {
+                  type: "text",
+                  text: conversation.contact?.name,
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      const response = await fetch(
+        `https://graph.facebook.com/v19.0/${conversation.phone_number.wa_id}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: WHATSAPP_ACCESS_TOKEN,
+            "Content-Type": "application/json",
+          },
+          body: body,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Error sending re-engagement message:", response);
+        showAlert("Error sending re-engagement message", "error");
+        return;
+      }
+
+      // Add message to database
+
+      const { data: newMessage, error } = await supabase
+        .from("messages")
+        .insert({
+          project_id: currentProject?.project_id,
+          wa_message_id: data.messages[0].id,
+          phone_number_id: conversation.phone_number_id,
+          contact_id: conversation.contact_id,
+          conversation_id: conversation.id,
+          message_type: "TEMPLATE",
+          content: `嗨 ${conversation.contact?.name} 👋
+
+由于这信息系统出现了些问题，无法马上回复您。
+
+若您有任何关于上课的疑问请一律 whatsapp Serene: 
++6011-20560692 (Serene)
+https://wa.link/v3pcls  
+
+感谢您的理解 🙆🏼‍♀
+`,
+        } as MessageInsert)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error sending re-engagement message:", error);
+        showAlert("Error sending re-engagement message", "error");
+      }
+
+      // Update last_message_id and updated_at in the conversation
+      const { error: updateConversationError } = await supabase
+        .from("conversations")
+        .update({
+          last_message_id: newMessage?.message_id,
+          updated_at: new Date(),
+        })
+        .eq("id", conversation.id);
+
+      if (updateConversationError) {
+        console.error(
+          "Error updating conversation with last_message_id:",
+          updateConversationError
+        );
+        return;
+      }
+
+      showAlert("Re-engagement message sent", "success");
+    },
+    [addMessage, currentProject, showAlert]
+  );
+
   const contextValue = useMemo(
     () => ({
       messages,
@@ -359,6 +460,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
       loading,
       currentConversationId,
       setCurrentConversationId,
+      sendReEngagementMessage,
     }),
     [
       messages,
@@ -368,6 +470,8 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
       fetchCampaignReadMessagesCount,
       loading,
       currentConversationId,
+      setCurrentConversationId,
+      sendReEngagementMessage,
     ]
   );
 

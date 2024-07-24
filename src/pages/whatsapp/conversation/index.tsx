@@ -100,7 +100,7 @@ const ConversationPage: React.FC = function () {
     setSelectedConversation(undefined);
   }, [currentProject]);
 
-  if (loading || !conversations || !conversations.length) {
+  if (loading || !conversations || !conversations.length || messagesLoading) {
     return <LoadingPage />;
   }
 
@@ -133,6 +133,7 @@ const ConversationPage: React.FC = function () {
 
         {selectedConversation && messages && !messagesLoading && (
           <ContactProfile
+            conversation={selectedConversation}
             contact={selectedConversation.contact}
             close_at={selectedConversation.close_at}
           />

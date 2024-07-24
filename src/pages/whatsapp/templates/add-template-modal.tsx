@@ -73,7 +73,6 @@ const AddTemplateModal: React.FC = function () {
     };
 
 
-    console.log("Template: ", template);
     let components: any[] = [];
 
     // If footer has data, add it to the components

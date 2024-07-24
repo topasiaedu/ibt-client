@@ -13,6 +13,7 @@ import { CiMicrophoneOff } from "react-icons/ci";
 import Picker from "emoji-picker-react";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
 import { Conversation } from "../../../context/ConversationContext";
+import LoadingPage from "../../pages/loading";
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -29,6 +30,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const [openEmoji, setOpenEmoji] = useState(false);
+
 
   const handleSubmit = async () => {
     let mediaType = "text";
@@ -205,6 +207,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
     console.log("Event", e);
     setInput(input + emojiObject.emoji);
   };
+
+  if (!messages || !conversation) {
+    return <LoadingPage />;
+  }
 
   return (
     <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full flex flex-col relative">

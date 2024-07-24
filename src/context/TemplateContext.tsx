@@ -55,25 +55,32 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
     console.log("Subscription payload:", payload.eventType);
   
     setTemplates((prev) => {
-      let newTemplates = prev;
+      let newTemplates;
   
-      if (payload.eventType === "INSERT") {
-        newTemplates = [...prev, payload.new];
-      } else if (payload.eventType === "UPDATE") {
-        newTemplates = prev.map((template) =>
-          template.template_id === payload.new.template_id
-            ? payload.new
-            : template
-        );
-      } else if (payload.eventType === "DELETE") {
-        newTemplates = prev.filter(
-          (template) => template.template_id !== payload.old.template_id
-        );
+      switch (payload.eventType) {
+        case "INSERT":
+          newTemplates = [...prev, payload.new];
+          break;
+        case "UPDATE":
+          newTemplates = prev.map((template) =>
+            template.template_id === payload.new.template_id
+              ? payload.new
+              : template
+          );
+          break;
+        case "DELETE":
+          newTemplates = prev.filter(
+            (template) => template.template_id !== payload.old.template_id
+          );
+          break;
+        default:
+          newTemplates = prev;
       }
   
+      // Only update state if there are actual changes
       return isEqual(prev, newTemplates) ? prev : newTemplates;
     });
-  }, []);
+  }, [setTemplates]);
 
   useEffect(() => {
     setLoading(true);

@@ -3,16 +3,22 @@ import { Button } from "flowbite-react";
 import React, { useEffect } from "react";
 import { HiChevronLeft } from "react-icons/hi";
 import { Contact } from "../../../context/ContactContext";
+import { useMessagesContext } from "../../../context/MessagesContext";
+import { Conversation } from "../../../context/ConversationContext";
+
 interface ContactProfileProps {
+  conversation: Conversation;
   contact: Contact;
   close_at: string | null;
 }
 
 const ContactProfile: React.FC<ContactProfileProps> = ({
+  conversation,
   contact,
   close_at,
 }) => {
   const [close_at_date_time, setCloseAtDateTime] = React.useState<string | null>( null);
+  const { sendReEngagementMessage } = useMessagesContext(); 
 
   useEffect(() => {
     if (close_at) {
@@ -80,6 +86,13 @@ const ContactProfile: React.FC<ContactProfileProps> = ({
             </address>
           )}
         </div>
+      </div>
+      <div>
+        <Button onClick={() => sendReEngagementMessage(conversation)}>
+          <div className="mr-1 flex items-center gap-x-2">
+            <HiChevronLeft className="text-xl" /> Send re-engagement message
+          </div>
+        </Button>
       </div>
       {/* <h3 className="mb-4 text-base font-bold text-gray-900 dark:text-white">
         Tags
