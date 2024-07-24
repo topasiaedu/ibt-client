@@ -180,7 +180,7 @@ const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
               {campaign.campaign_id === 150 ? 76 : campaign.read_count}
             </Table.Cell>
             <Table.Cell className="text-center">
-              {campaign.campaign_id === 150 ? 168 : campaign.sent}
+              {campaign.campaign_id === 150 ? 168 : campaign.sent + campaign.read_count}
             </Table.Cell>
             <Table.Cell className="text-center">
               {campaign.campaign_id === 150 ? 16 : campaign.failed}
