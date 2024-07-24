@@ -34,6 +34,16 @@ import { supabase } from "../../../utils/supabaseClient";
 import MessageComponent from "../../../components/MessageComponent";
 import { Contact, useContactContext } from "../../../context/ContactContext";
 
+const currentDate = new Date().toLocaleDateString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+  hour12: true,
+});
+
 const AddCampaignModal: React.FC = function () {
   const [isOpen, setIsOpen] = useState(false);
   const { addCampaign, loading } = useCampaignContext();
@@ -61,7 +71,6 @@ const AddCampaignModal: React.FC = function () {
   const [footerData, setFooterData] = useState<string>("");
   const [buttons, setButtons] = useState<TemplateButton[]>([]);
   const [headerType, setHeaderType] = useState<string>("TEXT");
-  const currentDate = new Date();
 
   const [includeInput, setIncludeInput] = useState<string>("");
   const [selectedIncludes, setSelectedIncludes] = useState<any[]>([]);
@@ -75,8 +84,6 @@ const AddCampaignModal: React.FC = function () {
     useState<ContactList[]>(contactLists);
   const [filteredExcludeContacts, setFilteredExcludeContacts] =
     useState<Contact[]>(contacts);
-
-  console.log("selectedTemplate", selectedTemplate);
 
   const wabaPhoneNumber = whatsAppBusinessAccounts
     .map((waba) => {
@@ -277,12 +284,15 @@ const AddCampaignModal: React.FC = function () {
   };
 
   const generatePreview = () => {
-    if (headerType === "IMAGE" ) {
+
+    // Check if the body data has any {{1}} or {{2}} or so on, replace them with the example data with the appropriate value from the input fields
+
+    if (headerType === "IMAGE") {
       return setPreview(
         <MessageComponent
           message={bodyData}
           footer={footerData}
-          date={currentDate.toString()}
+          date={currentDate}
           media={file ? URL.createObjectURL(file) : headerData}
           buttons={buttons.map((button: any) => button.text)}
           headerType="IMAGE"
@@ -294,7 +304,7 @@ const AddCampaignModal: React.FC = function () {
           header={headerData}
           message={bodyData}
           footer={footerData}
-          date={currentDate.toString()}
+          date={currentDate}
           buttons={buttons.map((button: any) => button.text)}
         />
       );
@@ -303,7 +313,7 @@ const AddCampaignModal: React.FC = function () {
         <MessageComponent
           message={bodyData}
           footer={footerData}
-          date={currentDate.toString()}
+          date={currentDate}
           media={URL.createObjectURL(file)}
           buttons={buttons.map((button: any) => button.text)}
           headerType="VIDEO"
@@ -314,7 +324,7 @@ const AddCampaignModal: React.FC = function () {
         <MessageComponent
           message={bodyData}
           footer={footerData}
-          date={currentDate.toString()}
+          date={currentDate}
           media={headerData}
           buttons={buttons.map((button: any) => button.text)}
           headerType="DOCUMENT"
@@ -325,7 +335,7 @@ const AddCampaignModal: React.FC = function () {
         <MessageComponent
           message={bodyData}
           footer={footerData}
-          date={currentDate.toString()}
+          date={currentDate}
           buttons={buttons.map((button: any) => button.text)}
         />
       );
@@ -739,7 +749,8 @@ const AddCampaignModal: React.FC = function () {
                 generateTemplateExampleFields(
                   selectedTemplate,
                   selectedTemplate.components,
-                  setFile
+                  setFile,
+                  generatePreview
                 )}
             </div>
 
@@ -780,7 +791,8 @@ const AddCampaignModal: React.FC = function () {
 function generateTemplateExampleFields(
   selectedTemplate: Template,
   components: any,
-  setFile: any
+  setFile: any,
+  generatePreview: any
 ) {
   return components.data.map((component: any, index: number) => {
     if (component?.example) {
@@ -814,6 +826,7 @@ function generateTemplateExampleFields(
                           index +
                           body_text
                         }
+                        onKeyUp={generatePreview}
                         placeholder={body_text}
                       />
                     </div>

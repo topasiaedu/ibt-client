@@ -158,6 +158,17 @@ const AddTemplateModal: React.FC = function () {
 
     addTemplate(template);
     setIsOpen(false);
+    setTemplateName("");
+    setSelectedCategory("");
+    setSelectedLanguage("");
+    setButtons([]);
+    setHeaderType("");
+    setHeaderData("");
+    setBodyData("");
+    setFooterData("");
+    setSelectedButtonType("QUICK_REPLY");
+    setFile(null);
+    setPreview(null);
     showAlert("Template added successfully", "success");
   };
 

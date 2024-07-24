@@ -383,6 +383,7 @@ const generateMessage = (message: Message) => {
             date={newDate}
             status={message.status || ""}
             headerType="VIDEO"
+            error={message.error || ""}
           />
         );
       } else {
@@ -394,6 +395,7 @@ const generateMessage = (message: Message) => {
             date={newDate}
             status={message.status || ""}
             headerType="IMAGE"
+            error={message.error || ""}
           />
         );
       }
@@ -404,6 +406,7 @@ const generateMessage = (message: Message) => {
           direction={(message.direction as "inbound" | "outbound") || ""}
           date={newDate}
           status={message.status || ""}
+          error={message.error || ""}
         />
       );
     }

@@ -59,7 +59,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
   
       switch (payload.eventType) {
         case "INSERT":
-          newTemplates = [...prev, payload.new];
+          newTemplates = [payload.new, ...prev ];
           break;
         case "UPDATE":
           newTemplates = prev.map((template) =>
