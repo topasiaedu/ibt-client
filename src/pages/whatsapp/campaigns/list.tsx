@@ -203,11 +203,6 @@ const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
 };
 
 const gRTS = (campaign: Campaign) => {
-  // if 210, return 165
-  // if 211, return 441 - 17
-  // if 212, return 47
-  // if 213, return 422
-  // else return campaign.sent + campaign.read_count
   if (campaign.campaign_id === 210) {
     return 165;
   } else if (campaign.campaign_id === 211) {

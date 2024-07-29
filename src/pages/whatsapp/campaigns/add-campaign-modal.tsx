@@ -851,6 +851,11 @@ function generateTemplateExampleFields(
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      // Check file size ( cant be more than 15MB )
+                      if (file.size > 15000000) {
+                        alert("File size is too large");
+                        return;
+                      }
                       setFile(file);
                     }
                   }}
