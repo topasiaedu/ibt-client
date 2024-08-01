@@ -24,8 +24,10 @@ export type Conversation =
   };
 
 export type Conversations = { conversations: Conversation[] };
-export type ConversationInsert = Database["public"]["Tables"]["conversations"]["Insert"];
-export type ConversationUpdate = Database["public"]["Tables"]["conversations"]["Update"];
+export type ConversationInsert =
+  Database["public"]["Tables"]["conversations"]["Insert"];
+export type ConversationUpdate =
+  Database["public"]["Tables"]["conversations"]["Update"];
 
 interface ConversationContextType {
   conversations: Conversation[];
@@ -76,7 +78,7 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
 
     fetchConversations();
 
-    const handleChanges = async (payload :any) => {
+    const handleChanges = async (payload: any) => {
       if (payload.eventType === "INSERT") {
         setConversations((prevConversations) => {
           const newConversations = [payload.new, ...prevConversations];
@@ -121,21 +123,30 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
         }
 
         setConversations((prevConversations) => {
-          const updatedConversations = prevConversations.map((conversation) => {
-            if (conversation.id === payload.new.id) {
-              return {
-                ...payload.new,
-                contact,
-                phone_number: phoneNumber,
-                last_message: lastMessage,
-              };
-            }
-            return conversation;
-          });
+          // Remove the conversation with the matching id from the list
+          const filteredConversations = prevConversations.filter(
+            (conversation) => conversation.id !== payload.new.id
+          );
 
+          // Create the updated conversation object
+          const newConversation = {
+            ...payload.new,
+            contact,
+            phone_number: phoneNumber,
+            last_message: lastMessage,
+          };
+
+          // Add the updated conversation at the beginning of the list
+          const updatedConversations = [
+            newConversation,
+            ...filteredConversations,
+          ];
+
+          // Check if the updatedConversations is different from the previous list
           if (isEqual(prevConversations, updatedConversations)) {
             return prevConversations;
           }
+
           return updatedConversations;
         });
       } else if (payload.eventType === "DELETE") {

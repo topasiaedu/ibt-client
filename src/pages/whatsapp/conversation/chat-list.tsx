@@ -3,6 +3,7 @@ import { Badge, Dropdown, Label, TextInput } from "flowbite-react";
 import { Conversation } from "../../../context/ConversationContext";
 import { PhoneNumber } from "../../../context/PhoneNumberContext";
 import LoadingPage from "../../pages/loading";
+import { useProjectContext } from "../../../context/ProjectContext";
 
 interface ChatListProps {
   conversations: Conversation[];
@@ -26,35 +27,43 @@ const ChatList: React.FC<ChatListProps> = ({
   const [contextMenuConversation, setContextMenuConversation] = useState<
     Conversation | undefined
   >(undefined);
+  const { currentProject } = useProjectContext();
 
   useEffect(() => {
-    const uniquePhoneNumbers = new Set(
-      phoneNumbers.map((phone) => phone.number)
-    );
+    // Function to update phone numbers based on the current project and conversations
+    const updatePhoneNumbers = () => {
+      const uniquePhoneNumbers = new Set();
 
-    conversations.forEach((conversation) => {
-      if (conversation.phone_number) {
-        uniquePhoneNumbers.add(conversation.phone_number.number);
-      }
-    });
+      // Collect unique phone numbers from conversations
+      conversations.forEach((conversation) => {
+        if (conversation.phone_number) {
+          uniquePhoneNumbers.add(conversation.phone_number.number);
+        }
+      });
 
-    const newPhoneNumbers = [...uniquePhoneNumbers]
-      .map(
-        (number) =>
-          conversations.find(
-            (conversation) =>
-              conversation.phone_number &&
-              conversation.phone_number.number === number
-          )?.phone_number
-      )
-      .filter(
-        (phoneNumber): phoneNumber is NonNullable<typeof phoneNumber> =>
-          phoneNumber !== null
-      );
+      // Map the unique numbers back to their respective phone number objects
+      const newPhoneNumbers = [...uniquePhoneNumbers]
+        .map(
+          (number) =>
+            conversations.find(
+              (conversation) =>
+                conversation.phone_number &&
+                conversation.phone_number.number === number
+            )?.phone_number
+        )
+        .filter(
+          (phoneNumber): phoneNumber is NonNullable<typeof phoneNumber> =>
+            phoneNumber !== null
+        );
 
-    setPhoneNumbers(newPhoneNumbers);
+      setPhoneNumbers(newPhoneNumbers);
+    };
+
+    // Call updatePhoneNumbers whenever the currentProject.id changes
+    updatePhoneNumbers();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversations]);
+  }, [currentProject]);
 
   const handleContextMenu = (
     event: React.MouseEvent,
@@ -106,40 +115,43 @@ const ChatList: React.FC<ChatListProps> = ({
           <Dropdown.Item onClick={() => setSelectedPhoneNumber(null)}>
             All
           </Dropdown.Item>
-          {phoneNumbers.map((phoneNumber, index) => (
-            <Dropdown.Item
-              key={index}
-              onClick={() => setSelectedPhoneNumber(phoneNumber)}>
-              {phoneNumber.name} ({phoneNumber.number})
-            </Dropdown.Item>
-          ))}
+          {phoneNumbers.length > 0 &&
+            phoneNumbers[0] !== null &&
+            phoneNumbers.map((phoneNumber, index) => (
+              <Dropdown.Item
+                key={index}
+                onClick={() => setSelectedPhoneNumber(phoneNumber)}>
+                {phoneNumber.name} ({phoneNumber.number})
+              </Dropdown.Item>
+            ))}
         </Dropdown>
       </div>
       <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto flex-grow">
         {conversations
-          // .sort(
-          //   (a, b) =>
-          //     new Date(b.last_message_time).getTime() -
-          //     new Date(a.last_message_time).getTime()
-          // )
+          .sort((a, b) => {
+            const aDate = a.last_message.created_at
+              ? new Date(a.last_message.created_at)
+              : new Date();
+            const bDate = b.last_message.created_at
+              ? new Date(b.last_message.created_at)
+              : new Date();
+
+            return bDate.getTime() - aDate.getTime();
+          })
           .filter((conversation) => {
-            if (conversation.contact) {
-              // Check for search and selected phone number
-              const nameMatch = conversation.contact.name
-                ? conversation.contact.name
-                    .toLowerCase()
-                    .includes(search.toLowerCase())
-                : false;
-              const waIdMatch = conversation.contact.wa_id.includes(search);
-              const phoneNumberMatch = selectedPhoneNumber
-                ? conversation.phone_number.number ===
-                  selectedPhoneNumber.number
-                : true;
-              return nameMatch || waIdMatch || phoneNumberMatch;
-            } else {
-              console.log("No contact found for conversation", conversation);
-              return true;
-            }
+            const searchLower = search.toLowerCase();
+            const contact = conversation.contact;
+
+            const nameMatch =
+              contact?.name?.toLowerCase().includes(searchLower) || false;
+            const waIdMatch =
+              contact?.wa_id?.toLowerCase().includes(searchLower) || false;
+
+            console.log("Search", search);
+            console.log("Name Match", nameMatch);
+            console.log("Wa Id Match", waIdMatch);
+
+            return nameMatch || waIdMatch ;
           })
           .map((conversation, index) => (
             <li
@@ -164,7 +176,7 @@ const ChatList: React.FC<ChatListProps> = ({
                     <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
                       {conversation.contact && conversation.contact.wa_id}
                     </p>
-                    {conversation.last_message_id && (
+                    {conversation.last_message && (
                       <>
                         <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
                           {conversation.last_message &&
