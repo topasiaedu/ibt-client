@@ -74,6 +74,7 @@ const ActionNodeTypes = [
   "add-to-contact-list",
   "send-message",
   "send-template",
+  "zoom"
 ];
 
 export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {

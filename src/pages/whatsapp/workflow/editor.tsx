@@ -15,6 +15,7 @@ import SendTemplateNode from './editor-components/send-template-node';
 import WebhookNode from './editor-components/webhook-node';
 import WorkflowNode from './editor-components/workflow-node';
 import './editor.css';
+import ZoomNode from './editor-components/zoom-node';
 
 const nodeTypes = {
   'add-to-contact-list': React.memo(AddToContactListNode),
@@ -24,6 +25,7 @@ const nodeTypes = {
   'send-message': React.memo(SendMessageNode),
   'send-template': React.memo(SendTemplateNode),
   'workflow': React.memo(WorkflowNode),
+  'zoom': React.memo(ZoomNode),
 };
 
 const FlowEditor: React.FC = () => {
