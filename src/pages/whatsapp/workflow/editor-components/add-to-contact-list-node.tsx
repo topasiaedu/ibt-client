@@ -48,8 +48,9 @@ export default function AddToContactListNode(
   );
 
   useEffect(() => {
-    debouncedUpdateNodeData(props.id, { listId });
-  }, [listId, debouncedUpdateNodeData, props.id]);
+    const listIds = lists.map((list) => list.contact_list_id);
+    debouncedUpdateNodeData(props.id, { listIds });
+  }, [debouncedUpdateNodeData, lists, props.id]);
 
   useEffect(() => {
     if (props.data?.listIds) {
@@ -61,7 +62,7 @@ export default function AddToContactListNode(
       setLists(lists);
     }
     
-  }, [props.data?.listIds]);
+  }, [contactLists, props.data.listIds]);
 
   return (
     <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg max-w-sm flex flex-col gap-2">
@@ -71,7 +72,7 @@ export default function AddToContactListNode(
         This node will rotate around these lists, first contact will be added to
         first list, second contact will be added to second list and so on.
       </p>
-      <Label htmlFor="listId">ListIds</Label>
+      <Label htmlFor="listId">List(s)</Label>
       <div className="relative">
         <div className="custom-input flex items-center flex-wrap block w-full border disabled:cursor-not-allowed disabled:opacity-50 bg-gray-50 border-gray-300 text-gray-900 focus:border-cyan-500 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-cyan-500 dark:focus:ring-cyan-500 p-2.5 text-sm rounded-lg">
           {lists.map((listId, index) => (

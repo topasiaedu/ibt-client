@@ -147,10 +147,6 @@ const ChatList: React.FC<ChatListProps> = ({
             const waIdMatch =
               contact?.wa_id?.toLowerCase().includes(searchLower) || false;
 
-            console.log("Search", search);
-            console.log("Name Match", nameMatch);
-            console.log("Wa Id Match", waIdMatch);
-
             return nameMatch || waIdMatch ;
           })
           .map((conversation, index) => (

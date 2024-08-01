@@ -22,6 +22,7 @@ import { useAlertContext } from "./AlertContext";
 import {
   ActionInsert,
   TriggerInsert,
+  WorkflowInsert,
   WorkflowUpdate,
   useWorkflowContext,
 } from "./WorkflowContext";
@@ -218,173 +219,151 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       return;
     }
 
-    // Check the edges to get all connected nodes and put it in an array of [workflow, trigger, action]
-    const connectedNodes: string[] = [];
-    edges.forEach((edge) => {
-      const sourceNode = nodes.find((node) => node.id === edge.source);
-      const targetNode = nodes.find((node) => node.id === edge.target);
-      if (!connectedNodes.includes(sourceNode?.id ?? "")) {
-        connectedNodes.push(sourceNode?.id ?? "");
-      }
-      if (!connectedNodes.includes(targetNode?.id ?? "")) {
-        connectedNodes.push(targetNode?.id ?? "");
-      }
-    });
+    // Collect unique node IDs from edges
+    const connectedNodeIds = new Set(
+      edges.flatMap((edge) => [edge.source, edge.target])
+    );
+    const connectedNodes = nodes.filter((node) =>
+      connectedNodeIds.has(node.id)
+    );
+    const workflowNode = connectedNodes.find(
+      (node) => node.type === "workflow"
+    );
 
-    // Filter workflow, trigger, and action nodes
-    const workflowNodes = nodes.filter((node) =>
-      connectedNodes.includes(node.id)
-    );
-    const triggerNodes = workflowNodes.filter((node) =>
-      TriggerNodeTypes.includes(node.type ?? "")
-    );
-    const actionNodes = workflowNodes.filter((node) =>
-      ActionNodeTypes.includes(node.type ?? "")
-    );
-    const workflowNode = nodes.find((node) => node.type === "workflow");
     if (!workflowNode) {
       showAlert("Workflow node not found", "error");
       return;
     }
 
-    const workflowData = {
+    // Define workflow data
+    const workflowData: WorkflowInsert = {
       id: currentWorkflowId || "1",
       name: workflowNode.data.name,
       description: workflowNode.data.description,
       run: workflowNode.data.run,
       phone_numbers: workflowNode.data.phone_numbers,
       canvas_state: { nodes, edges } as unknown as Json | undefined,
-      project_id: currentProject?.project_id,
+      project_id: currentProject.project_id,
     };
 
-    // Prepare trigger data
-    const prepareTriggerData = (workflowId: string) => {
-      return triggerNodes.map((node) => {
-        if (node.type === "webhook" && node.data) {
-          (
-            node.data as { url: string }
-          ).url = `https://ibts.whatsgenie.com/ibt/webhook/${workflowId}`;
-        }
-        return {
-          id: node.id,
-          type: node.type,
-          details: node.data,
-          workflow_id: workflowId,
-          project_id: currentProject?.project_id,
-          active: true,
-        } as TriggerInsert;
-      });
-    };
-
-    const triggerData = prepareTriggerData(currentWorkflowId);
-
-    const actionData = actionNodes.map((node, index) => {
-      return {
+    // Prepare trigger and action data
+    const prepareTriggerData = (
+      nodes: Node[],
+      workflowId: string
+    ): TriggerInsert[] => {
+      return nodes.map((node) => ({
         id: node.id,
-        type: node.type,
+        type: node.type || "",
         details: node.data,
-        workflow_id: currentWorkflowId,
-        project_id: currentProject?.project_id,
+        workflow_id: workflowId,
+        project_id: currentProject.project_id,
+        active: true,
+      }));
+    };
+
+    const prepareActionData = (
+      nodes: Node[],
+      workflowId: string
+    ): ActionInsert[] => {
+      return nodes.map((node, index) => ({
+        id: node.id,
+        type: node.type || "",
+        details: node.data,
+        workflow_id: workflowId,
+        project_id: currentProject.project_id,
         execution_order: index + 1,
         active: true,
-      } as ActionInsert;
-    });
+      }));
+    };
 
-    if (workflowData.id !== "1" || currentWorkflowId) {
-      // Update the workflow
-      const workflow: WorkflowUpdate = {
+    const triggerNodes = connectedNodes.filter((node) =>
+      TriggerNodeTypes.includes(node.type ?? "")
+    );
+    const actionNodes = connectedNodes.filter((node) =>
+      ActionNodeTypes.includes(node.type ?? "")
+    );
+    const triggerData = prepareTriggerData(triggerNodes, currentWorkflowId);
+    const actionData = prepareActionData(actionNodes, currentWorkflowId);
+    
+
+    // Function to update or create data
+    const updateOrCreateData = async (
+      newData: (TriggerInsert | ActionInsert)[],
+      existingData: (TriggerInsert | ActionInsert)[] | undefined,
+      updateFn: (data: TriggerInsert | ActionInsert) => Promise<void>,
+      createFn: (data: TriggerInsert | ActionInsert) => Promise<void>
+    ) => {
+      const existingIds = existingData?.map((item) => item.id) || [];
+      for (const data of newData) {
+        if (existingIds.includes(data.id)) {
+          await updateFn(data);
+        } else {
+          await createFn(data);
+        }
+      }
+
+      if (existingData) {
+        for (const existing of existingData) {
+          if (!newData.some((newItem) => newItem.id === existing.id)) {
+            await updateFn({ ...existing, active: false });
+          }
+        }
+      }
+    };
+
+    if (currentWorkflowId && workflowData.id !== "1") {
+      // Update existing workflow
+      const workflowUpdate: WorkflowUpdate = {
         id: workflowData.id,
         name: workflowData.name,
         description: workflowData.description,
         run: workflowData.run,
         canvas_state: workflowData.canvas_state,
       };
-      await updateWorkflow(workflow, workflowData.phone_numbers);
+      await updateWorkflow(workflowUpdate, workflowData.phone_numbers);
 
-      // Update or deactivate existing triggers and actions
-      const existingTriggers = workflows.find(
-        (workflow) => workflow.id === currentWorkflowId
-      )?.trigger;
-      const existingActions = workflows.find(
-        (workflow) => workflow.id === currentWorkflowId
-      )?.actions;
-
-      if (existingTriggers) {
-        triggerData.forEach((trigger) => {
-          if (
-            existingTriggers.map((trigger) => trigger.id).includes(trigger.id)
-          ) {
-            updateTrigger(trigger);
-          }
-        });
-
-        existingTriggers.forEach((trigger) => {
-          if (!triggerData.map((trigger) => trigger.id).includes(trigger.id)) {
-            updateTrigger({ ...trigger, active: false });
-          }
-        });
-      }
-
-      // Create new triggers
-      triggerData.forEach((trigger) => {
-        if (
-          !existingTriggers?.map((trigger) => trigger.id).includes(trigger.id)
-        ) {
-          createTrigger(trigger);
-        }
-      });
-
-      // Update or deactivate existing actions
-      if (existingActions) {
-        actionData.forEach((action) => {
-          if (existingActions.map((action) => action.id).includes(action.id)) {
-            updateAction(action);
-          }
-        });
-
-        existingActions.forEach((action) => {
-          if (!actionData.map((action) => action.id).includes(action.id)) {
-            updateAction({ ...action, active: false });
-          }
-        });
-      }
-
-      // Create new actions
-      actionData.forEach((action) => {
-        if (!existingActions?.map((action) => action.id).includes(action.id)) {
-          createAction(action);
-        }
-      });
+      const existingWorkflow = workflows.find(
+        (wf) => wf.id === currentWorkflowId
+      );
+      await updateOrCreateData(
+        triggerData,
+        existingWorkflow?.trigger,
+        updateTrigger,
+        createTrigger
+      );
+      await updateOrCreateData(
+        actionData,
+        existingWorkflow?.actions,
+        updateAction,
+        createAction
+      );
     } else {
-      // Create the workflow
+      // Create new workflow
       const newWorkflowId = await createWorkflow(
         {
           name: workflowData.name,
           description: workflowData.description,
           run: workflowData.run,
-          project_id: currentProject?.project_id,
+          project_id: currentProject.project_id,
           canvas_state: workflowData.canvas_state,
+          phone_numbers: workflowData.phone_numbers,
         },
         workflowData.phone_numbers
       );
+
       if (!newWorkflowId) {
         showAlert("Workflow not saved", "error");
         return;
       }
 
-      // Prepare trigger data with the new workflow ID
-      const newTriggerData = prepareTriggerData(newWorkflowId);
-
-      // Create the triggers
-      for (const trigger of newTriggerData) {
-        await createTrigger(trigger);
-      }
-
-      // Create the actions
-      for (const action of actionData) {
-        action.workflow_id = newWorkflowId;
-        await createAction(action);
-      }
+      await Promise.all([
+        ...triggerData.map((trigger) =>
+          createTrigger({ ...trigger, workflow_id: newWorkflowId })
+        ),
+        ...actionData.map((action) =>
+          createAction({ ...action, workflow_id: newWorkflowId })
+        ),
+      ]);
 
       setCurrentWorkflowId(newWorkflowId);
     }

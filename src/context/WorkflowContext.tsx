@@ -30,7 +30,10 @@ export type Workflow = Database["public"]["Tables"]["workflows"]["Row"] & {
 };
 export type Workflows = { workflows: Workflow[] };
 export type WorkflowInsert =
-  Database["public"]["Tables"]["workflows"]["Insert"];
+  Database["public"]["Tables"]["workflows"]["Insert"] & {
+    phone_numbers: PhoneNumber[];
+  };
+
 export type WorkflowUpdate =
   Database["public"]["Tables"]["workflows"]["Update"];
 
@@ -172,7 +175,7 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({
         .from("workflow_phone_numbers")
         .delete()
         .eq("workflow_id", workflow.id);
-        
+
       for (const phoneNumber of phoneNumbers) {
         await supabase.from("workflow_phone_numbers").insert({
           workflow_id: workflow.id,
@@ -258,7 +261,6 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({
 
   const updateAction = useCallback(
     async (action: ActionUpdate) => {
-      console.log("action", action);
       const { error } = await supabase
         .from("actions")
         .update(action)
