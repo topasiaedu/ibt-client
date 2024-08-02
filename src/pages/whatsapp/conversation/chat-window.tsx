@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   useMessagesContext,
   MessageInsert,
@@ -7,13 +7,12 @@ import {
 } from "../../../context/MessagesContext";
 import MessageComponent from "../../../components/MessageComponent";
 import { IoAddOutline } from "react-icons/io5";
-import { CiMicrophoneOn } from "react-icons/ci";
-import { CiMicrophoneOff } from "react-icons/ci";
 // import { useAlertContext } from "../../../context/AlertContext";
 import Picker from "emoji-picker-react";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
 import { Conversation } from "../../../context/ConversationContext";
 import LoadingPage from "../../pages/loading";
+import VoiceRecorder from "../../../components/VoiceRecorder";
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -24,13 +23,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
   const [input, setInput] = React.useState("");
   const { addMessage } = useMessagesContext();
   const [file, setFile] = React.useState<File | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [recording, setRecording] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
-  const audioChunks = useRef<Blob[]>([]);
   const [openEmoji, setOpenEmoji] = useState(false);
-
 
   const handleSubmit = async () => {
     let mediaType = "text";
@@ -48,7 +42,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
       mediaType = "audio";
     }
 
-    console.log("Conversation", conversation);
     // Add message to conversation
     const data: MessageInsert = {
       contact_id: conversation.contact_id,
@@ -64,6 +57,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
     if (file) {
       addMessage(data, conversation.id, conversation.contact.wa_id, file);
     } else if (audioFile) {
+      console.log("audioFile", audioFile);
       addMessage(data, conversation.id, conversation.contact.wa_id, audioFile);
     } else {
       addMessage(data, conversation.id, conversation.contact.wa_id);
@@ -73,7 +67,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
     setInput("");
     setFile(null);
     setAudioFile(null);
-    setAudioUrl(null);
   };
 
   useEffect(() => {
@@ -89,117 +82,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
       e.preventDefault();
       handleSubmit();
     }
-  };
-  useEffect(() => {
-    // Create a URL whenever there's a new audio file
-    if (audioFile) {
-      const url = URL.createObjectURL(audioFile);
-      setAudioUrl(url);
-
-      // Cleanup the URL when it's no longer needed
-      return () => {
-        URL.revokeObjectURL(url);
-      };
-    }
-  }, [audioFile]); // Dependency array ensures this runs only if audioFile changes
-
-  const startRecording = async () => {
-    // Clear any previous data
-    audioChunks.current = [];
-    setAudioFile(null);
-
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-
-        const options = { mimeType: "audio/webm" }; // Record initially in audio/webm
-        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-          console.error(
-            `${options.mimeType} is not supported by this browser.`
-          );
-          return;
-        }
-
-        mediaRecorder.current = new MediaRecorder(stream, options);
-
-        mediaRecorder.current.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunks.current.push(event.data);
-          }
-        };
-
-        mediaRecorder.current.onstop = async () => {
-          const audioBlob = new Blob(audioChunks.current, {
-            type: "audio/webm",
-          });
-          const oggBlob = await convertAudioBlobToOgg(audioBlob); // Convert to OGG format
-          const file = new File([oggBlob], "recording.ogg", {
-            type: "audio/ogg; codecs=opus",
-          });
-          setAudioFile(file);
-        };
-
-        mediaRecorder.current.start();
-        setRecording(true);
-      } catch (err) {
-        console.error("Failed to start recording:", err);
-      }
-    } else {
-      console.error("getUserMedia not supported on this browser");
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder.current) {
-      mediaRecorder.current.stop();
-      setRecording(false);
-    }
-  };
-
-  const convertAudioBlobToOgg = async (blob: any) => {
-    // Convert audio/webm to audio/ogg; codecs=opus
-    const audioContext = new AudioContext();
-    const audioBlob = blob;
-    const fileReader = new FileReader();
-    const audioBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
-      fileReader.onload = (event) => {
-        if (event.target) {
-          audioContext.decodeAudioData(
-            event.target.result as ArrayBuffer,
-            resolve,
-            reject
-          );
-        }
-      };
-      fileReader.onerror = reject;
-      fileReader.readAsArrayBuffer(audioBlob);
-    });
-
-    const oggBlob = await new Promise<Blob>((resolve, reject) => {
-      const audioCtx = new OfflineAudioContext({
-        numberOfChannels: audioBuffer.numberOfChannels,
-        length: audioBuffer.length,
-        sampleRate: audioBuffer.sampleRate,
-      });
-
-      const source = audioCtx.createBufferSource();
-      source.buffer = audioBuffer;
-      audioCtx.oncomplete = (event) => {
-        const renderedBuffer = event.renderedBuffer;
-        renderedBuffer.copyFromChannel(audioBuffer.getChannelData(0), 0);
-        const blob = new Blob([renderedBuffer.getChannelData(0)], {
-          type: "audio/ogg; codecs=opus",
-        });
-        resolve(blob);
-      };
-
-      source.connect(audioCtx.destination);
-      audioCtx.startRendering();
-    });
-
-    return oggBlob;
   };
 
   const onEmojiClick = (emojiObject: any, e: any) => {
@@ -279,54 +161,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
           <MdOutlineEmojiEmotions className="w-5 h-5" />
           <span className="sr-only">Open Emoji</span>
         </button>
-        <button
-          type="button"
-          className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
-          {recording ? (
-            <CiMicrophoneOff className="w-5 h-5" onClick={stopRecording} />
-          ) : (
-            <CiMicrophoneOn className="w-5 h-5" onClick={startRecording} />
-          )}
-          <span className="sr-only">Record Audio</span>
-        </button>
-        {recording && (
-          <button
-            type="button"
-            className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
-            onClick={stopRecording}>
-            <span className="sr-only">Stop Recording</span>
-          </button>
-        )}
-        {recording && (
-          <span className="text-sm text-gray-500">Recording...</span>
-        )}
-        {audioUrl && (
-          <div className="flex items-center space-x-2">
-            <audio src={audioUrl} controls className="w-100 h-10" />
-            <button
-              type="button"
-              className="p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
-              onClick={() => {
-                setAudioFile(null);
-                setAudioUrl(null);
-              }}>
-              <svg
-                className="w-5 h-5 rtl:rotate-90"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M10 1a9 9 0 0 0-9 9 9 9 0 0 0 9 9 9 9 0 0 0 9-9 9 9 0 0 0-9-9zm4.293 5.293a1 1 0 0 1 1.414 1.414L11.414 10l3.293 3.293a1 1 0 0 1-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 0 1-1.414-1.414L8.586 10 5.293 6.707a1 1 0 0 1 1.414-1.414L10 8.586l3.293-3.293z"
-                />
-              </svg>
-              <span className="sr-only">Remove attachment</span>
-            </button>
-          </div>
-        )}
-        {!recording && !audioFile && (
+        {/* <VoiceRecorder setFile={setAudioFile}/> */}
+
+        {!audioFile && (
           <textarea
             id="chat"
             rows={1}

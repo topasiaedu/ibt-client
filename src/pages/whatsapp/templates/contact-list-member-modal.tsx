@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { Button, Modal, Table } from "flowbite-react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { CiViewTable } from "react-icons/ci";
 import { Template } from "../../../context/TemplateContext";
 import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusinessAccountContext";

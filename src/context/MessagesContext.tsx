@@ -85,7 +85,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
     fetchMessages();
 
     const handleChanges = (payload: any) => {
-      console.log("Inside handleChanges, event type: ", payload.eventType);
       if (payload.eventType === "INSERT") {
         if (payload.new.conversation_id === currentConversationId) {
           setMessages((prev) => [payload.new, ...prev]);
@@ -155,7 +154,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
         let randomFileName = Math.random().toString(36).substring(7);
 
         // Check if file is present if so change the body to include the file
-        if (file) {
+        if (file && message.message_type !== "audio") {
           const { error } = await supabase.storage
             .from("media")
             .upload(`${randomFileName}`, file!, {
@@ -190,17 +189,14 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
                 link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
               },
             });
+
+            console.log("Sending media message", body);
           }
-        } else if (message.message_type === "audio") {
-          // Upload file to the following api to get the media id
-          // curl - X POST 'https://graph.facebook.com/v19.0/<MEDIA_ID>/media' \
-          // -H 'Authorization: Bearer <ACCESS_TOKEN>' \
-          // -F 'file=@"2jC60Vdjn/cross-trainers-summer-sale.jpg"' \
-          // -F 'type="image/jpeg"' \
-          // -F 'messaging_product="whatsapp"'
+        } else if (message.message_type === "audio" && file) {
+          console.log("Sending audio message");
           const form = new FormData();
           form.append("messaging_product", "whatsapp");
-          // form.append('file', file);
+          form.append('file', file);
 
           const response = await fetch(
             `https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/media`,
@@ -218,6 +214,11 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
 
           const data = await response.json();
 
+          console.error("Data:", data);
+
+          // const url = await fetchMedia(data.id, randomFileName, "EAAFZCUSsuZBkQBO7vI52BiAVIVDPsZAATo0KbTLYdZBQ7hCq59lPYf5FYz792HlEN13MCPGDaVP93VYZASXz9ZBNXaiATyIToimwDx0tcCB2sz0TwklEoof3K0mZASJtcYugK1hfdnJGJ1pnRXtnTGmlXiIgkyQe0ZC2DOh4qZAeRhJ9nd9hgKKedub4eaCgvZBWrOHBa3NadCqdlZCx0zO");
+
+          // console.log("URL:", url);
           body = JSON.stringify({
             messaging_product: "whatsapp",
             to: to,
@@ -251,8 +252,8 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
         const data = await response.json();
 
         if (!response.ok) {
-          console.error("Payload:", body, WHATSAPP_ACCESS_TOKEN);
-          console.error("Error sending message:", response);
+          console.error("Payload:", body);
+          console.error("Error sending message:", data);
           showAlert("Error sending message", "error");
           return;
         }
@@ -494,3 +495,64 @@ export const useMessagesContext = () => {
 
   return context;
 };
+
+
+// const fetchMedia = async (
+//   imageId: string,
+//   randomFileName: string,
+//   access_token: string
+// ): Promise<string> => {
+//   try {
+//     const whatsappApiURL: string = 'https://graph.facebook.com/v19.0/'
+//     console.log('Fetching image with ID:', imageId, randomFileName, access_token)
+//     // Assume axios and headers are set up previously
+//     const response = await fetch(`${whatsappApiURL}${imageId}`, {
+//       method: 'GET',
+//       headers: {
+//         Authorization: `Bearer ${access_token}`,
+//       },
+//     })
+
+//     const responseData = await response.json()
+//     console.log('Response:', responseData)
+
+//     const proxyUrl = 'https://ibts3.whatsgenie.com/proxy?url=';
+//     const targetUrl = responseData.url;
+    
+//     const data = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
+//       method: 'GET',
+//       headers: {
+//         'Authorization': `Bearer ${access_token}`
+//       }
+//     });
+    
+//     if (!data.ok) {
+//       throw new Error('Network response was not ok ' + data.statusText);
+//     }
+    
+//     const mediaResponse = await data.arrayBuffer();
+
+//     console.log('Media response:', mediaResponse)
+
+//     const contentType = 'audio/ogg; codecs=opus'
+
+//     // Upload the buffer directly to Supabase storage
+//     const { data: uploadData, error } = await supabase.storage
+//       .from('media')
+//       .upload(randomFileName, mediaResponse, {
+//         contentType: contentType,
+//         upsert: true,
+//       })
+
+//     if (error) throw error
+
+//     return (
+//       `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/` +
+//       uploadData.path
+//     )
+//   } catch (error) {
+//     console.error('error:', error)
+//     console.error('Error fetching or uploading image with ID:', imageId)
+//     throw new Error('Failed to fetch or upload image')
+//   }
+// }

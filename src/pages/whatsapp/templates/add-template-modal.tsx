@@ -38,7 +38,6 @@ const currentDate = new Date().toLocaleDateString("en-US", {
 const AddTemplateModal: React.FC = function () {
   const [isOpen, setIsOpen] = useState(false);
   const { addTemplate } = useTemplateContext();
-  const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
   const [selectedWhatsappBusinessAccount, setSelectedWhatsappBusinessAccount] =
     useState<WhatsAppBusinessAccount | null>(null);
   const [templateName, setTemplateName] = useState<string>("");
