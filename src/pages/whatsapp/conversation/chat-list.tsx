@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Dropdown, Label, TextInput } from "flowbite-react";
+import { Badge, Checkbox, Dropdown, Label, TextInput } from "flowbite-react";
 import { Conversation } from "../../../context/ConversationContext";
 import { PhoneNumber } from "../../../context/PhoneNumberContext";
 import LoadingPage from "../../pages/loading";
@@ -27,6 +27,7 @@ const ChatList: React.FC<ChatListProps> = ({
   const [contextMenuConversation, setContextMenuConversation] = useState<
     Conversation | undefined
   >(undefined);
+  const [filterByUnread, setFilterByUnread] = useState(false);
   const { currentProject } = useProjectContext();
 
   useEffect(() => {
@@ -53,7 +54,7 @@ const ChatList: React.FC<ChatListProps> = ({
         )
         .filter(
           (phoneNumber): phoneNumber is NonNullable<typeof phoneNumber> =>
-            phoneNumber !== null
+            phoneNumber !== null  
         );
 
       setPhoneNumbers(newPhoneNumbers);
@@ -62,8 +63,7 @@ const ChatList: React.FC<ChatListProps> = ({
     // Call updatePhoneNumbers whenever the currentProject.id changes
     updatePhoneNumbers();
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentProject]);
+  }, [conversations, currentProject]);
 
   const handleContextMenu = (
     event: React.MouseEvent,
@@ -110,7 +110,7 @@ const ChatList: React.FC<ChatListProps> = ({
           </div>
         </form>
         <Dropdown
-          label={selectedPhoneNumber?.name || "All"}
+          label={selectedPhoneNumber?.number || "All"}
           dismissOnClick={true}>
           <Dropdown.Item onClick={() => setSelectedPhoneNumber(null)}>
             All
@@ -126,9 +126,21 @@ const ChatList: React.FC<ChatListProps> = ({
             ))}
         </Dropdown>
       </div>
+      <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800">
+        <Checkbox
+          id="filterByUnread"
+          checked={filterByUnread}
+          onChange={(e) => setFilterByUnread(e.target.checked)}
+        />
+        <Label htmlFor="filterByUnread">Filter by unread</Label>
+      </div>
       <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto flex-grow">
         {conversations
           .sort((a, b) => {
+            if (a.last_message === null || b.last_message === null) {
+              return 0;
+            }
+
             const aDate = a.last_message.created_at
               ? new Date(a.last_message.created_at)
               : new Date();
@@ -139,6 +151,20 @@ const ChatList: React.FC<ChatListProps> = ({
             return bDate.getTime() - aDate.getTime();
           })
           .filter((conversation) => {
+            if (conversation.last_message === null) {
+              return false;
+            }
+
+            if (filterByUnread && conversation.unread_messages === 0) {
+              return false;
+            }
+
+            if (selectedPhoneNumber !== null) {
+              return (
+                conversation.phone_number?.number === selectedPhoneNumber.number
+              );
+            }
+
             const searchLower = search.toLowerCase();
             const contact = conversation.contact;
 
@@ -147,7 +173,7 @@ const ChatList: React.FC<ChatListProps> = ({
             const waIdMatch =
               contact?.wa_id?.toLowerCase().includes(searchLower) || false;
 
-            return nameMatch || waIdMatch ;
+            return nameMatch || waIdMatch;
           })
           .map((conversation, index) => (
             <li

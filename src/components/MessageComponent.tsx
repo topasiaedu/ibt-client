@@ -30,7 +30,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ header, message, me
     <div className={`flex items-start gap-2.5 ${isInbound ? "" : "flex-row-reverse"} max-w-full break-all`}>
       <div className={`flex flex-col gap-1 w-full max-w-[320px] ${isInbound ? "" : "items-end"}`}>
         {date && <span className="text-xs font-normal text-gray-500 dark:text-gray-400">{date}</span>}
-        <div className={`flex flex-col leading-1.5 p-2 border-gray-200 rounded-bl-xl rounded-br-xl ${isInbound ? "bg-gray-100 dark:bg-gray-700 rounded-tr-xl" : "bg-green-100 dark:bg-green-700 rounded-tl-xl"}`} style={{ width: 'fit-content' }}>
+        <div className={`flex flex-col leading-1.5 p-2 border-gray-200 rounded-bl-xl rounded-br-xl max-w-full ${isInbound ? "bg-gray-100 dark:bg-gray-700 rounded-tr-xl" : "bg-green-100 dark:bg-green-700 rounded-tl-xl"}`} style={{ width: 'fit-content' }}>
           {header && <span className="text-sm font-semibold text-gray-900 dark:text-white">{header}</span>}
           {media && headerType === "IMAGE" && (
             <img

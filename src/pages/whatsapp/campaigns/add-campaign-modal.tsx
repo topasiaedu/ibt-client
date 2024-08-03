@@ -284,7 +284,6 @@ const AddCampaignModal: React.FC = function () {
   };
 
   const generatePreview = () => {
-
     // Check if the body data has any {{1}} or {{2}} or so on, replace them with the example data with the appropriate value from the input fields
 
     if (headerType === "IMAGE") {
@@ -752,6 +751,11 @@ const AddCampaignModal: React.FC = function () {
                   setFile,
                   generatePreview
                 )}
+              {/* Helper text to say that can use %name% */}
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                <strong>Tip:</strong> You can use %name% to include the contact
+                name
+              </p>
             </div>
 
             <div className="col-span-1">
@@ -803,8 +807,8 @@ function generateTemplateExampleFields(
               key={selectedTemplate.template_id.toString() + index}
               className="mb-4">
               <Label htmlFor={selectedTemplate.template_id.toString() + index}>
-                {component.type}
-              </Label>
+                {component.type.toLowerCase()}
+              </Label>              
               {component.example.body_text[0].map(
                 (body_text: any, index: number) => {
                   return (
