@@ -36,6 +36,7 @@ const TemplateApprovalModal: React.FC<ContactListMemberModalProps> = function ({
                     <Table.Head className="bg-gray-100 dark:bg-gray-700">
                       <Table.HeadCell>Whatsapp Business Account</Table.HeadCell>
                       <Table.HeadCell>Status</Table.HeadCell>
+                      <Table.HeadCell>Rejected Reason</Table.HeadCell>
                     </Table.Head>
                     <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                       {templates.map((template) => (
@@ -53,6 +54,11 @@ const TemplateApprovalModal: React.FC<ContactListMemberModalProps> = function ({
                               {getStatusIndicator(template.status)}{" "}
                               {template.status}
                             </div>
+                          </Table.Cell>
+                          <Table.Cell>
+                            {template.status === "REJECTED"
+                              ? template.rejected_reason
+                              : "-"}
                           </Table.Cell>
                         </Table.Row>
                       ))}

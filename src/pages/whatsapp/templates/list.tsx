@@ -16,7 +16,7 @@ import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusi
 import { useProjectContext } from "../../../context/ProjectContext";
 import LoadingPage from "../../pages/loading";
 import EditTemplateModal from "./edit-template-modal";
-import TemplateApprovalModal from "./contact-list-member-modal";
+import TemplateApprovalModal from "./template-approval-modal";
 
 const TemplateListPage: React.FC = function () {
   const { templates, loading } = useTemplateContext();

@@ -71,7 +71,6 @@ const AddTemplateModal: React.FC = function () {
       status: "PENDING",
     };
 
-
     let components: any[] = [];
 
     // If footer has data, add it to the components
@@ -99,16 +98,30 @@ const AddTemplateModal: React.FC = function () {
     //   ]
     // }
     const bodyDataMatches = bodyData.match(/{{\d+}}/g);
+    let example: any = {
+      "body_text":[]
+    };
+    let body_text: string[] = [];
 
     if (bodyDataMatches) {
-      const example: any = {
-        body_text: [bodyDataMatches.map((match) => match.replace(/[{}]/g, ""))],
-      };
+      bodyDataMatches.forEach((match) => {
+        const domInputValue = (
+          document.getElementById(
+            `bodyData${parseInt(match.replace(/[{}]/g, "")) - 1}`
+          ) as HTMLInputElement
+        )?.value;
+        body_text.push(domInputValue || "");
+      });
+
+      example.body_text.push(body_text);
+
       components.push({
         type: "BODY",
         text: bodyData,
         example,
       });
+
+      console.log("components", components);
     } else {
       components.push({
         type: "BODY",
@@ -130,7 +143,7 @@ const AddTemplateModal: React.FC = function () {
       components = [
         {
           type: "HEADER",
-          format: "IMAGE",
+          format: headerType,
           example: {
             header_handle: [
               `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`,
@@ -187,9 +200,8 @@ const AddTemplateModal: React.FC = function () {
     }
     const buttonTexts = buttons.map((button) => button.text) || [];
     if (headerType === "IMAGE" && file) {
-      return (
-        setPreview(
-          <MessageComponent
+      return setPreview(
+        <MessageComponent
           message={newBodyData}
           footer={footerData}
           date={currentDate}
@@ -197,11 +209,9 @@ const AddTemplateModal: React.FC = function () {
           buttons={buttonTexts}
           headerType="IMAGE"
         />
-        )
       );
     } else if (headerType === "TEXT") {
-      return (
-        setPreview(
+      return setPreview(
         <MessageComponent
           header={headerData}
           message={newBodyData}
@@ -209,11 +219,9 @@ const AddTemplateModal: React.FC = function () {
           date={currentDate}
           buttons={buttonTexts}
         />
-        )
       );
     } else if (headerType === "VIDEO" && file) {
-      return (
-        setPreview(
+      return setPreview(
         <MessageComponent
           message={newBodyData}
           footer={footerData}
@@ -222,11 +230,9 @@ const AddTemplateModal: React.FC = function () {
           buttons={buttonTexts}
           headerType="VIDEO"
         />
-        )
       );
     } else if (headerType === "DOCUMENT") {
-      return (
-        setPreview(
+      return setPreview(
         <MessageComponent
           message={newBodyData}
           footer={footerData}
@@ -235,25 +241,30 @@ const AddTemplateModal: React.FC = function () {
           buttons={buttonTexts}
           headerType="DOCUMENT"
         />
-        )
       );
     } else {
-      return (
-        setPreview(
+      return setPreview(
         <MessageComponent
           message={newBodyData}
           footer={footerData}
           date={currentDate}
           buttons={buttonTexts}
         />
-        )
       );
     }
   }, [bodyData, buttons, file, footerData, headerData, headerType]);
 
   useEffect(() => {
     generatePreview();
-  }, [headerData, bodyData, footerData, buttons, file, headerType, generatePreview]);
+  }, [
+    headerData,
+    bodyData,
+    footerData,
+    buttons,
+    file,
+    headerType,
+    generatePreview,
+  ]);
 
   return (
     <>

@@ -51,36 +51,39 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
   const { showAlert } = useAlertContext();
   const { currentProject } = useProjectContext();
 
-  const handleChanges = useCallback((payload: any) => {
-    console.log("Subscription payload:", payload.eventType);
-  
-    setTemplates((prev) => {
-      let newTemplates;
-  
-      switch (payload.eventType) {
-        case "INSERT":
-          newTemplates = [payload.new, ...prev ];
-          break;
-        case "UPDATE":
-          newTemplates = prev.map((template) =>
-            template.template_id === payload.new.template_id
-              ? payload.new
-              : template
-          );
-          break;
-        case "DELETE":
-          newTemplates = prev.filter(
-            (template) => template.template_id !== payload.old.template_id
-          );
-          break;
-        default:
-          newTemplates = prev;
-      }
-  
-      // Only update state if there are actual changes
-      return isEqual(prev, newTemplates) ? prev : newTemplates;
-    });
-  }, [setTemplates]);
+  const handleChanges = useCallback(
+    (payload: any) => {
+      console.log("Subscription payload:", payload.eventType);
+
+      setTemplates((prev) => {
+        let newTemplates;
+
+        switch (payload.eventType) {
+          case "INSERT":
+            newTemplates = [payload.new, ...prev];
+            break;
+          case "UPDATE":
+            newTemplates = prev.map((template) =>
+              template.template_id === payload.new.template_id
+                ? payload.new
+                : template
+            );
+            break;
+          case "DELETE":
+            newTemplates = prev.filter(
+              (template) => template.template_id !== payload.old.template_id
+            );
+            break;
+          default:
+            newTemplates = prev;
+        }
+
+        // Only update state if there are actual changes
+        return isEqual(prev, newTemplates) ? prev : newTemplates;
+      });
+    },
+    [setTemplates]
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -171,11 +174,12 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
               body: body,
             }
           );
+
           const responseData = await response.json();
           const templateId = responseData.id;
 
           if (!response.ok) {
-            console.error("Error adding template:", response.body);
+            console.error("Error adding template:", response);
             showAlert("Error adding template", "error");
             return;
           }
