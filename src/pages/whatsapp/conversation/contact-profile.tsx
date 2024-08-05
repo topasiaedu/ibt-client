@@ -5,6 +5,7 @@ import { HiChevronLeft } from "react-icons/hi";
 import { Contact } from "../../../context/ContactContext";
 import { useMessagesContext } from "../../../context/MessagesContext";
 import { Conversation } from "../../../context/ConversationContext";
+import { useProjectContext } from "../../../context/ProjectContext";
 
 interface ContactProfileProps {
   conversation: Conversation;
@@ -17,8 +18,11 @@ const ContactProfile: React.FC<ContactProfileProps> = ({
   contact,
   close_at,
 }) => {
-  const [close_at_date_time, setCloseAtDateTime] = React.useState<string | null>( null);
-  const { sendReEngagementMessage } = useMessagesContext(); 
+  const [close_at_date_time, setCloseAtDateTime] = React.useState<
+    string | null
+  >(null);
+  const { sendReEngagementMessage } = useMessagesContext();
+  const { currentProject } = useProjectContext();
 
   useEffect(() => {
     if (close_at) {
@@ -87,13 +91,15 @@ const ContactProfile: React.FC<ContactProfileProps> = ({
           )}
         </div>
       </div>
-      <div>
-        <Button onClick={() => sendReEngagementMessage(conversation)}>
-          <div className="mr-1 flex items-center gap-x-2">
-            <HiChevronLeft className="text-xl" /> Send re-engagement message
-          </div>
-        </Button>
-      </div>
+      {currentProject?.name === "Pemni" && (
+        <div>
+          <Button onClick={() => sendReEngagementMessage(conversation)}>
+            <div className="mr-1 flex items-center gap-x-2">
+              <HiChevronLeft className="text-xl" /> Send re-engagement message
+            </div>
+          </Button>
+        </div>
+      )}
       {/* <h3 className="mb-4 text-base font-bold text-gray-900 dark:text-white">
         Tags
       </h3> */}
