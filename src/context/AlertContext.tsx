@@ -46,7 +46,7 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(false);
-    }, 3000);
+    }, 10000);
 
     return () => clearTimeout(timer);
   }, [visible]);

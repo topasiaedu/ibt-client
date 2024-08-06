@@ -265,6 +265,14 @@ const AddTemplateModal: React.FC = function () {
     generatePreview,
   ]);
 
+  const handleInputChange = (e:any) => {
+    const inputValue = e.target.value;
+    // Replace spaces and special characters with an empty string
+    const sanitizedValue = inputValue.replace(/[^a-z_]/g, '');
+    // Set the transformed value to the state
+    setTemplateName(sanitizedValue);
+  };
+
   return (
     <>
       <Button color="primary" onClick={() => setIsOpen(true)}>

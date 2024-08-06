@@ -137,7 +137,8 @@ const ChatList: React.FC<ChatListProps> = ({
       <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto flex-grow">
         {conversations
           .sort((a, b) => {
-            if (a.last_message === null || b.last_message === null) {
+            // Check for null or undefined last_message
+            if (a.last_message === null || b.last_message === null || a.last_message === undefined || b.last_message === undefined) {
               return 0;
             }
 

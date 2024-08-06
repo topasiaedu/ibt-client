@@ -92,6 +92,8 @@ const AddCampaignModal: React.FC = function () {
           return {
             waba_id: waba.account_id,
             phone_number_id: phoneNumber.phone_number_id,
+            waba: waba,
+            phoneNumber: phoneNumber,
             name:
               waba.name +
               " - " +
@@ -485,7 +487,7 @@ const AddCampaignModal: React.FC = function () {
                 <Label htmlFor="waba">
                   Select WhatsApp Business Account & Phone Number
                 </Label>
-                <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-2">
+                <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-1">
                   {/* Create Cards that the user can click on to select which phone number to use and use selected wabaPhoneNumber to manage */}
                   {wabaPhoneNumber
                     // Remove those with UNKNOWN quality_rating
@@ -524,18 +526,49 @@ const AddCampaignModal: React.FC = function () {
                             : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                         }`}>
                         <div className="flex items-center gap-3">
-                          <div className="flex flex-col">
-                            <span
-                              className={`text-sm font-semibold ${
-                                selectedWabaPhoneNumber.find(
-                                  (selectedItem: any) =>
-                                    selectedItem.id === item.id
-                                )
-                                  ? "text-white"
-                                  : "text-gray-900 dark:text-white"
-                              }`}>
-                              {item.name}
-                            </span>
+                          <div className="flex justify-between w-full items-center">
+                            <div className="flex flex-col">
+                              <span
+                                className={`text-xs ${
+                                  selectedWabaPhoneNumber.find(
+                                    (selectedItem: any) =>
+                                      selectedItem.id === item.id
+                                  )
+                                    ? "text-white"
+                                    : "text-gray-900 dark:text-white"
+                                }`}>
+                                {item.waba.name}
+                              </span>
+                              <span
+                                className={`text-md font-bold ${
+                                  selectedWabaPhoneNumber.find(
+                                    (selectedItem: any) =>
+                                      selectedItem.id === item.id
+                                  )
+                                    ? "text-white"
+                                    : "text-gray-900 dark:text-white"
+                                }`}>
+                                {item.phoneNumber.name}
+                              </span>
+                              <span
+                                className={`text-xs ${
+                                  selectedWabaPhoneNumber.find(
+                                    (selectedItem: any) =>
+                                      selectedItem.id === item.id
+                                  )
+                                    ? "text-white"
+                                    : "text-gray-900 dark:text-white"
+                                }`}>
+                                {item.phoneNumber.number}
+                              </span>
+                            </div>
+                            <Badge
+                              color={
+                                item.quality_rating?.toLowerCase() || "info"
+                              }
+                              className="text-xs w-fit">
+                              {item.quality_rating}
+                            </Badge>
                           </div>
                         </div>
                       </Card>
@@ -583,8 +616,10 @@ const AddCampaignModal: React.FC = function () {
                   </Select>
                 </div>
               </div>
+            </div>
+            <div className="col-span-1">
               <div>
-                <div className="mt-4">
+                <div className="">
                   <Label htmlFor="category">
                     Include Contact List or Contact
                   </Label>
@@ -696,9 +731,7 @@ const AddCampaignModal: React.FC = function () {
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="col-span-1">
-              <div className="mb-4">
+              <div className="mt-4">
                 <Label
                   htmlFor="postTime"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -710,7 +743,7 @@ const AddCampaignModal: React.FC = function () {
                   onSelectedDateChanged={(e) => setPostDate(e)}
                 />
               </div>
-              <div className="mb-4">
+              <div className="mt-4">
                 <label
                   htmlFor="time"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -805,10 +838,10 @@ function generateTemplateExampleFields(
           return (
             <div
               key={selectedTemplate.template_id.toString() + index}
-              className="mb-4">
+              className="mt-4">
               <Label htmlFor={selectedTemplate.template_id.toString() + index}>
                 {component.type.toLowerCase()}
-              </Label>              
+              </Label>
               {component.example.body_text[0].map(
                 (body_text: any, index: number) => {
                   return (

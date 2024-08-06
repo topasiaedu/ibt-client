@@ -27,7 +27,7 @@ const PhoneNumberStatus = function () {
           </div>
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              <Badge color={phoneNumber.quality_rating?.toLowerCase() || ""}>
+              <Badge color={phoneNumber.quality_rating?.toLowerCase() || "info"}>
                 {phoneNumber.quality_rating}
               </Badge>
             </p>

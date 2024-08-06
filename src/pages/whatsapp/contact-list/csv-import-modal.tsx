@@ -173,6 +173,13 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
           <div className="overflow-x-auto">
             <Tabs aria-label="Full width tabs" style="fullWidth">
               <Tabs.Item active title="CSV" icon={BsFiletypeCsv}>
+                {/* Helper Text to guide the user on what the csv should be like */}
+                <div className="flex flex-col items-center justify-center w-full">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    The CSV should be in the format: Phone Number, Name
+                    (optional)
+                  </p>
+                </div>
                 <div className="flex items-center justify-center w-full">
                   <label
                     htmlFor="dropzone-file"
