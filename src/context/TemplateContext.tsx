@@ -88,9 +88,11 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setLoading(true);
     const fetchTemplates = async () => {
-      const wabaIds = whatsAppBusinessAccounts.map((waba) =>
-        waba.project_id === currentProject?.project_id ? waba.account_id : null
-      );
+      console.log("whatsAppBusinessAccounts", whatsAppBusinessAccounts);
+      console.log("currentProject", currentProject);
+      const wabaIds = whatsAppBusinessAccounts
+      .map((waba) => (waba.project_id === currentProject?.project_id ? waba.account_id : null))
+      .filter((id) => id !== null);   
 
       const { data: templates, error } = await supabase
         .from("templates")

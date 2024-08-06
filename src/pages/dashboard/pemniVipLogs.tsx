@@ -37,16 +37,25 @@ const PemniVipLogs = function () {
           </Table.Head>
           <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
             {pemniVipLogs
-              .filter(
-                (log) =>
-                {
-                  const nameMatch = log.contact?.name ? log.contact?.name.toLowerCase().includes(searchValue.toLowerCase()) : false;
-                  const emailMatch = log.contact?.email ? log.contact?.email.toLowerCase().includes(searchValue.toLowerCase()) : false;
-                  const phoneMatch = log.contact?.phone ? log.contact?.phone.toLowerCase().includes(searchValue.toLowerCase()) : false;
+              .filter((log) => {
+                const nameMatch = log.contact?.name
+                  ? log.contact?.name
+                      .toLowerCase()
+                      .includes(searchValue.toLowerCase())
+                  : false;
+                const emailMatch = log.contact?.email
+                  ? log.contact?.email
+                      .toLowerCase()
+                      .includes(searchValue.toLowerCase())
+                  : false;
+                const phoneMatch = log.contact?.phone
+                  ? log.contact?.phone
+                      .toLowerCase()
+                      .includes(searchValue.toLowerCase())
+                  : false;
 
-                  return nameMatch || emailMatch || phoneMatch;
-                }
-              )
+                return nameMatch || emailMatch || phoneMatch;
+              })
               .map((log) => (
                 <Table.Row key={log.id}>
                   <Table.Cell>
@@ -57,12 +66,12 @@ const PemniVipLogs = function () {
                   <Table.Cell>{log.contact?.wa_id}</Table.Cell>
                   <Table.Cell>{log.password}</Table.Cell>
                   <Table.Cell>
-                    {log.status === "SUCCESS" ? (
-                      <Badge className="w-fit">Success</Badge>
-                    ) : (
+                    {log.status === "FAILED" ? (
                       <Badge className="w-fit" color="danger">
                         Failed
                       </Badge>
+                    ) : (
+                      <Badge className="w-fit">{log.status.toLowerCase()}</Badge>
                     )}
                   </Table.Cell>
                   <Table.Cell>

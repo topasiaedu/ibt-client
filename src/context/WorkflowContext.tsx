@@ -134,9 +134,19 @@ export const WorkflowProvider: React.FC<PropsWithChildren<{}>> = ({
 
   const createWorkflow = useCallback(
     async (workflow: WorkflowInsert, phoneNumbers: PhoneNumber[]) => {
+      // Remove workflow.phone_numbers from the workflow object
+      // because we need to insert them separately in the workflow_phone_numbers table
+
       const { data, error } = await supabase
         .from("workflows")
-        .insert({ ...workflow, project_id: currentProject?.project_id })
+        .insert({
+          canvas_state: workflow.canvas_state,
+          description: workflow.description,
+          name: workflow.name,
+          run: false,
+          updated_at: new Date(),
+          project_id: currentProject?.project_id,
+        })
         .select("id");
       if (error) {
         showAlert(error.message, "error");

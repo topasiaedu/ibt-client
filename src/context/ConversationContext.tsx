@@ -11,8 +11,8 @@ import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
 import { useAlertContext } from "./AlertContext";
-import { Contact, useContactContext } from "./ContactContext";
-import { PhoneNumber, usePhoneNumberContext } from "./PhoneNumberContext";
+import { Contact } from "./ContactContext";
+import { PhoneNumber } from "./PhoneNumberContext";
 import isEqual from "lodash/isEqual"; // Import lodash's isEqual for deep comparison
 import { Message } from "./MessagesContext";
 
@@ -63,6 +63,7 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
         .eq("project_id", currentProject.project_id)
         .order("last_message_id", { ascending: false });
 
+
       if (error) {
         console.error("Error fetching conversations:", error);
         return;
@@ -80,6 +81,10 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
 
     const handleChanges = async (payload: any) => {
       if (payload.eventType === "INSERT") {
+        // Check if its under the same project
+        if (payload.new.project_id !== currentProject?.project_id) {
+          return;
+        }
         setConversations((prevConversations) => {
           const newConversations = [payload.new, ...prevConversations];
           if (isEqual(prevConversations, newConversations)) {
@@ -88,6 +93,10 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
           return newConversations;
         });
       } else if (payload.eventType === "UPDATE") {
+        // Check if its under the same project
+        if (payload.new.project_id !== currentProject?.project_id) {
+          return;
+        }
         // Fetch contact, phone number, and last message
         const { data: contact, error: contactError } = await supabase
           .from("contacts")

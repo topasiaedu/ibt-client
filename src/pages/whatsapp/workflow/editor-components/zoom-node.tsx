@@ -25,6 +25,10 @@ export default function ZoomNode(props: NodeProps<ZoomData>) {
   return (
     <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg max-w-sm flex flex-col gap-2">
       <h1 className="text-lg font-semibold">Zoom Node</h1>
+      {/* Helper Text saying that remember not to include space */}
+      <p className="text-sm text-gray-500">
+        Remember to include the meeting ID without any spaces.
+      </p>
       <Label>Meeting ID</Label>
       <TextInput
         value={meetingId}
