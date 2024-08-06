@@ -12,8 +12,6 @@ interface EditCampaignModalProps {
 const EditCampaignModal: FC<EditCampaignModalProps> = ({ campaignId }) => {
   const [isOpen, setOpen] = useState(false);
 
-  console.log(campaignId); // Now correctly typed as string
-
   return (
     <>
       <Button color="primary" onClick={() => setOpen(true)}>

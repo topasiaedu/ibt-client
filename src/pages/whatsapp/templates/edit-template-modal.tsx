@@ -46,10 +46,6 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ template }) => {
     const bodyDataMatches = bodyData.match(/{{\d+}}/g);
     let newBodyData = bodyData;
 
-    if (template.name === "je_coaching_july_reminder_2") {
-      console.log("bodyDataMatches", bodyData);
-    }
-
     if (bodyDataMatches) {
       bodyDataMatches.forEach((match, index) => {
         newBodyData = newBodyData.replace(

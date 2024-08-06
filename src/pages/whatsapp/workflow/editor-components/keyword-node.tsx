@@ -16,7 +16,6 @@ export default function KeywordNode(props: NodeProps<KeywordData>) {
   const { removeNode, updateNodeData } = useFlowContext();
 
   const removeKeyword = (keyword: string) => {
-    console.log("Removing keyword", keyword);
     setKeywords((prev) => prev.filter((c) => c !== keyword));
   };
 

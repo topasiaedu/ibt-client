@@ -26,7 +26,6 @@ const ContactListMemberModal: React.FC<ContactListMemberModalProps> = function (
 
   // Rerender if contact_list changes
   useEffect(() => {
-    console.log("contact_list changed");
   }, [contact_list]);
 
 

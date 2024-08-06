@@ -53,7 +53,6 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
 
   const handleChanges = useCallback(
     (payload: any) => {
-      console.log("Subscription payload:", payload.eventType);
 
       setTemplates((prev) => {
         let newTemplates;
@@ -88,8 +87,6 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setLoading(true);
     const fetchTemplates = async () => {
-      console.log("whatsAppBusinessAccounts", whatsAppBusinessAccounts);
-      console.log("currentProject", currentProject);
       const wabaIds = whatsAppBusinessAccounts
       .map((waba) => (waba.project_id === currentProject?.project_id ? waba.account_id : null))
       .filter((id) => id !== null);   

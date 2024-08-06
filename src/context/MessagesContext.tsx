@@ -190,7 +190,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
               },
             });
 
-            console.log("Sending media message", body);
           }
         } else if (message.message_type === "audio" && file) {
           console.log("Sending audio message");
@@ -218,7 +217,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
 
           // const url = await fetchMedia(data.id, randomFileName, "EAAFZCUSsuZBkQBO7vI52BiAVIVDPsZAATo0KbTLYdZBQ7hCq59lPYf5FYz792HlEN13MCPGDaVP93VYZASXz9ZBNXaiATyIToimwDx0tcCB2sz0TwklEoof3K0mZASJtcYugK1hfdnJGJ1pnRXtnTGmlXiIgkyQe0ZC2DOh4qZAeRhJ9nd9hgKKedub4eaCgvZBWrOHBa3NadCqdlZCx0zO");
 
-          // console.log("URL:", url);
           body = JSON.stringify({
             messaging_product: "whatsapp",
             to: to,

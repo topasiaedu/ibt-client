@@ -121,7 +121,6 @@ const AddTemplateModal: React.FC = function () {
         example,
       });
 
-      console.log("components", components);
     } else {
       components.push({
         type: "BODY",

@@ -23,7 +23,6 @@ const WhatsAppContactListPage: React.FC = function () {
   const [searchValue, setSearchValue] = React.useState("");
 
   if (loading) {
-    console.log("Loading contact lists, loading: ", loading, "contactLists: ", contactLists);
     return <LoadingPage />;
   }
 

@@ -57,7 +57,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
     if (file) {
       addMessage(data, conversation.id, conversation.contact.wa_id, file);
     } else if (audioFile) {
-      console.log("audioFile", audioFile);
       addMessage(data, conversation.id, conversation.contact.wa_id, audioFile);
     } else {
       addMessage(data, conversation.id, conversation.contact.wa_id);
@@ -85,8 +84,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
   };
 
   const onEmojiClick = (emojiObject: any, e: any) => {
-    console.log("Emoji clicked", emojiObject);
-    console.log("Event", e);
     setInput(input + emojiObject.emoji);
   };
 

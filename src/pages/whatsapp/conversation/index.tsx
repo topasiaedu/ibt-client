@@ -57,7 +57,6 @@ const ConversationPage: React.FC = function () {
       (message) => message.direction === "inbound"
     );
     if (firstInboundMessage) {
-      console.log(firstInboundMessage);
       updateMessage({
         ...firstInboundMessage,
         status: "UNREAD",

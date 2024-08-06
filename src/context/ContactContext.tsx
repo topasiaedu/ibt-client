@@ -98,7 +98,6 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
     async (contact: ContactInsert) => {
       setLoading(true);
 
-      console.log("Adding contact: ", contact);
       const { data, error } = await supabase
         .from("contacts")
         .insert([
