@@ -5,13 +5,13 @@ import React, {
   PropsWithChildren,
   useEffect,
   useCallback,
-  useMemo,
 } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useAlertContext } from "./AlertContext";
 import isEqual from "lodash/isEqual"; // Import lodash's isEqual for deep comparison
 import { Contact } from "./ContactContext";
+import { Message } from "./MessagesContext";
 
 const WHATSAPP_ACCESS_TOKEN =
   "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN;
@@ -19,6 +19,7 @@ const WHATSAPP_ACCESS_TOKEN =
 export type PemniVipLog =
   Database["public"]["Tables"]["pemni_vip_logs"]["Row"] & {
     contact: Contact;
+    message: Message;
   };
 export type PemniVipLogs = { pemniVipLogs: PemniVipLog[] };
 
@@ -42,7 +43,7 @@ export const PemniVipLogsProvider: React.FC<PropsWithChildren<{}>> = ({
     const fetchPemniVipLogs = async () => {
       const { data: pemniVipLogs, error } = await supabase
         .from("pemni_vip_logs")
-        .select("*, contact:contact_id(*)")
+        .select("*, contact:contact_id(*), message:message_id(*)")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -55,6 +56,41 @@ export const PemniVipLogsProvider: React.FC<PropsWithChildren<{}>> = ({
     };
 
     fetchPemniVipLogs();
+
+    const handleChanges = (payload: any) => {
+      if (payload.eventType === "INSERT") {
+        setPemniVipLogs((prev) => [payload.new, ...prev]);
+      } else if (payload.eventType === "UPDATE") {
+        setPemniVipLogs((prev) =>
+          prev.map((log) =>
+            log.id === payload.new.id && !isEqual(log, payload.new)
+              ? { ...log, ...payload.new }
+              : log
+          )
+        );
+      } else if (payload.eventType === "DELETE") {
+        setPemniVipLogs((prev) =>
+          prev.filter((log) => log.id !== payload.old.id)
+        );
+      }
+    };
+
+    const pemniVipLogsSubscription = supabase
+      .channel("pemni_vip_logs")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pemni_vip_logs" },
+        (payload) => {
+          handleChanges(payload);
+        }
+      )
+      .subscribe();
+
+    setLoading(false);
+
+    return () => {
+      pemniVipLogsSubscription.unsubscribe();
+    };
   }, [showAlert]);
 
   const retry = useCallback(
@@ -152,7 +188,7 @@ export const PemniVipLogsProvider: React.FC<PropsWithChildren<{}>> = ({
       );
 
       if (!response.ok) {
-        console.error("Error sending message:", response);  
+        console.error("Error sending message:", response);
         showAlert("Error sending message", "error");
       } else {
         const responseData = await response.json();
@@ -194,7 +230,6 @@ export const PemniVipLogsProvider: React.FC<PropsWithChildren<{}>> = ({
         // Insert the message into the messages table
 
         if (password) {
-        
           const { data: newMessage, error: messageError } = await supabase
             .from("messages")
             .insert([
