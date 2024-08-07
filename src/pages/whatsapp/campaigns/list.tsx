@@ -21,7 +21,7 @@ import LoadingPage from "../../pages/loading";
 import { BsFillCalendarDateFill } from "react-icons/bs";
 
 const CampaignListPage: React.FC = function () {
-  const { campaigns, loading } = useCampaignContext();
+  const { campaigns, loading, fetchCampaigns } = useCampaignContext();
   const [searchValue, setSearchValue] = React.useState("");
   const [startDate, setStartDate] = React.useState<Date | null>(null);
   const [endDate, setEndDate] = React.useState<Date | null>(null);
@@ -53,9 +53,16 @@ const CampaignListPage: React.FC = function () {
               <Breadcrumb.Item href="#">WhatsApp</Breadcrumb.Item>
               <Breadcrumb.Item>All Campaign</Breadcrumb.Item>
             </Breadcrumb>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
-              All Campaigns
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
+                All Campaigns
+              </h1>
+
+              {/* Refresh Button */}
+              <Button color="primary" className="mt-3" onClick={fetchCampaigns}>
+                Refresh
+              </Button>
+            </div>
           </div>
           <div className="sm:flex">
             <div className="mb-3 hidden items-center dark:divide-gray-700 sm:mb-0 sm:flex sm:divide-x sm:divide-gray-100">
@@ -180,9 +187,7 @@ const CampaignsTable: React.FC<Campaigns> = function ({ campaigns }) {
             <Table.Cell className="text-center">
               {campaign.campaign_id === 150 ? 76 : campaign.read_count}
             </Table.Cell>
-            <Table.Cell className="text-center">
-              {gRTS(campaign)}
-            </Table.Cell>
+            <Table.Cell className="text-center">{gRTS(campaign)}</Table.Cell>
             <Table.Cell className="text-center">
               {campaign.campaign_id === 150 ? 16 : campaign.failed}
             </Table.Cell>

@@ -28,6 +28,7 @@ export type CampaignListInsert =
   Database["public"]["Tables"]["campaign_lists"]["Insert"];
 
 interface CampaignContextType {
+  fetchCampaigns: () => Promise<void>;
   campaigns: Campaign[];
   addCampaign: (
     campaign: CampaignInsert,
@@ -49,28 +50,32 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
   const { currentProject } = useProjectContext();
   const { showAlert } = useAlertContext();
 
+  const fetchCampaigns = useCallback(async () => {
+    // Just Testing  - Clear out the campaigns
+    setCampaigns([]);
+
+    if (!currentProject) return;
+
+    const { data: campaigns, error } = await supabase.rpc("fetch_campaigns", {
+      project_id_param: currentProject.project_id,
+    });
+
+    if (error) {
+      console.error("Error fetching campaigns:", error);
+      showAlert("Error fetching campaigns", "error");
+      return;
+    }
+
+    setCampaigns((prevCampaigns) => {
+      if (!isEqual(prevCampaigns, campaigns)) {
+        return campaigns;
+      }
+      return prevCampaigns;
+    });
+  }, [currentProject, showAlert]);
+
   useEffect(() => {
     setLoading(true);
-    const fetchCampaigns = async () => {
-      if (!currentProject) return;
-
-      const { data: campaigns, error } = await supabase.rpc("fetch_campaigns", {
-        project_id_param: currentProject.project_id,
-      });
-
-      if (error) {
-        console.error("Error fetching campaigns:", error);
-        showAlert("Error fetching campaigns", "error");
-        return;
-      }
-
-      setCampaigns((prevCampaigns) => {
-        if (!isEqual(prevCampaigns, campaigns)) {
-          return campaigns;
-        }
-        return prevCampaigns;
-      });
-    };
 
     fetchCampaigns();
 
@@ -105,23 +110,11 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
       )
       .subscribe();
 
-    const subscriptionMessages = supabase
-      .channel("messages")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "messages" },
-        (payload) => {
-          fetchCampaigns();
-        }
-      )
-      .subscribe();
-
     setLoading(false);
     return () => {
       subscription.unsubscribe();
-      subscriptionMessages.unsubscribe();
     };
-  }, [currentProject, showAlert]);
+  }, [currentProject, fetchCampaigns, showAlert]);
 
   const addCampaign = useCallback(
     async (campaign: CampaignInsert, includes: any, excludes: any) => {
@@ -155,8 +148,9 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
         })),
       ];
 
-      const { error: campaignListError } =
-        await supabase.from("campaign_lists").insert(campaignListInserts);
+      const { error: campaignListError } = await supabase
+        .from("campaign_lists")
+        .insert(campaignListInserts);
 
       if (campaignListError) {
         console.error("Error adding campaign list:", campaignListError);
@@ -172,7 +166,6 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
 
       // Add Phone Numbers too
 
-      
       showAlert("Campaign added successfully", "success");
       setLoading(false);
       return data[0];
@@ -216,8 +209,22 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
   );
 
   const contextValue = useMemo(
-    () => ({ campaigns, addCampaign, updateCampaign, deleteCampaign, loading }),
-    [campaigns, addCampaign, updateCampaign, deleteCampaign, loading]
+    () => ({
+      fetchCampaigns,
+      campaigns,
+      addCampaign,
+      updateCampaign,
+      deleteCampaign,
+      loading,
+    }),
+    [
+      fetchCampaigns,
+      campaigns,
+      addCampaign,
+      updateCampaign,
+      deleteCampaign,
+      loading,
+    ]
   );
 
   return (
