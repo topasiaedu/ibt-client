@@ -14,7 +14,7 @@ export type WebhookData = {
 };
 
 export default function WebhookNode(props: NodeProps<WebhookData>) {
-  const url = props.data?.url ?? 'https://ibts.whatsgenie.com/webhook/id'
+  const url = props.data?.url ?? 'https://ibts3.whatsgenie.com/webhook/id'
   const { showAlert } = useAlertContext();
   const { removeNode, updateNodeData } = useFlowContext();
 

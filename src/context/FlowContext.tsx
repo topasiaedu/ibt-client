@@ -357,6 +357,20 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
         return;
       }
 
+      // Update Trigger if type is webhook
+      const webhookTrigger = triggerData.find((trigger) => trigger.type === "webhook");
+      if (webhookTrigger) {
+        await updateTrigger({ ...webhookTrigger, details: {           
+          url: `https://ibts3.whatsgenie.com/ibt/webhook/${newWorkflowId}` 
+        } });
+        
+        // Update the one in the state too
+        const webhookNode = nodes.find((node) => node.id === webhookTrigger.id);
+        if (webhookNode) {
+          updateNodeData(webhookNode.id, { ...webhookNode.data, url: `https://ibts3.whatsgenie.com/ibt/webhook/${newWorkflowId}` });
+        }
+      }
+
       await Promise.all([
         ...triggerData.map((trigger) =>
           createTrigger({ ...trigger, workflow_id: newWorkflowId })
