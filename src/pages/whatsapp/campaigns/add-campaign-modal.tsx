@@ -563,11 +563,10 @@ const AddCampaignModal: React.FC = function () {
                               </span>
                             </div>
                             <Badge
-                              color={
-                                item.quality_rating?.toLowerCase() || "info"
-                              }
-                              className="text-xs w-fit">
-                              {item.quality_rating}
+                              color={generateBadgeColor(
+                                item.phoneNumber.quality_rating
+                              )}>
+                              {item.phoneNumber.quality_rating}
                             </Badge>
                           </div>
                         </div>
@@ -926,3 +925,20 @@ function replaceTimeInDate(date: Date, timeString: string): Date {
 
   return newDate;
 }
+
+const generateBadgeColor = function (qualityRating: string | null) {
+  if (!qualityRating) {
+    return "info";
+  }
+  // LOW | MEDIUM | HEALTHY
+  switch (qualityRating) {
+    case "LOW":
+      return "red";
+    case "MEDIUM":
+      return "yellow";
+    case "HEALTHY":
+      return "green";
+    default:
+      return "info";
+  }
+};

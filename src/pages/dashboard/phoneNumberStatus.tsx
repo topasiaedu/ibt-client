@@ -27,7 +27,7 @@ const PhoneNumberStatus = function () {
           </div>
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              <Badge color={phoneNumber.quality_rating?.toLowerCase() || "info"}>
+              <Badge color={generateBadgeColor(phoneNumber.quality_rating)}>
                 {phoneNumber.quality_rating}
               </Badge>
             </p>
@@ -38,4 +38,20 @@ const PhoneNumberStatus = function () {
   );
 };
 
+const generateBadgeColor = function (qualityRating:string | null) {
+  if (!qualityRating) {
+    return "info";
+  }
+  // LOW | MEDIUM | HEALTHY
+  switch (qualityRating) {
+    case "LOW":
+      return "red";
+    case "MEDIUM":
+      return "yellow";
+    case "HEALTHY":
+      return "green";
+    default:
+      return "info";
+  }
+}
 export default PhoneNumberStatus;
