@@ -63,7 +63,7 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
       } else if (payload.eventType === "UPDATE") {
         setContacts((prev) =>
           prev.map((contact) =>
-            contact.contact_id === payload.new.contact_id
+            contact.contact_id === payload.new.contact_id && !isEqual(contact, payload.new)
               ? payload.new
               : contact
           )

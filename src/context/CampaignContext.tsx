@@ -85,7 +85,7 @@ export const CampaignProvider: React.FC<PropsWithChildren<{}>> = ({
       } else if (payload.eventType === "UPDATE") {
         setCampaigns((prev) =>
           prev.map((campaign) =>
-            campaign.campaign_id === payload.new.campaign_id
+            campaign.campaign_id === payload.new.campaign_id && !isEqual(campaign, payload.new)
               ? payload.new
               : campaign
           )
