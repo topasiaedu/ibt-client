@@ -26,6 +26,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [openEmoji, setOpenEmoji] = useState(false);
   const [contextMessage, setContextMessage] = useState<Message | null>(null);
+  const [ableToSend, setAbleToSend] = useState(true);
 
   const handleSubmit = async () => {
     let mediaType = "text";
@@ -59,16 +60,27 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
 
     const fileToSend = file || audioFile;
 
-    if ( fileToSend  && contextMessage) {
-      addMessage(data, conversation.id, conversation.contact.wa_id, fileToSend, contextMessage);
+    if (fileToSend && contextMessage) {
+      addMessage(
+        data,
+        conversation.id,
+        conversation.contact.wa_id,
+        fileToSend,
+        contextMessage
+      );
     } else if (fileToSend) {
       addMessage(data, conversation.id, conversation.contact.wa_id, fileToSend);
     } else if (contextMessage) {
-      addMessage(data, conversation.id, conversation.contact.wa_id, undefined, contextMessage);
+      addMessage(
+        data,
+        conversation.id,
+        conversation.contact.wa_id,
+        undefined,
+        contextMessage
+      );
     } else {
       addMessage(data, conversation.id, conversation.contact.wa_id);
     }
-
 
     // Clear input field
     setInput("");
@@ -79,16 +91,43 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
   };
 
   useEffect(() => {
+    // Check within the last 24 hours, is there any inbound message or message.message_type === "TEMPLATE"
+    const lastInboundMessage = messages
+      .slice()
+      .reverse()
+      .find(
+        (message) =>
+          message.direction === "inbound" &&
+          message.message_type !== "TEMPLATE"
+      );
+
+    if (lastInboundMessage) {
+      const lastInboundMessageDate = new Date(
+        lastInboundMessage.created_at || ""
+      );
+      const currentDate = new Date();
+      const diff = currentDate.getTime() - lastInboundMessageDate.getTime();
+      const diffInHours = diff / (1000 * 60 * 60);
+
+      if (diffInHours < 24) {
+        setAbleToSend(true);
+      } else {
+        setAbleToSend(false);
+      }
+    } else {
+      setAbleToSend(false);
+    }
+
     // Scroll to the bottom of the chat window
     scrollToBottom();
-  }, [messages.length]);
+  }, [messages, messages.length]);
 
   const scrollToBottom = () => {
     const chatWindow = document.querySelector(".scrollToBottom");
     if (chatWindow) {
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -120,6 +159,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
       messageElement.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  if (!ableToSend) {
+    return (
+      <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full flex flex-col relative">
+        {/* Chat Messages */}
+        {/* Scroll to the bottom of the chat window */}
+        <div className="flex flex-grow gap-4 xl:h-[calc(100vh-15rem)] overflow-y-auto scrollToBottom flex-col">
+          {[...messages].reverse().map((message, index) => (
+            <div key={message.message_id} id={message.message_id.toString()}>
+              {generateMessage(message, onDoubleClick, onContextClick)}
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+          <p className="text-gray-500">
+            You can only send a message after 24 hours of the last inbound
+            message or template message.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full flex flex-col relative">
