@@ -25,6 +25,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
   const [file, setFile] = React.useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [openEmoji, setOpenEmoji] = useState(false);
+  const [contextMessage, setContextMessage] = useState<Message | null>(null);
 
   const handleSubmit = async () => {
     let mediaType = "text";
@@ -52,29 +53,40 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
       phone_number_id: conversation.phone_number.phone_number_id,
       status: "delivered",
       wa_message_id: null,
+      context: contextMessage?.message_id || null,
     };
 
-    if (file) {
-      addMessage(data, conversation.id, conversation.contact.wa_id, file);
-    } else if (audioFile) {
-      addMessage(data, conversation.id, conversation.contact.wa_id, audioFile);
+    const fileToSend = file || audioFile;
+
+    if ( fileToSend  && contextMessage) {
+      addMessage(data, conversation.id, conversation.contact.wa_id, fileToSend, contextMessage);
+    } else if (fileToSend) {
+      addMessage(data, conversation.id, conversation.contact.wa_id, fileToSend);
+    } else if (contextMessage) {
+      addMessage(data, conversation.id, conversation.contact.wa_id, undefined, contextMessage);
     } else {
       addMessage(data, conversation.id, conversation.contact.wa_id);
     }
+
 
     // Clear input field
     setInput("");
     setFile(null);
     setAudioFile(null);
+    setContextMessage(null);
   };
 
   useEffect(() => {
     // Scroll to the bottom of the chat window
+    scrollToBottom();
+  }, [messages.length]);
+
+  const scrollToBottom = () => {
     const chatWindow = document.querySelector(".scrollToBottom");
     if (chatWindow) {
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
-  }, [messages.length]);
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -85,11 +97,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
 
   const onEmojiClick = (emojiObject: any, e: any) => {
     setInput(input + emojiObject.emoji);
+    setOpenEmoji(false);
   };
 
   if (!messages || !conversation) {
     return <LoadingPage />;
   }
+
+  const onDoubleClick = (message: Message) => {
+    // Set the context message
+    setContextMessage(message);
+    scrollToBottom();
+  };
+
+  const onContextClick = (message: Message) => {
+    //Scroll to the message
+    const messageElement = document.getElementById(
+      message.message_id.toString() || ""
+    );
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="col-span-2 m-auto mb-5 h-full space-y-6 overflow-hidden overflow-y-auto p-4 lg:pt-6 w-full flex flex-col relative">
@@ -97,8 +126,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
       {/* Scroll to the bottom of the chat window */}
       <div className="flex flex-grow gap-4 xl:h-[calc(100vh-15rem)] overflow-y-auto scrollToBottom flex-col">
         {[...messages].reverse().map((message, index) => (
-          <div key={conversation.id + "" + index}>
-            {generateMessage(message)}
+          <div key={message.message_id} id={message.message_id.toString()}>
+            {generateMessage(message, onDoubleClick, onContextClick)}
           </div>
         ))}
       </div>
@@ -106,6 +135,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
       <label htmlFor="chat" className="sr-only">
         Your message
       </label>
+
+      {contextMessage && (
+        <div
+          className="flex mb-2 p-1 items-center gap-2 border-l-4 border-gray-300 bg-gray-200 p-1 rounded-lg dark:bg-gray-700 dark:border-gray-600 z-10"
+          onClick={() => onContextClick && onContextClick(contextMessage)}>
+          {/* show context.content with max 3 lines */}
+          <span className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-3">
+            {contextMessage.content}
+          </span>
+        </div>
+      )}
+
       {file && (
         <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700">
           <div className="flex items-center space-x-2">
@@ -159,7 +200,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
           <span className="sr-only">Open Emoji</span>
         </button>
         {/* <VoiceRecorder setFile={setAudioFile}/> */}
-
         {!audioFile && (
           <textarea
             id="chat"
@@ -189,8 +229,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
     </div>
   );
 };
-
-const generateMessage = (message: Message) => {
+const generateMessage = (
+  message: Message,
+  onDoubleClick: (message: Message) => void,
+  onContextClick: (message: Message) => void
+) => {
   const newDate = new Date(message.created_at || "").toLocaleDateString(
     "en-US",
     {
@@ -204,122 +247,59 @@ const generateMessage = (message: Message) => {
     }
   );
 
-  const { message_type } = message;
+  const {
+    message_type,
+    media_url,
+    content,
+    direction,
+    status,
+    error,
+    context_message,
+  } = message;
+
+  const renderMessageComponent = (headerType?: string) => (
+    <MessageComponent
+      message={content || ""}
+      media={media_url || ""}
+      direction={(direction as "inbound" | "outbound") || ""}
+      date={newDate}
+      status={status || ""}
+      headerType={headerType as "VIDEO" | "IMAGE" | "DOCUMENT" | "AUDIO"}
+      error={error || ""}
+      context={context_message}
+      onDoubleClick={onDoubleClick}
+      onContextClick={onContextClick}
+      messageObj={message}
+    />
+  );
+
   if (message_type === "TEMPLATE") {
-    // Check if it has video or image
-    if (message.media_url) {
-      if (message.media_url.includes("mp4")) {
-        return (
-          <MessageComponent
-            message={message.content || ""}
-            media={message.media_url || ""}
-            direction={(message.direction as "inbound" | "outbound") || ""}
-            date={newDate}
-            status={message.status || ""}
-            headerType="VIDEO"
-            error={message.error || ""}
-          />
-        );
+    if (media_url) {
+      if (media_url.includes("mp4")) {
+        return renderMessageComponent("VIDEO");
       } else {
-        return (
-          <MessageComponent
-            message={message.content || ""}
-            media={message.media_url || ""}
-            direction={(message.direction as "inbound" | "outbound") || ""}
-            date={newDate}
-            status={message.status || ""}
-            headerType="IMAGE"
-            error={message.error || ""}
-          />
-        );
+        return renderMessageComponent("IMAGE");
       }
     } else {
-      return (
-        <MessageComponent
-          message={message.content || ""}
-          direction={(message.direction as "inbound" | "outbound") || ""}
-          date={newDate}
-          status={message.status || ""}
-          error={message.error || ""}
-        />
-      );
+      return renderMessageComponent();
     }
   }
 
   switch (message_type) {
     case "text":
-      return (
-        <MessageComponent
-          message={message.content || ""}
-          direction={(message.direction as "inbound" | "outbound") || ""}
-          date={newDate}
-          status={message.status || ""}
-          error={message.error || ""}
-        />
-      );
+      return renderMessageComponent();
     case "image":
-      return (
-        <MessageComponent
-          message={message.content || ""}
-          media={message.media_url || ""}
-          direction={(message.direction as "inbound" | "outbound") || ""}
-          date={newDate}
-          status={message.status || ""}
-          headerType="IMAGE"
-        />
-      );
     case "sticker":
-      return (
-        <MessageComponent
-          message={message.content || ""}
-          media={message.media_url || ""}
-          direction={(message.direction as "inbound" | "outbound") || ""}
-          date={newDate}
-          status={message.status || ""}
-          headerType="IMAGE"
-        />
-      );
+      return renderMessageComponent("IMAGE");
     case "video":
-      return (
-        <MessageComponent
-          message={message.content || ""}
-          media={message.media_url || ""}
-          direction={(message.direction as "inbound" | "outbound") || ""}
-          date={newDate}
-          status={message.status || ""}
-          headerType="VIDEO"
-        />
-      );
+      return renderMessageComponent("VIDEO");
     case "audio":
-      return (
-        <MessageComponent
-          message={message.content || ""}
-          media={message.media_url || ""}
-          direction={(message.direction as "inbound" | "outbound") || ""}
-          date={newDate}
-          status={message.status || ""}
-          headerType="AUDIO"
-        />
-      );
+      return renderMessageComponent("AUDIO");
     case "document":
-      return (
-        <MessageComponent
-          message={message.content || ""}
-          media={message.media_url || ""}
-          direction={(message.direction as "inbound" | "outbound") || ""}
-          date={newDate}
-          status={message.status || ""}
-          headerType="DOCUMENT"
-        />
-      );
-    // case "voice":
-    //   return <VoiceMessage />;
-    // case "file":
-    //   return <FileMessage />;
-    // case "multiple_images":
-    //   return <MultipleImagesMessage />;
+      return renderMessageComponent("DOCUMENT");
     default:
       return null;
   }
 };
+
 export default ChatWindow;

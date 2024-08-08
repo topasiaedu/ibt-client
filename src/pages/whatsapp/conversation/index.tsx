@@ -33,7 +33,7 @@ const ConversationPage: React.FC = function () {
     for (const message of messages) {
       if (message.status !== "READ" && message.direction === "inbound") {
         updateMessage({
-          ...message,
+          message_id: message.message_id,
           status: "READ",
         });
       }
@@ -58,7 +58,7 @@ const ConversationPage: React.FC = function () {
     );
     if (firstInboundMessage) {
       updateMessage({
-        ...firstInboundMessage,
+        message_id: firstInboundMessage.message_id,
         status: "UNREAD",
       });
     }
@@ -84,7 +84,7 @@ const ConversationPage: React.FC = function () {
         for (const message of messages) {
           if (message.status !== "READ" && message.direction === "inbound") {
             updateMessage({
-              ...message,
+              message_id: message.message_id,
               status: "READ",
             });
           }

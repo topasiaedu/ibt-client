@@ -1,11 +1,12 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { Button } from "flowbite-react";
+import { Button, Card } from "flowbite-react";
 import React, { useEffect } from "react";
 import { HiChevronLeft } from "react-icons/hi";
 import { Contact } from "../../../context/ContactContext";
 import { useMessagesContext } from "../../../context/MessagesContext";
 import { Conversation } from "../../../context/ConversationContext";
 import { useProjectContext } from "../../../context/ProjectContext";
+import UpdateNoticeComponent from "../../../components/UpdateNoticeComponent";
 
 interface ContactProfileProps {
   conversation: Conversation;
@@ -100,6 +101,13 @@ const ContactProfile: React.FC<ContactProfileProps> = ({
           </Button>
         </div>
       )}
+
+      {/* New Update: the user can now double click to reply to message */}
+      <UpdateNoticeComponent
+        title="Double click to reply"
+        message="You can now double click on a message to reply to it."
+      />
+
       {/* <h3 className="mb-4 text-base font-bold text-gray-900 dark:text-white">
         Tags
       </h3> */}

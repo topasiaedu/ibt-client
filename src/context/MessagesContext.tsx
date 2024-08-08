@@ -17,9 +17,12 @@ import { useWhatsAppBusinessAccountContext } from "./WhatsAppBusinessAccountCont
 import isEqual from "lodash.isequal";
 import { Conversation } from "./ConversationContext";
 
-export type Message = Database["public"]["Tables"]["messages"]["Row"];
+export type Message = Database["public"]["Tables"]["messages"]["Row"] & {
+  context_message: Message | null;
+};
 export type Messages = { messages: Message[] };
 export type MessageInsert = Database["public"]["Tables"]["messages"]["Insert"];
+export type MessageUpdate = Database["public"]["Tables"]["messages"]["Update"];
 
 const WHATSAPP_ACCESS_TOKEN =
   "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN;
@@ -30,9 +33,10 @@ interface MessagesContextType {
     message: MessageInsert,
     conversation_id: string,
     to: string,
-    file?: File
+    file?: File,
+    context?: Message
   ) => void;
-  updateMessage: (message: Message) => void;
+  updateMessage: (message: MessageUpdate) => void;
   deleteMessage: (messageId: number) => void;
   fetchCampaignReadMessagesCount: (
     campaignId: number
@@ -67,7 +71,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
 
       const { data: messages, error } = await supabase
         .from("messages")
-        .select("*")
+        .select("*, context_message:context(*)")
         .eq("conversation_id", currentConversationId)
         .order("message_id", { ascending: false });
 
@@ -85,12 +89,27 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
     fetchMessages();
 
     const handleChanges = (payload: any) => {
+      console.log("Payload:", payload.eventType);
       if (payload.eventType === "INSERT") {
+        // Check if there is context if so populate it
+        if (payload.new.context) {
+          payload.new.context_message = messages.find(
+            (message) => message.message_id === payload.new.context.message_id
+          );
+        }
+
         if (payload.new.conversation_id === currentConversationId) {
           setMessages((prev) => [payload.new, ...prev]);
         }
       } else if (payload.eventType === "UPDATE") {
         setMessages((prev) => {
+          // Check if there is context if so populate it
+          if (payload.new.context) {
+            payload.new.context_message = messages.find(
+              (message) => message.message_id === payload.new.context.message_id
+            );
+          }
+
           const updatedMessages = prev.map((message) =>
             message.message_id === payload.new.message_id
               ? payload.new
@@ -129,6 +148,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
     contacts,
     currentConversationId,
     currentProject,
+    messages,
     phoneNumbers,
     whatsAppBusinessAccounts,
   ]);
@@ -138,7 +158,8 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
       message: MessageInsert,
       conversation_id: string,
       to: string,
-      file?: File
+      file?: File,
+      context?: Message
     ) => {
       try {
         const phoneNumber = phoneNumbers.find(
@@ -146,18 +167,21 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             phoneNumber.phone_number_id === message.phone_number_id
         );
 
-        let body = JSON.stringify({
+        let body: any = {
           messaging_product: "whatsapp",
           to: to,
-        });
+          type: "text",
+          text: { body: message.content },
+          ...(context && { context: { message_id: context.wa_message_id } }),
+        };
 
-        let randomFileName = Math.random().toString(36).substring(7);
+        const randomFileName = Math.random().toString(36).substring(7);
+        const mediaLink = `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`;
 
-        // Check if file is present if so change the body to include the file
-        if (file && message.message_type !== "audio") {
+        if (file) {
           const { error } = await supabase.storage
             .from("media")
-            .upload(`${randomFileName}`, file!, {
+            .upload(`${randomFileName}`, file, {
               cacheControl: "3600",
               upsert: false,
               contentType: file.type,
@@ -169,72 +193,59 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             return;
           }
 
-          // Check if there is caption for the file
-          if (message.content) {
-            body = JSON.stringify({
+          if (message.message_type !== "audio") {
+            body = {
               messaging_product: "whatsapp",
               to: to,
               type: message.message_type,
               [message.message_type]: {
-                link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
-                caption: message.content,
+                link: mediaLink,
+                caption: message.content || undefined,
               },
-            });
+              ...(context && {
+                context: { message_id: context.wa_message_id },
+              }),
+            };
           } else {
-            body = JSON.stringify({
+            const form = new FormData();
+            form.append("messaging_product", "whatsapp");
+            form.append("file", file);
+
+            const response = await fetch(
+              `https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/media`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization:
+                    phoneNumber?.wa_id === "378967558625481"
+                      ? "Bearer " +
+                        process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN_2
+                      : "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN,
+                },
+                body: form,
+              }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              console.error("Error uploading audio:", data);
+              showAlert("Error uploading audio", "error");
+              return;
+            }
+
+            body = {
               messaging_product: "whatsapp",
               to: to,
-              type: message.message_type,
-              [message.message_type]: {
-                link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`,
-              },
-            });
-
+              type: "audio",
+              audio: { id: data.id },
+              ...(context && {
+                context: { message_id: context.wa_message_id },
+              }),
+            };
           }
-        } else if (message.message_type === "audio" && file) {
-          console.log("Sending audio message");
-          const form = new FormData();
-          form.append("messaging_product", "whatsapp");
-          form.append('file', file);
-
-          const response = await fetch(
-            `https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/media`,
-            {
-              method: "POST",
-              headers: {
-                Authorization:
-                  phoneNumber?.wa_id === "378967558625481"
-                    ? "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN_2
-                    : "Bearer " + process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN,
-              },
-              body: form,
-            }
-          );
-
-          const data = await response.json();
-
-          console.error("Data:", data);
-
-          // const url = await fetchMedia(data.id, randomFileName, "EAAFZCUSsuZBkQBO7vI52BiAVIVDPsZAATo0KbTLYdZBQ7hCq59lPYf5FYz792HlEN13MCPGDaVP93VYZASXz9ZBNXaiATyIToimwDx0tcCB2sz0TwklEoof3K0mZASJtcYugK1hfdnJGJ1pnRXtnTGmlXiIgkyQe0ZC2DOh4qZAeRhJ9nd9hgKKedub4eaCgvZBWrOHBa3NadCqdlZCx0zO");
-
-          body = JSON.stringify({
-            messaging_product: "whatsapp",
-            to: to,
-            type: "audio",
-            audio: {
-              id: data.id,
-            },
-          });
-        } else {
-          body = JSON.stringify({
-            messaging_product: "whatsapp",
-            to: to,
-            type: "text",
-            text: {
-              body: message.content,
-            },
-          });
         }
+
         const response = await fetch(
           `https://graph.facebook.com/v19.0/${phoneNumber?.wa_id}/messages`,
           {
@@ -243,7 +254,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
               Authorization: WHATSAPP_ACCESS_TOKEN,
               "Content-Type": "application/json",
             },
-            body: body,
+            body: JSON.stringify(body),
           }
         );
 
@@ -256,7 +267,6 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           return;
         }
 
-        // Add message to database
         const { data: newMessage, error } = await supabase
           .from("messages")
           .insert({
@@ -264,9 +274,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
             project_id: currentProject?.project_id,
             wa_message_id: data.messages[0].id,
             conversation_id: conversation_id,
-            media_url: file
-              ? `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/${randomFileName}`
-              : null,
+            media_url: file ? mediaLink : null,
           })
           .select()
           .single();
@@ -274,9 +282,9 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
         if (error) {
           console.error("Error sending message:", error);
           showAlert("Error sending message", "error");
+          return;
         }
 
-        // Update last_message_id and updated_at in the conversation
         const { error: updateConversationError } = await supabase
           .from("conversations")
           .update({
@@ -301,7 +309,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
   );
 
   const updateMessage = useCallback(
-    async (message: Message) => {
+    async (message: MessageUpdate) => {
       const { error } = await supabase
         .from("messages")
         .update({
@@ -494,7 +502,6 @@ export const useMessagesContext = () => {
   return context;
 };
 
-
 // const fetchMedia = async (
 //   imageId: string,
 //   randomFileName: string,
@@ -516,18 +523,18 @@ export const useMessagesContext = () => {
 
 //     const proxyUrl = 'https://ibts3.whatsgenie.com/proxy?url=';
 //     const targetUrl = responseData.url;
-    
+
 //     const data = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
 //       method: 'GET',
 //       headers: {
 //         'Authorization': `Bearer ${access_token}`
 //       }
 //     });
-    
+
 //     if (!data.ok) {
 //       throw new Error('Network response was not ok ' + data.statusText);
 //     }
-    
+
 //     const mediaResponse = await data.arrayBuffer();
 
 //     console.log('Media response:', mediaResponse)

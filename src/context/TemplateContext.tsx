@@ -53,10 +53,9 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
 
   const handleChanges = useCallback(
     (payload: any) => {
-
       setTemplates((prev) => {
         let newTemplates;
-
+  
         switch (payload.eventType) {
           case "INSERT":
             newTemplates = [payload.new, ...prev];
@@ -76,7 +75,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
           default:
             newTemplates = prev;
         }
-
+  
         // Only update state if there are actual changes
         return isEqual(prev, newTemplates) ? prev : newTemplates;
       });
@@ -127,7 +126,7 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [currentProject?.project_id, whatsAppBusinessAccounts]);
+  }, [currentProject?.project_id, handleChanges, whatsAppBusinessAccounts]);
 
   const addTemplate = useCallback(
     async (template: TemplateInsert) => {
