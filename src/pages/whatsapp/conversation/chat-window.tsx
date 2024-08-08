@@ -54,6 +54,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
       status: "delivered",
       wa_message_id: null,
       context: contextMessage?.message_id || null,
+      project_id: conversation.project_id,
     };
 
     const fileToSend = file || audioFile;
@@ -74,6 +75,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
     setFile(null);
     setAudioFile(null);
     setContextMessage(null);
+    setOpenEmoji(false);
   };
 
   useEffect(() => {
@@ -97,7 +99,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
 
   const onEmojiClick = (emojiObject: any, e: any) => {
     setInput(input + emojiObject.emoji);
-    setOpenEmoji(false);
   };
 
   if (!messages || !conversation) {

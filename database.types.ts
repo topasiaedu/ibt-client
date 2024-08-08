@@ -268,6 +268,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "campaigns_phone_number_id_fkey"
+            columns: ["phone_number_id"]
+            isOneToOne: false
+            referencedRelation: "phone_numbers"
+            referencedColumns: ["phone_number_id"]
+          },
+          {
             foreignKeyName: "campaigns_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
@@ -287,13 +294,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "whatsapp_business_accounts"
             referencedColumns: ["waba_id"]
-          },
-          {
-            foreignKeyName: "public_campaigns_phone_number_id_fkey"
-            columns: ["phone_number_id"]
-            isOneToOne: false
-            referencedRelation: "phone_numbers"
-            referencedColumns: ["phone_number_id"]
           },
           {
             foreignKeyName: "public_campaigns_project_id_fkey"
@@ -610,7 +610,7 @@ export type Database = {
           message_id: number
           message_type: string
           phone_number_id: number
-          project_id: number | null
+          project_id: number
           status: string | null
           wa_message_id: string | null
           workflow_id: string | null
@@ -628,7 +628,7 @@ export type Database = {
           message_id?: number
           message_type: string
           phone_number_id: number
-          project_id?: number | null
+          project_id: number
           status?: string | null
           wa_message_id?: string | null
           workflow_id?: string | null
@@ -646,7 +646,7 @@ export type Database = {
           message_id?: number
           message_type?: string
           phone_number_id?: number
-          project_id?: number | null
+          project_id?: number
           status?: string | null
           wa_message_id?: string | null
           workflow_id?: string | null
@@ -754,7 +754,7 @@ export type Database = {
           quality_rating: string | null
           throughput_level: string | null
           wa_id: string
-          waba_id: number | null
+          waba_id: number
         }
         Insert: {
           created_at?: string | null
@@ -764,7 +764,7 @@ export type Database = {
           quality_rating?: string | null
           throughput_level?: string | null
           wa_id: string
-          waba_id?: number | null
+          waba_id: number
         }
         Update: {
           created_at?: string | null
@@ -774,7 +774,7 @@ export type Database = {
           quality_rating?: string | null
           throughput_level?: string | null
           wa_id?: string
-          waba_id?: number | null
+          waba_id?: number
         }
         Relationships: [
           {
@@ -952,7 +952,7 @@ export type Database = {
           currency: string | null
           message_template_namespace: string | null
           name: string | null
-          project_id: number | null
+          project_id: number
           timezone_id: string | null
           updated_at: string | null
           waba_id: string
@@ -964,7 +964,7 @@ export type Database = {
           currency?: string | null
           message_template_namespace?: string | null
           name?: string | null
-          project_id?: number | null
+          project_id: number
           timezone_id?: string | null
           updated_at?: string | null
           waba_id: string
@@ -976,7 +976,7 @@ export type Database = {
           currency?: string | null
           message_template_namespace?: string | null
           name?: string | null
-          project_id?: number | null
+          project_id?: number
           timezone_id?: string | null
           updated_at?: string | null
           waba_id?: string
@@ -1218,6 +1218,14 @@ export type Database = {
           trigger: Json
           actions: Json
           phone_numbers: Json
+        }[]
+      }
+      get_conversation_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          time_interval: string
+          conversation_count: number
+          project_id: number
         }[]
       }
       get_triggers_with_details: {

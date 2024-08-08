@@ -265,13 +265,15 @@ const AddTemplateModal: React.FC = function () {
     generatePreview,
   ]);
 
-  const handleInputChange = (e:any) => {
+  const handleInputChange = (e: any) => {
     const inputValue = e.target.value;
-    // Replace spaces and special characters with an empty string
-    const sanitizedValue = inputValue.replace(/[^a-z_]/g, '');
+    // Convert capital letters to lowercase and replace spaces with underscores
+    const transformedValue = inputValue.toLowerCase().replace(/\s+/g, '_');
+    // Remove any characters that are not lowercase letters or underscores
+    const sanitizedValue = transformedValue.replace(/[^a-z_]/g, '');
     // Set the transformed value to the state
     setTemplateName(sanitizedValue);
-  };
+};
 
   return (
     <>
@@ -295,7 +297,7 @@ const AddTemplateModal: React.FC = function () {
                     id="name"
                     name="name"
                     placeholder="Template name"
-                    onChange={(e) => setTemplateName(e.target.value)}
+                    onChange={(e) => handleInputChange(e)}
                     value={templateName}
                   />
                   {/* Write a small reminder that it cannot have space or capitalized letters */}
