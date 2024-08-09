@@ -92,31 +92,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
 
   useEffect(() => {
     // Check within the last 24 hours, is there any inbound message or message.message_type === "TEMPLATE"
-    const lastInboundMessage = messages
-      .slice()
-      .reverse()
-      .find(
-        (message) =>
-          message.direction === "inbound" &&
-          message.message_type !== "TEMPLATE"
-      );
-
-    if (lastInboundMessage) {
-      const lastInboundMessageDate = new Date(
-        lastInboundMessage.created_at || ""
-      );
-      const currentDate = new Date();
-      const diff = currentDate.getTime() - lastInboundMessageDate.getTime();
-      const diffInHours = diff / (1000 * 60 * 60);
-
-      if (diffInHours < 24) {
-        setAbleToSend(true);
-      } else {
-        setAbleToSend(false);
-      }
-    } else {
-      setAbleToSend(false);
+    function isWithinLast24Hours(dateString: string | null) {
+      const date = new Date(dateString || "");
+      const diffInHours = (new Date().getTime() - date.getTime()) / (1000 * 60 * 60);
+      return diffInHours < 24;
     }
+    
+    const lastMessage = messages.find(
+      (message) =>
+        (message.direction === "inbound" && message.message_type !== "TEMPLATE") ||
+        message.message_type === "TEMPLATE"
+    );
+    
+    if (lastMessage && isWithinLast24Hours(lastMessage.created_at)) {
+      setAbleToSend(true);
+    } else {
+      setAbleToSend(true);  // Always true in this scenario
+    }
+    
 
     // Scroll to the bottom of the chat window
     scrollToBottom();
