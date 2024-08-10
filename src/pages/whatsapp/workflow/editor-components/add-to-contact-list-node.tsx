@@ -53,7 +53,7 @@ export default function AddToContactListNode(
   }, [debouncedUpdateNodeData, lists, props.id]);
 
   useEffect(() => {
-    if (props.data?.listIds) {
+    if (props.data?.listIds && contactLists.length > 0) {
       var lists: any[] = [];
 
       props.data.listIds.forEach((listId) => {
@@ -61,7 +61,6 @@ export default function AddToContactListNode(
       });
       setLists(lists);
     }
-    
   }, [contactLists, props.data.listIds]);
 
   return (
@@ -80,7 +79,7 @@ export default function AddToContactListNode(
               key={listId + index}
               color="info"
               className="mr-2 mb-1 flex items-center">
-              {listId.name}
+              {listId.name || listId}
               <span
                 className="ml-1 cursor-pointer"
                 onClick={() => removeListId(listId)}>
