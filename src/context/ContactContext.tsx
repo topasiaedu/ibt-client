@@ -61,14 +61,23 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
       if (payload.eventType === "INSERT") {
         setContacts((prev) => [payload.new, ...prev]);
       } else if (payload.eventType === "UPDATE") {
+        const contact = contacts.find(
+          (contact) => contact.contact_id === payload.new.contact_id
+        );
+
+        if (!contact) return;
+
         setContacts((prev) =>
           prev.map((contact) =>
-            contact.contact_id === payload.new.contact_id && !isEqual(contact, payload.new)
-              ? payload.new
-              : contact
+            contact.contact_id === payload.new.contact_id ? payload.new : contact
           )
         );
       } else if (payload.eventType === "DELETE") {
+        const contact = contacts.find(
+          (contact) => contact.contact_id === payload.old.contact_id
+        );
+
+        if (!contact) return;
         setContacts((prev) =>
           prev.filter(
             (contact) => contact.contact_id !== payload.old.contact_id

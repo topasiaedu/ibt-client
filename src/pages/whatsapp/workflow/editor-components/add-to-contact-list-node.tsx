@@ -4,6 +4,7 @@ import { Handle, NodeProps, Position } from "reactflow";
 import { useContactListContext } from "../../../../context/ContactListContext";
 import { Select, Label, Button, Badge } from "flowbite-react";
 import { useFlowContext } from "../../../../context/FlowContext";
+import isEqual from "lodash.isequal";
 
 export type AddToContactListData = {
   listId?: string;
@@ -49,8 +50,10 @@ export default function AddToContactListNode(
 
   useEffect(() => {
     const listIds = lists.map((list) => list.contact_list_id);
-    debouncedUpdateNodeData(props.id, { listIds });
-  }, [debouncedUpdateNodeData, lists, props.id]);
+    if (!isEqual(props.data.listIds, listIds) && listIds.length > 0) {
+      debouncedUpdateNodeData(props.id, { listIds });
+    }
+  }, [debouncedUpdateNodeData, lists, props.data.listIds, props.id]);
 
   useEffect(() => {
     if (props.data?.listIds && contactLists.length > 0) {
@@ -75,17 +78,19 @@ export default function AddToContactListNode(
       <div className="relative">
         <div className="custom-input flex items-center flex-wrap block w-full border disabled:cursor-not-allowed disabled:opacity-50 bg-gray-50 border-gray-300 text-gray-900 focus:border-cyan-500 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-cyan-500 dark:focus:ring-cyan-500 p-2.5 text-sm rounded-lg">
           {lists.map((listId, index) => (
-            <Badge
-              key={listId + index}
-              color="info"
-              className="mr-2 mb-1 flex items-center">
-              {listId.name || listId}
+            <>
+              <Badge
+                key={listId + index}
+                color="info"
+                className="mr-2 mb-1 flex items-center z-10">
+                {listId.name || listId}
+              </Badge>
               <span
-                className="ml-1 cursor-pointer"
+                className="ml-1 cursor-pointer z-10"
                 onClick={() => removeListId(listId)}>
                 &times;
               </span>
-            </Badge>
+            </>
           ))}
           <input
             id="listId"

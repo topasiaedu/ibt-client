@@ -35,6 +35,8 @@ interface ConversationContextType {
   updateConversation: (conversation: ConversationUpdate) => Promise<void>;
   deleteConversation: (conversation: Conversation) => Promise<void>;
   loading: boolean;
+  searchConversations: (searchPattern: string) => Promise<void>;
+  searchResults: any[];
 }
 
 const ConversationContext = createContext<ConversationContextType>(undefined!);
@@ -46,12 +48,16 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const { currentProject } = useProjectContext();
   const { showAlert } = useAlertContext();
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
     setLoading(true);
-    const fetchConversations = async () => {
+    const fetchConversations = async (page = 1, pageSize = 10) => {
       if (!currentProject) return;
-
+    
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize - 1;
+    
       const { data: conversations, error } = await supabase
         .from("conversations")
         .select(
@@ -61,23 +67,25 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
           last_message:last_message_id (*)`
         )
         .eq("project_id", currentProject.project_id)
-        .order("last_message_id", { ascending: false });
-
-
+        .order("last_message_id", { ascending: false })
+        .range(start, end);  // Fetch only the specified range of conversations
+    
       if (error) {
         console.error("Error fetching conversations:", error);
         return;
       }
-
+    
       setConversations((prevConversations) => {
         if (isEqual(prevConversations, conversations)) {
-          return prevConversations;
+          return[conversations, ...prevConversations];
         }
         return conversations;
       });
     };
-
-    fetchConversations();
+    
+    // Example usage:
+    fetchConversations(1, 1000); // Fetch the first page with 10 conversations per page
+    fetchConversations(2, 2000); // Fetch the first page with 10 conversations per page
 
     const handleChanges = async (payload: any) => {
       if (payload.eventType === "INSERT") {
@@ -241,6 +249,35 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     [showAlert]
   );
 
+  const searchConversations = useCallback(
+    async (searchPattern: string) => {
+      if (!currentProject) return;
+  
+      // setLoading(true);
+  
+      const { data: conversations, error } = await supabase
+        .rpc("search_conversations_and_messages", {
+          search_pattern: searchPattern,
+        });
+  
+      if (error) {
+        showAlert("Error searching conversations", "error");
+        console.error("Error searching conversations:", error);
+        // setLoading(false);
+        return;
+      }
+  
+      if (conversations) {
+        // setConversations(conversations);
+        console.log("Search results:", conversations);
+        setSearchResults(conversations);
+      }
+  
+      // setLoading(false);
+    },
+    [currentProject, showAlert]
+  );
+
   const value = useMemo(() => {
     return {
       conversations,
@@ -248,6 +285,8 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
       updateConversation,
       deleteConversation,
       loading,
+      searchConversations,
+      searchResults,
     };
   }, [
     conversations,
@@ -255,6 +294,8 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     updateConversation,
     deleteConversation,
     loading,
+    searchConversations,
+    searchResults,
   ]);
 
   return (
