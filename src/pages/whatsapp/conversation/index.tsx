@@ -18,37 +18,41 @@ const ConversationPage: React.FC = function () {
   >(undefined);
   const {
     updateMessage,
+    currentConversationId,
     setCurrentConversationId,
     messages,
     loading: messagesLoading,
   } = useMessagesContext();
   const { currentProject } = useProjectContext();
-  const { conversations, loading, updateConversation } =
+  const { conversations, loading, updateConversation, fetchConversationById } =
     useConversationContext();
 
-  const handleSelectConversation = (conversation: Conversation) => {
-    setCurrentConversationId(conversation.id);
-
-    // Mark all messages as read
-    for (const message of messages) {
-      if (message.status !== "READ" && message.direction === "inbound") {
-        updateMessage({
-          message_id: message.message_id,
-          status: "READ",
-        });
-      }
-    }
-
-    updateConversation({
-      id: conversation.id,
-      phone_number_id: conversation.phone_number_id,
-      contact_id: conversation.contact_id,
-      project_id: conversation.project_id,
-      last_message_id: conversation.last_message_id,
-      close_at: conversation.close_at,
-      unread_messages: 0,
-    });
+  const handleSelectConversation = async (conversationId:string) => {
+    const conversation:Conversation|undefined = await fetchConversationById(conversationId);
+    if (!conversation) return;
     setSelectedConversation(conversation);
+    setCurrentConversationId(conversationId);
+    
+    // // Mark all messages as read
+    // for (const message of messages) {
+    //   if (message.status !== "READ" && message.direction === "inbound") {
+    //     updateMessage({
+    //       message_id: message.message_id,
+    //       status: "READ",
+    //     });
+    //   }
+    // }
+
+    // updateConversation({
+    //   id: conversation.id,
+    //   phone_number_id: conversation.phone_number_id,
+    //   contact_id: conversation.contact_id,
+    //   project_id: conversation.project_id,
+    //   last_message_id: conversation.last_message_id,
+    //   close_at: conversation.close_at,
+    //   unread_messages: 0,
+    // });
+    // setSelectedConversation(conversation);
   };
 
   const handleUnreadConversation = (conversation: Conversation) => {

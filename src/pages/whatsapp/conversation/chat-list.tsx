@@ -11,7 +11,7 @@ import debounce from "lodash.debounce";
 
 interface ChatListProps {
   conversations: Conversation[];
-  onSelectConversation: (conversation: Conversation) => void;
+  onSelectConversation: (conversationId:string) => void;
   selectedConversation: Conversation | undefined;
   onMarkAsUnread: (conversation: Conversation) => void;
 }
@@ -74,7 +74,7 @@ const ChatList: React.FC<ChatListProps> = ({
       return;
     }
     debouncedSearchConversations(search);
-  }, [debouncedSearchConversations, search]);
+  }, [search]);
 
   const handleContextMenu = (
     event: React.MouseEvent,
@@ -160,7 +160,7 @@ const ChatList: React.FC<ChatListProps> = ({
                       ? "bg-gray-200 dark:bg-gray-700"
                       : ""
                   }`}
-                  onClick={() => onSelectConversation(result)}
+                  onClick={() => onSelectConversation(result.conversation_id)}
                   onContextMenu={(e) => handleContextMenu(e, result)}>
                   <div className="flex justify-between 2xl:space-x-4 items-center">
                     <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
@@ -202,7 +202,7 @@ const ChatList: React.FC<ChatListProps> = ({
                 <li
                   key={index}
                   className="p-4 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600"
-                  onClick={() => onSelectConversation(result)}
+                  onClick={() => onSelectConversation(result.conversation_id)}
                   onContextMenu={(e) => handleContextMenu(e, result)}>
                   <div className="flex justify-between 2xl:space-x-4 items-center">
                     <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
@@ -284,7 +284,7 @@ const ChatList: React.FC<ChatListProps> = ({
                     ? "bg-gray-200 dark:bg-gray-700"
                     : ""
                 }`}
-                onClick={() => onSelectConversation(conversation)}
+                onClick={() => onSelectConversation(conversation.id)}
                 onContextMenu={(e) => handleContextMenu(e, conversation)}>
                 <div className="flex justify-between 2xl:space-x-4 items-center">
                   <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">

@@ -69,6 +69,8 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
     const fetchMessages = async () => {
       if (!currentConversationId) return;
 
+      console.log("Fetching messages for conversation:", currentConversationId);
+
       const { data: messages, error } = await supabase
         .from("messages")
         .select("*, context_message:context(*)")

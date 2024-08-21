@@ -269,11 +269,12 @@ const AddTemplateModal: React.FC = function () {
     const inputValue = e.target.value;
     // Convert capital letters to lowercase and replace spaces with underscores
     const transformedValue = inputValue.toLowerCase().replace(/\s+/g, '_');
-    // Remove any characters that are not lowercase letters or underscores
-    const sanitizedValue = transformedValue.replace(/[^a-z_]/g, '');
+    // Remove any characters that are not lowercase letters, numbers, or underscores
+    const sanitizedValue = transformedValue.replace(/[^a-z0-9_]/g, '');
     // Set the transformed value to the state
     setTemplateName(sanitizedValue);
 };
+
 
   return (
     <>

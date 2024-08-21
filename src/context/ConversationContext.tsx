@@ -31,6 +31,7 @@ export type ConversationUpdate =
 
 interface ConversationContextType {
   conversations: Conversation[];
+  fetchConversationById: (conversationId: string) => Promise<Conversation | undefined>;
   createConversation: (conversation: ConversationInsert) => Promise<void>;
   updateConversation: (conversation: ConversationUpdate) => Promise<void>;
   deleteConversation: (conversation: Conversation) => Promise<void>;
@@ -54,10 +55,10 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     setLoading(true);
     const fetchConversations = async (page = 1, pageSize = 10) => {
       if (!currentProject) return;
-    
+
       const start = (page - 1) * pageSize;
       const end = start + pageSize - 1;
-    
+
       const { data: conversations, error } = await supabase
         .from("conversations")
         .select(
@@ -68,26 +69,27 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
         )
         .eq("project_id", currentProject.project_id)
         .order("last_message_id", { ascending: false })
-        .range(start, end);  // Fetch only the specified range of conversations
-    
+        .range(start, end); // Fetch only the specified range of conversations
+
       if (error) {
         console.error("Error fetching conversations:", error);
         return;
       }
-    
+
       setConversations((prevConversations) => {
         if (isEqual(prevConversations, conversations)) {
-          return[conversations, ...prevConversations];
+          return [conversations, ...prevConversations];
         }
         return conversations;
       });
     };
-    
+
     // Example usage:
     fetchConversations(1, 1000); // Fetch the first page with 10 conversations per page
     fetchConversations(2, 2000); // Fetch the first page with 10 conversations per page
 
     const handleChanges = async (payload: any) => {
+      console.log("Conversation changes:", payload.eventType);
       if (payload.eventType === "INSERT") {
         // Check if its under the same project
         if (payload.new.project_id !== currentProject?.project_id) {
@@ -198,6 +200,35 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     };
   }, [currentProject]);
 
+  const fetchConversationById = useCallback(async (conversationId: string) => {
+    // Try looking in the existing conversations
+    const existingConversation = conversations.find(
+      (conversation) => conversation.id === conversationId
+    );
+
+    if (existingConversation) {
+      return existingConversation;
+    }
+
+    const { data: conversation, error } = await supabase
+      .from("conversations")
+      .select(
+        `*,
+          contact:contact_id (*),
+          phone_number:phone_number_id (*),
+          last_message:last_message_id (*)`
+      )
+      .eq("id", conversationId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching conversation:", error);
+      return;
+    }
+
+    return conversation;
+  }, [conversations]);
+
   const createConversation = useCallback(
     async (conversation: ConversationInsert) => {
       const { error } = await supabase
@@ -252,27 +283,28 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
   const searchConversations = useCallback(
     async (searchPattern: string) => {
       if (!currentProject) return;
-  
+
       // setLoading(true);
-  
-      const { data: conversations, error } = await supabase
-        .rpc("search_conversations_and_messages", {
+
+      const { data: conversations, error } = await supabase.rpc(
+        "search_conversations_and_messages",
+        {
           search_pattern: searchPattern,
-        });
-  
+        }
+      );
+
       if (error) {
         showAlert("Error searching conversations", "error");
         console.error("Error searching conversations:", error);
         // setLoading(false);
         return;
       }
-  
+
       if (conversations) {
         // setConversations(conversations);
-        console.log("Search results:", conversations);
         setSearchResults(conversations);
       }
-  
+
       // setLoading(false);
     },
     [currentProject, showAlert]
@@ -281,6 +313,7 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
   const value = useMemo(() => {
     return {
       conversations,
+      fetchConversationById,
       createConversation,
       updateConversation,
       deleteConversation,
@@ -290,6 +323,7 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     };
   }, [
     conversations,
+    fetchConversationById,
     createConversation,
     updateConversation,
     deleteConversation,
