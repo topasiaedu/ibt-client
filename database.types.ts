@@ -374,7 +374,8 @@ export type Database = {
           last_contacted_by: number | null
           name: string
           phone: string | null
-          project_id: number | null
+          project_id: number
+          tsv_name_waid: unknown | null
           wa_id: string
         }
         Insert: {
@@ -384,7 +385,8 @@ export type Database = {
           last_contacted_by?: number | null
           name: string
           phone?: string | null
-          project_id?: number | null
+          project_id: number
+          tsv_name_waid?: unknown | null
           wa_id: string
         }
         Update: {
@@ -394,7 +396,8 @@ export type Database = {
           last_contacted_by?: number | null
           name?: string
           phone?: string | null
-          project_id?: number | null
+          project_id?: number
+          tsv_name_waid?: unknown | null
           wa_id?: string
         }
         Relationships: [
@@ -612,6 +615,7 @@ export type Database = {
           phone_number_id: number
           project_id: number
           status: string | null
+          tsv_content: unknown | null
           wa_message_id: string | null
           workflow_id: string | null
         }
@@ -630,6 +634,7 @@ export type Database = {
           phone_number_id: number
           project_id: number
           status?: string | null
+          tsv_content?: unknown | null
           wa_message_id?: string | null
           workflow_id?: string | null
         }
@@ -648,6 +653,7 @@ export type Database = {
           phone_number_id?: number
           project_id?: number
           status?: string | null
+          tsv_content?: unknown | null
           wa_message_id?: string | null
           workflow_id?: string | null
         }
@@ -745,6 +751,41 @@ export type Database = {
           },
         ]
       }
+      personalized_images: {
+        Row: {
+          canvas_state: string
+          created_at: string
+          id: string
+          media_url: string | null
+          name: string
+          project_id: number | null
+        }
+        Insert: {
+          canvas_state: string
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          name: string
+          project_id?: number | null
+        }
+        Update: {
+          canvas_state?: string
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          name?: string
+          project_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personalized_images_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       phone_numbers: {
         Row: {
           created_at: string | null
@@ -752,6 +793,7 @@ export type Database = {
           number: string
           phone_number_id: number
           quality_rating: string | null
+          restricted: boolean | null
           throughput_level: string | null
           wa_id: string
           waba_id: number
@@ -762,6 +804,7 @@ export type Database = {
           number: string
           phone_number_id?: number
           quality_rating?: string | null
+          restricted?: boolean | null
           throughput_level?: string | null
           wa_id: string
           waba_id: number
@@ -772,6 +815,7 @@ export type Database = {
           number?: string
           phone_number_id?: number
           quality_rating?: string | null
+          restricted?: boolean | null
           throughput_level?: string | null
           wa_id?: string
           waba_id?: number
@@ -1003,6 +1047,7 @@ export type Database = {
           action_id: string
           action_time: string
           created_at: string
+          error: string | null
           id: string
           payload: Json
           status: string
@@ -1012,6 +1057,7 @@ export type Database = {
           action_id: string
           action_time: string
           created_at?: string
+          error?: string | null
           id?: string
           payload: Json
           status?: string
@@ -1021,6 +1067,7 @@ export type Database = {
           action_id?: string
           action_time?: string
           created_at?: string
+          error?: string | null
           id?: string
           payload?: Json
           status?: string
@@ -1220,17 +1267,43 @@ export type Database = {
           phone_numbers: Json
         }[]
       }
-      get_conversation_counts: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          time_interval: string
-          conversation_count: number
-          project_id: number
-        }[]
-      }
+      get_conversation_counts:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: {
+              conversation_id: string
+            }[]
+          }
+        | {
+            Args: {
+              start_date: string
+              end_date: string
+              interval_type: string
+            }
+            Returns: {
+              time_interval: string
+              conversation_count: number
+              project_id: number
+            }[]
+          }
       get_triggers_with_details: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      search_conversations_and_messages: {
+        Args: {
+          search_pattern: string
+        }
+        Returns: {
+          result_type: string
+          conversation_id: string
+          contact: Json
+          phone_number: Json
+          last_message: Json
+          message_id: number
+          matched_message: Json
+          message_created_at: string
+        }[]
       }
     }
     Enums: {

@@ -134,7 +134,8 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
             contact_id: 0,
             created_at: new Date().toISOString(),
             last_contacted_by: null,
-            project_id: null,
+            project_id: currentProject?.project_id || 0,
+            tsv_name_waid: undefined
           };
 
           const response = await addContact(createContactData);

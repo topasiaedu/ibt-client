@@ -4,9 +4,10 @@ import { Sidebar } from "flowbite-react";
 import React, { useEffect, useState } from "react";
 import { FaListUl } from "react-icons/fa6";
 import {
-  HiChartPie, HiInboxIn,
+  HiChartPie,
+  HiInboxIn,
   HiInformationCircle,
-  HiTemplate
+  HiTemplate,
 } from "react-icons/hi";
 import { IoMdContact } from "react-icons/io";
 import { TbBrandCampaignmonitor } from "react-icons/tb";
@@ -14,13 +15,13 @@ import { useSidebarContext } from "../context/SidebarContext";
 import isSmallScreen from "../helpers/is-small-screen";
 import ProjectDropdown from "./ProjectDropdown";
 import { GoWorkflow } from "react-icons/go";
+import { FaImage } from "react-icons/fa";
 
 const ExampleSidebar: React.FC = function () {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
     useSidebarContext();
   const [currentPage, setCurrentPage] = useState("");
   // const [isWhatsAppOpen, setWhatsAppOpen] = useState(true);
-
 
   useEffect(() => {
     const newPage = window.location.pathname;
@@ -33,17 +34,16 @@ const ExampleSidebar: React.FC = function () {
     <div
       className={classNames("lg:!block", {
         hidden: !isSidebarOpenOnSmallScreens,
-      })}
-    >
+      })}>
       <Sidebar
         aria-label="Sidebar with multi-level dropdown example"
-        collapsed={isSidebarOpenOnSmallScreens && !isSmallScreen()}
-      >
+        collapsed={isSidebarOpenOnSmallScreens && !isSmallScreen()}>
         <div className="flex h-full flex-col justify-between py-2">
           <div>
+            <ProjectDropdown
+              collapsed={isSidebarOpenOnSmallScreens && !isSmallScreen()}
+            />
 
-            <ProjectDropdown collapsed={isSidebarOpenOnSmallScreens && !isSmallScreen()} />
-            
             <Sidebar.Items>
               <Sidebar.ItemGroup>
                 <Sidebar.Item
@@ -51,8 +51,7 @@ const ExampleSidebar: React.FC = function () {
                   icon={HiChartPie}
                   className={
                     "/" === currentPage ? "bg-gray-100 dark:bg-gray-700" : ""
-                  }
-                >
+                  }>
                   Dashboard
                 </Sidebar.Item>
                 {/* Contacts */}
@@ -63,8 +62,7 @@ const ExampleSidebar: React.FC = function () {
                     "/contacts" === currentPage
                       ? "bg-gray-100 dark:bg-gray-700"
                       : ""
-                  }
-                >
+                  }>
                   Contacts
                 </Sidebar.Item>
                 {/* <Sidebar.Collapse
@@ -72,65 +70,72 @@ const ExampleSidebar: React.FC = function () {
                   label="Whatsapp"
                   open={isWhatsAppOpen}
                 > */}
-                  <Sidebar.Item
-                    href="/whatsapp/conversation"
-                    icon={HiInboxIn}
-                    className={
-                      "/whatsapp/conversation" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Conversation
-                  </Sidebar.Item>
-                  <Sidebar.Item
-                    href="/whatsapp/campaigns"
-                    icon={TbBrandCampaignmonitor}
-                    className={
-                      "/whatsapp/campaigns" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Campaigns
-                  </Sidebar.Item>
-                  {/* Template */}
-                  <Sidebar.Item
-                    href="/whatsapp/templates"
-                    icon={HiTemplate}
-                    className={
-                      "/whatsapp/templates" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Templates
-                  </Sidebar.Item>
-                  {/* Contact List */}
-                  <Sidebar.Item
-                    href="/whatsapp/contact-list"
-                    icon={FaListUl}
-                    className={
-                      "/whatsapp/contact-list" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Contact List
-                  </Sidebar.Item>
+                <Sidebar.Item
+                  href="/whatsapp/conversation"
+                  icon={HiInboxIn}
+                  className={
+                    "/whatsapp/conversation" === currentPage
+                      ? "bg-gray-100 dark:bg-gray-700"
+                      : ""
+                  }>
+                  Conversation
+                </Sidebar.Item>
+                <Sidebar.Item
+                  href="/whatsapp/campaigns"
+                  icon={TbBrandCampaignmonitor}
+                  className={
+                    "/whatsapp/campaigns" === currentPage
+                      ? "bg-gray-100 dark:bg-gray-700"
+                      : ""
+                  }>
+                  Campaigns
+                </Sidebar.Item>
+                {/* Template */}
+                <Sidebar.Item
+                  href="/whatsapp/templates"
+                  icon={HiTemplate}
+                  className={
+                    "/whatsapp/templates" === currentPage
+                      ? "bg-gray-100 dark:bg-gray-700"
+                      : ""
+                  }>
+                  Templates
+                </Sidebar.Item>
+                {/* Contact List */}
+                <Sidebar.Item
+                  href="/whatsapp/contact-list"
+                  icon={FaListUl}
+                  className={
+                    "/whatsapp/contact-list" === currentPage
+                      ? "bg-gray-100 dark:bg-gray-700"
+                      : ""
+                  }>
+                  Contact List
+                </Sidebar.Item>
 
-                  {/* Workflow */}
-                  <Sidebar.Item
-                    href="/whatsapp/workflow"
-                    icon={GoWorkflow}
-                    className={
-                      "/whatsapp/workflow" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Workflow
-                  </Sidebar.Item>                  
+                {/* Workflow */}
+                <Sidebar.Item
+                  href="/whatsapp/workflow"
+                  icon={GoWorkflow}
+                  className={
+                    "/whatsapp/workflow" === currentPage
+                      ? "bg-gray-100 dark:bg-gray-700"
+                      : ""
+                  }>
+                  Workflow
+                </Sidebar.Item>
+
+                {/* Personalized Image */}
+                {/* <Sidebar.Item
+                  href="/personalized-image"
+                  icon={FaImage}
+                  className={
+                    "/personalized-image" === currentPage
+                      ? "bg-gray-100 dark:bg-gray-700"
+                      : ""
+                  }>
+                  Personalized Image
+                </Sidebar.Item> */}
 
                 {/* </Sidebar.Collapse> */}
               </Sidebar.ItemGroup>
@@ -138,8 +143,7 @@ const ExampleSidebar: React.FC = function () {
                 <Sidebar.Item
                   href="https://api.whatsapp.com/send/?phone=60139968817&text&type=phone_number&app_absent=0"
                   target="_blank"
-                  icon={HiInformationCircle}
-                >
+                  icon={HiInformationCircle}>
                   Help
                 </Sidebar.Item>
               </Sidebar.ItemGroup>
@@ -174,7 +178,5 @@ const ExampleSidebar: React.FC = function () {
 //     </div>
 //   );
 // };
-
-
 
 export default ExampleSidebar;
