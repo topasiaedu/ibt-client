@@ -168,7 +168,9 @@ const CanvasEditor: React.FC = () => {
     if (editor) {
       const url = prompt("Enter the image URL:");
       if (url) {
-        const img = fabric.FabricImage.fromURL(url);
+        const img = fabric.FabricImage.fromURL(url,{
+          crossOrigin: "anonymous",
+        });
         editor.canvas.add(await img);
       }
     }

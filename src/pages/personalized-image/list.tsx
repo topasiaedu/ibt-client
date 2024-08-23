@@ -57,7 +57,7 @@ const PersonalizedImageListPage: React.FC = function () {
               <Button
                 color="primary"
                 onClick={() =>
-                  (window.location.href = "/whatsapp/personalizedImage/editor")
+                  (window.location.href = "/personalized-image/editor")
                 }>
                 <div className="flex items-center gap-x-3">
                   <HiPlus className="text-xl" />
