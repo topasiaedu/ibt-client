@@ -10,27 +10,44 @@ import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
 import isEqual from "lodash.isequal";
+import { useAlertContext } from "./AlertContext";
 
-export type PersonalizedImage = Database["public"]["Tables"]["personalized_images"]["Row"];
+export type PersonalizedImage =
+  Database["public"]["Tables"]["personalized_images"]["Row"];
 export type PersonalizedImages = { personalizedImages: PersonalizedImage[] };
-export type PersonalizedImageInsert = Database["public"]["Tables"]["personalized_images"]["Insert"];
-export type PersonalizedImageUpdate = Database["public"]["Tables"]["personalized_images"]["Update"];
+export type PersonalizedImageInsert =
+  Database["public"]["Tables"]["personalized_images"]["Insert"];
+export type PersonalizedImageUpdate =
+  Database["public"]["Tables"]["personalized_images"]["Update"];
 
 interface PersonalizedImageContextProps {
   personalizedImages: PersonalizedImage[];
-  addPersonalizedImage: (personalizedImage: PersonalizedImageInsert) => Promise<PersonalizedImage | null>;
+  addPersonalizedImage: (
+    personalizedImage: PersonalizedImageInsert
+  ) => Promise<PersonalizedImage | null>;
   updatePersonalizedImage: (personalizedImage: PersonalizedImageUpdate) => void;
   deletePersonalizedImage: (personalizedImageId: number) => void;
-  findPersonalizedImage: (personalizedImage: PersonalizedImage) => Promise<PersonalizedImage | null>;
+  findPersonalizedImage: (
+    personalizedImage: PersonalizedImage
+  ) => Promise<PersonalizedImage | null>;
   loading: boolean;
 }
 
-const PersonalizedImageContext = createContext<PersonalizedImageContextProps>(undefined!);
+const PersonalizedImageContext = createContext<PersonalizedImageContextProps>(
+  undefined!
+);
 
-export function PersonalizedImageProvider({ children }: { children: React.ReactNode }) {
-  const [personalizedImages, setPersonalizedImages] = useState<PersonalizedImage[]>([]);
+export function PersonalizedImageProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [personalizedImages, setPersonalizedImages] = useState<
+    PersonalizedImage[]
+  >([]);
   const [loading, setLoading] = useState<boolean>(false);
   const { currentProject } = useProjectContext();
+  const { showAlert } = useAlertContext();
 
   useEffect(() => {
     setLoading(true);
@@ -45,6 +62,8 @@ export function PersonalizedImageProvider({ children }: { children: React.ReactN
 
       if (error) {
         console.error("Error fetching personalized images:", error);
+        setLoading(false);
+        showAlert("Error fetching personalized images", "error");
         return;
       }
 
@@ -84,15 +103,15 @@ export function PersonalizedImageProvider({ children }: { children: React.ReactN
     };
 
     const subscription = supabase
-    .channel("personalized_images")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "personalized_images" },
-      (payload) => {
-        handleChanges(payload);
-      }
-    )
-    .subscribe();
+      .channel("personalized_images")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "personalized_images" },
+        (payload) => {
+          handleChanges(payload);
+        }
+      )
+      .subscribe();
 
     setLoading(false);
     return () => {
@@ -106,15 +125,16 @@ export function PersonalizedImageProvider({ children }: { children: React.ReactN
         .from("personalized_images")
         .insert(personalizedImage)
         .single();
-        
+
       if (error) {
         console.error("Error adding personalized image:", error);
         return null;
       }
 
       return data;
-    }
-  , []);
+    },
+    []
+  );
 
   const updatePersonalizedImage = useCallback(
     async (personalizedImage: PersonalizedImageUpdate) => {
@@ -127,8 +147,9 @@ export function PersonalizedImageProvider({ children }: { children: React.ReactN
         console.error("Error updating personalized image:", error);
         return;
       }
-    }
-  , []);
+    },
+    []
+  );
 
   const deletePersonalizedImage = useCallback(
     async (personalizedImageId: number) => {
@@ -141,8 +162,9 @@ export function PersonalizedImageProvider({ children }: { children: React.ReactN
         console.error("Error deleting personalized image:", error);
         return;
       }
-    }
-  , []);
+    },
+    []
+  );
 
   const findPersonalizedImage = useCallback(
     async (personalizedImage: PersonalizedImage) => {
@@ -158,8 +180,9 @@ export function PersonalizedImageProvider({ children }: { children: React.ReactN
       }
 
       return data;
-    }
-  , []);
+    },
+    []
+  );
 
   const value = useMemo(
     () => ({
@@ -170,17 +193,29 @@ export function PersonalizedImageProvider({ children }: { children: React.ReactN
       findPersonalizedImage,
       loading,
     }),
-    [personalizedImages, addPersonalizedImage, updatePersonalizedImage, deletePersonalizedImage, findPersonalizedImage, loading]
+    [
+      personalizedImages,
+      addPersonalizedImage,
+      updatePersonalizedImage,
+      deletePersonalizedImage,
+      findPersonalizedImage,
+      loading,
+    ]
   );
 
-  return <PersonalizedImageContext.Provider value={value}>{children}</PersonalizedImageContext.Provider>;
-
+  return (
+    <PersonalizedImageContext.Provider value={value}>
+      {children}
+    </PersonalizedImageContext.Provider>
+  );
 }
 
 export function usePersonalizedImageContext() {
   const context = useContext(PersonalizedImageContext);
   if (!context) {
-    throw new Error("usePersonalizedImageContext must be used within a PersonalizedImageProvider");
+    throw new Error(
+      "usePersonalizedImageContext must be used within a PersonalizedImageProvider"
+    );
   }
   return context;
 }

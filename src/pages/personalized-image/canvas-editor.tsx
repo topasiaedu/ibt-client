@@ -38,14 +38,14 @@ const CanvasEditor: React.FC = () => {
       );
       if (personalizedImage) {
         setName(personalizedImage.name);
-        
+
         editor.canvas.loadFromJSON(
           JSON.parse(personalizedImage.canvas_state),
           () => {
             // Render after loading JSON
             setTimeout(() => {
               editor.canvas.renderAll();
-  
+
               // Optionally trigger an object selection to force a redraw
               const objects = editor.canvas.getObjects();
               if (objects.length > 0) {
@@ -58,12 +58,10 @@ const CanvasEditor: React.FC = () => {
       }
     }
   }, [id, editor, personalizedImages]);
-  
-  
 
   const onSaveCanvas = async () => {
     if (!editor || !currentProject) return;
-  
+
     try {
       // Step 1: Generate the image from the canvas
       const canvasDataURL = editor.canvas.toDataURL({
@@ -71,41 +69,44 @@ const CanvasEditor: React.FC = () => {
         quality: 1.0,
         multiplier: 2,
       });
-  
+
       // Convert the base64 string to a Blob
       const byteString = atob(canvasDataURL.split(",")[1]);
-      const mimeString = canvasDataURL.split(",")[0].split(":")[1].split(";")[0];
+      const mimeString = canvasDataURL
+        .split(",")[0]
+        .split(":")[1]
+        .split(";")[0];
       const arrayBuffer = new ArrayBuffer(byteString.length);
       const uint8Array = new Uint8Array(arrayBuffer);
-  
+
       for (let i = 0; i < byteString.length; i++) {
         uint8Array[i] = byteString.charCodeAt(i);
       }
-  
+
       const blob = new Blob([uint8Array], { type: mimeString });
-  
+
       const randomFileName = Math.random().toString(36).substring(7);
-  
+
       // Step 2: Upload the image to Supabase
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("media")
         .upload(`templates/${randomFileName}.png`, blob, {
           contentType: "image/png",
           upsert: true,
         });
-  
+
       if (uploadError) {
         throw new Error(
           "Error uploading image to Supabase: " + uploadError.message
         );
       }
-  
+
       // Step 3: Prepare the data for saving
       const canvasState = JSON.stringify(editor.canvas.toJSON());
-  
+
       // Step 4: Save the data
       const mediaUrl = `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}.png`;
-  
+
       if (id) {
         const data: PersonalizedImageUpdate = {
           id,
@@ -114,7 +115,7 @@ const CanvasEditor: React.FC = () => {
           project_id: currentProject.project_id,
           media_url: mediaUrl,
         };
-  
+
         await updatePersonalizedImage(data);
         showAlert("Personalized image updated successfully.", "success");
       } else {
@@ -135,15 +136,17 @@ const CanvasEditor: React.FC = () => {
       );
     }
   };
-  
 
   const onAddText = () => {
     if (editor) {
       const text = new fabric.Textbox("Enter text", {
         left: 100,
         top: 100,
-        fontFamily: "Arial",
+        fontFamily: "Arial", // Default font family
         fontSize: 20,
+        fontWeight: "normal",
+        fontStyle: "normal",
+        underline: false,
       });
       editor.canvas.add(text);
       editor.canvas.setActiveObject(text);
@@ -160,7 +163,7 @@ const CanvasEditor: React.FC = () => {
         fill: "red",
       });
       editor.canvas.add(rectangle);
-      editor.canvas.setActiveObject(rectangle);
+      editor.canvas.setActiveObject(rectangle); 
     }
   };
 
@@ -168,7 +171,7 @@ const CanvasEditor: React.FC = () => {
     if (editor) {
       const url = prompt("Enter the image URL:");
       if (url) {
-        const img = fabric.FabricImage.fromURL(url,{
+        const img = fabric.FabricImage.fromURL(url, {
           crossOrigin: "anonymous",
         });
         editor.canvas.add(await img);
@@ -212,6 +215,7 @@ const CanvasEditor: React.FC = () => {
       console.log("Updated selectedObject:", selectedObject);
     }
   };
+  
 
   const renderPropertiesPanel = () => {
     if (!selectedObject) {
@@ -223,19 +227,31 @@ const CanvasEditor: React.FC = () => {
     switch (selectedObject.type) {
       case "textbox":
         return (
-          <>
-            {/* <div className="">
-              <Label htmlFor="fontSize" value="Font Size:" />
-              <TextInput
-                id="fontSize"
-                type="number"
-                value={(selectedObject as fabric.Textbox).fontSize || 20}
+          <div className="flex flex-col space-y-4">
+            <div>
+              <Label htmlFor="fontFamily" value="Font Family:" />
+              <Select
+                id="fontFamily"
+                value={(selectedObject as fabric.Textbox).fontFamily || "Arial"}
                 onChange={(e) =>
-                  updateSelectedObject("fontSize", parseInt(e.target.value))
-                }
-              />
-            </div> */}
-            <div className="mt-4">
+                  updateSelectedObject("fontFamily", e.target.value)
+                }>
+                <option value="Arial">Arial</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Palatino">Palatino</option>
+                <option value="Garamond">Garamond</option>
+                <option value="Bookman">Bookman</option>
+                <option value="Comic Sans MS">Comic Sans MS</option>
+                <option value="Trebuchet MS">Trebuchet MS</option>
+                <option value="Arial Black">Arial Black</option>
+                <option value="Impact">Impact</option>
+              </Select>
+            </div>
+            <div>
               <Label htmlFor="fontColor" value="Font Color:" />
               <TextInput
                 id="fontColor"
@@ -247,7 +263,7 @@ const CanvasEditor: React.FC = () => {
                 onChange={(e) => updateSelectedObject("fill", e.target.value)}
               />
             </div>
-            <div className="mt-4">
+            <div>
               <Label htmlFor="textAlign" value="Text Align:" />
               <Select
                 id="textAlign"
@@ -260,11 +276,54 @@ const CanvasEditor: React.FC = () => {
                 <option value="right">Right</option>
               </Select>
             </div>
-          </>
+            <div className="flex space-x-2">
+              <Button
+                size="sm"
+                onClick={() =>
+                  updateSelectedObject(
+                    "fontWeight",
+                    (selectedObject as fabric.Textbox).fontWeight === "bold"
+                      ? "normal"
+                      : "bold"
+                  )
+                }>
+                {(selectedObject as fabric.Textbox).fontWeight === "bold"
+                  ? "Unbold"
+                  : "Bold"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() =>
+                  updateSelectedObject(
+                    "fontStyle",
+                    (selectedObject as fabric.Textbox).fontStyle === "italic"
+                      ? "normal"
+                      : "italic"
+                  )
+                }>
+                {(selectedObject as fabric.Textbox).fontStyle === "italic"
+                  ? "Unitalic"
+                  : "Italic"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() =>
+                  updateSelectedObject(
+                    "underline",
+                    !(selectedObject as fabric.Textbox).underline
+                  )
+                }>
+                {(selectedObject as fabric.Textbox).underline
+                  ? "Remove Underline"
+                  : "Underline"}
+              </Button>
+            </div>
+          </div>
         );
+
       case "rect":
         return (
-          <>
+          <div className="flex flex-col space-y-4">
             {/* <div className="mt-4">
               <Label htmlFor="width" value="Width:" />
               <TextInput
@@ -287,7 +346,7 @@ const CanvasEditor: React.FC = () => {
                 }
               />
             </div> */}
-            <div className="mt-4">
+            <div>
               <Label htmlFor="fillColor" value="Fill Color:" />
               <TextInput
                 id="fillColor"
@@ -296,25 +355,23 @@ const CanvasEditor: React.FC = () => {
                 onChange={(e) => updateSelectedObject("fill", e.target.value)}
               />
             </div>
-          </>
+          </div>
         );
       case "image":
         return (
-          <>
-            <div className="mt-4">
-              <Label htmlFor="opacity" value="Opacity:" />
-              <RangeSlider
-                id="opacity"
-                min={0}
-                max={1}
-                step={0.1}
-                value={(selectedObject.opacity as number) || 1}
-                onChange={(e) =>
-                  updateSelectedObject("opacity", parseFloat(e.target.value))
-                }
-              />
-            </div>
-          </>
+          <div className="flex flex-col space-y-4">
+            <Label htmlFor="opacity" value="Opacity:" />
+            <RangeSlider
+              id="opacity"
+              min={0}
+              max={1}
+              step={0.1}
+              value={(selectedObject.opacity as number) || 1}
+              onChange={(e) =>
+                updateSelectedObject("opacity", parseFloat(e.target.value))
+              }
+            />
+          </div>
         );
       default:
         return <p>Properties not available for this element.</p>;
@@ -339,6 +396,41 @@ const CanvasEditor: React.FC = () => {
       }
     };
   }, [editor, handleSaveCanvasState]);
+
+  // Move object forward
+  const moveObjectForward = () => {
+    if (selectedObject && editor) {
+      const objects = editor.canvas.getObjects();
+      const index = objects.indexOf(selectedObject);
+
+      // Ensure the object is not already at the top
+      if (index < objects.length - 1) {
+        // Manually move the object forward
+        objects.splice(index, 1);
+        objects.splice(index + 1, 0, selectedObject);
+        editor.canvas._objects = objects;
+        editor.canvas.renderAll(); // Re-render the canvas to apply changes
+      }
+    }
+  };
+
+  // Move object backward
+  const moveObjectBackward = () => {
+    if (selectedObject && editor) {
+      const objects = editor.canvas.getObjects();
+      const index = objects.indexOf(selectedObject);
+      console.log("Index:", index);
+      // Ensure the object is not already at the bottom
+      if (index > 0) {
+        // Manually move the object backward
+        objects.splice(index, 1);
+        objects.splice(index - 1, 0, selectedObject);
+        console.log("Objects:", objects);
+        editor.canvas._objects = objects;
+        editor.canvas.renderAll(); // Re-render the canvas to apply changes
+      }
+    }
+  };
 
   return (
     <NavbarSidebarLayout>
@@ -391,10 +483,32 @@ const CanvasEditor: React.FC = () => {
               <div className="mt-6 flex space-x-2">
                 <Button
                   size="sm"
+                  color="gray"
+                  onClick={() => {
+                    if (selectedObject) {
+                      moveObjectForward();
+                    }
+                  }}>
+                  Bring Forward
+                </Button>
+                <Button
+                  size="sm"
+                  color="gray"
+                  onClick={() => {
+                    if (selectedObject) {
+                      moveObjectBackward();
+                    }
+                  }}>
+                  Send Backward
+                </Button>
+                <Button
+                  size="sm"
                   color="red"
                   onClick={() => {
-                    // Remove the selected object from the canvas
-                    editor?.canvas.remove(selectedObject);
+                    if (selectedObject) {
+                      editor?.canvas.remove(selectedObject);
+                      setSelectedObject(null); // Clear the selection after deletion
+                    }
                   }}>
                   Delete
                 </Button>
@@ -418,7 +532,7 @@ const CanvasEditor: React.FC = () => {
 
         <div className="lg:col-span-3 flex justify-center items-center bg-gray-100 dark:bg-gray-800">
           <FabricJSCanvas
-            className="border border-gray-300 bg-white dark:bg-gray-900 shadow-md rounded-lg w-full h-full"
+            className="border border-gray-300 bg-white dark:bg-gray-900 shadow-md rounded-lg w-[500px] h-[500px]"
             onReady={onReady}
           />
         </div>

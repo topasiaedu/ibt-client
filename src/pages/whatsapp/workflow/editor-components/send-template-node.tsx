@@ -16,6 +16,10 @@ import {
 import { useFlowContext } from "../../../../context/FlowContext";
 import { supabase } from "../../../../utils/supabaseClient";
 import { useAlertContext } from "../../../../context/AlertContext";
+import {
+  PersonalizedImage,
+  usePersonalizedImageContext,
+} from "../../../../context/PersonalizedImageContext";
 
 export type SendTemplateData = {
   selectedTemplate?: Template | null;
@@ -25,6 +29,8 @@ export type SendTemplateData = {
   postDate?: Date;
   minutesInput?: number;
   mediaUrl?: string;
+  personalizedImageId?: string;
+  imageType?: string;
 };
 
 export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
@@ -41,6 +47,13 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
   const { showAlert } = useAlertContext();
   const [file, setFile] = useState<File | null>(null);
   const [minutesInput, setMinutesInput] = useState<number>(0);
+  const { personalizedImages } = usePersonalizedImageContext();
+  const [selectedPersonalizedImage, setSelectedPersonalizedImage] = useState<
+    string | undefined
+  >(props.data?.personalizedImageId ?? undefined);
+  const [imageType, setImageType] = useState<string | undefined>(
+    props.data?.imageType ?? undefined
+  );
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdateNodeData = useCallback(
@@ -181,13 +194,25 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
         selectedTemplate,
         minutesInput,
         templatePayload: template_payload,
+        personalizedImageId: selectedPersonalizedImage,
+        imageType,
+      });
+    } else if (selectedPersonalizedImage) {
+      debouncedUpdateNodeData(props.id, {
+        timePostType,
+        postTime,
+        postDate,
+        selectedTemplate,
+        minutesInput,
+        personalizedImageId: selectedPersonalizedImage,
+        imageType,
       });
     }
   };
 
   useEffect(() => {
     updateTemplatePayload();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     timePostType,
     postTime,
@@ -198,6 +223,8 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
     minutesInput,
     file,
     showAlert,
+    selectedPersonalizedImage,
+    imageType,
   ]);
 
   return (
@@ -228,7 +255,12 @@ export default function SendTemplateNode(props: NodeProps<SendTemplateData>) {
           selectedTemplate,
           selectedTemplate.components,
           setFile,
-          updateTemplatePayload
+          updateTemplatePayload,
+          personalizedImages,
+          selectedPersonalizedImage,
+          setSelectedPersonalizedImage,
+          imageType,
+          setImageType
         )}
 
       <Label className="mt-4">Time to send</Label>
@@ -331,7 +363,12 @@ function generateTemplateExampleFields(
   selectedTemplate: Template,
   components: any,
   setFile: any,
-  updateTemplatePayload: any
+  updateTemplatePayload: any,
+  personalizedImages: PersonalizedImage[],
+  selectedPersonalizedImage: string | undefined,
+  setPersonalizedImage: any,
+  imageType: string | undefined,
+  setImageType: any
 ) {
   return components.data.map((component: any, index: number) => {
     if (component?.example) {
@@ -383,22 +420,65 @@ function generateTemplateExampleFields(
                 {component.type} {component.format}
               </Label>
               <div className="mt-1">
-                <FileInput
-                  id={selectedTemplate.template_id.toString() + index}
-                  name={selectedTemplate.template_id.toString() + index}
-                  placeholder={component.example.header_image}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setFile(file);
-                    }
-                  }}
-                />
+                {component.format === "IMAGE" && (
+                  <>
+                    {/* Image Type ( generic | personalized) */}
+                    <Label
+                      htmlFor="imageType"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                      Image Type:
+                    </Label>
+                    <Select
+                      className="mt-2"
+                      value={imageType}
+                      onChange={(e) => setImageType(e.target.value)}>
+                      <option value="">Select Image Type</option>
+                      <option value="generic">Generic</option>
+                      <option value="personalized">Personalized</option>
+                    </Select>
+                    {imageType === "personalized" && (
+                      <>
+                        <Label
+                          htmlFor="personalizedImage"
+                          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                          Personalized Image:
+                        </Label>
+                        <Select
+                          className="mt-2"
+                          value={selectedPersonalizedImage}
+                          onChange={(e) =>
+                            setPersonalizedImage(e.target.value)
+                          }>
+                          <option value="">Select Personalized Image</option>
+                          {personalizedImages.map((image) => (
+                            <option key={image.id} value={image.id}>
+                              {image.name}
+                            </option>
+                          ))}
+                        </Select>
+                      </>
+                    )}
+                  </>
+                )}
+                {(imageType === "generic" || component.format === "VIDEO") && (
+                  <FileInput
+                    id={selectedTemplate.template_id.toString() + index}
+                    name={selectedTemplate.template_id.toString() + index}
+                    placeholder={component.example.header_image}
+                    className="mt-2"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFile(file);
+                      }
+                    }}
+                  />
+                )}
                 {/* Write a note saying if left empty will reuse the original one */}
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   If left empty, the original {component.format.toLowerCase()}{" "}
                   will be used
-                </p>
+                </p> */}
               </div>
             </div>
           );

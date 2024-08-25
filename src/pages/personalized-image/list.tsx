@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Breadcrumb, Button, Label, TextInput } from "flowbite-react";
-import { HiHome, HiOutlinePencilAlt, HiPlus } from "react-icons/hi";
+import { HiHome, HiPlus } from "react-icons/hi";
 import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
 import LoadingPage from "../pages/loading";
 import { usePersonalizedImageContext } from "../../context/PersonalizedImageContext";
-import * as fabric from "fabric";
 
 const PersonalizedImageListPage: React.FC = function () {
   const [searchValue, setSearchValue] = useState("");
@@ -12,8 +11,9 @@ const PersonalizedImageListPage: React.FC = function () {
 
   useEffect(() => {}, [personalizedImages]);
 
-  if (loading || !personalizedImages || !personalizedImages.length) {
+  if (loading || !personalizedImages) {
     console.log("loading", loading);
+    console.log("personalizedImages", personalizedImages);
     return <LoadingPage />;
   }
 
