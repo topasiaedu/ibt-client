@@ -8,6 +8,7 @@ import {
   TextInput,
   Select,
   RangeSlider,
+  FileInput,
 } from "flowbite-react";
 import * as fabric from "fabric";
 import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
@@ -30,6 +31,9 @@ const CanvasEditor: React.FC = () => {
   const [name, setName] = useState<string>("");
   const { showAlert } = useAlertContext();
   const { currentProject } = useProjectContext();
+  const [openUploadSection, setOpenUploadSection] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (id && editor) {
@@ -163,17 +167,36 @@ const CanvasEditor: React.FC = () => {
         fill: "red",
       });
       editor.canvas.add(rectangle);
-      editor.canvas.setActiveObject(rectangle); 
+      editor.canvas.setActiveObject(rectangle);
     }
   };
 
   const onAddImage = async () => {
     if (editor) {
-      const url = prompt("Enter the image URL:");
-      if (url) {
-        const img = fabric.FabricImage.fromURL(url, {
+      if (imageUrl) {
+        const img = fabric.FabricImage.fromURL(imageUrl, {
           crossOrigin: "anonymous",
         });
+        editor.canvas.add(await img);
+      } else if (imageFile) {
+        // Upload to supabase
+        const randomFileName = Math.random().toString(36).substring(7);
+        const { error } = await supabase.storage
+          .from("media")
+          .upload(`templates/${randomFileName}`, imageFile!);
+
+        if (error) {
+          showAlert("Error uploading file", "error");
+          console.error("Error uploading file: ", error);
+          return;
+        }
+
+        const mediaUrl = `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`;
+
+        const img = fabric.FabricImage.fromURL(mediaUrl, {
+          crossOrigin: "anonymous",
+        });
+
         editor.canvas.add(await img);
       }
     }
@@ -215,7 +238,6 @@ const CanvasEditor: React.FC = () => {
       console.log("Updated selectedObject:", selectedObject);
     }
   };
-  
 
   const renderPropertiesPanel = () => {
     if (!selectedObject) {
@@ -459,11 +481,73 @@ const CanvasEditor: React.FC = () => {
                 <i className="fas fa-square mr-2"></i>
                 Rectangle
               </Button>
-              <Button onClick={onAddImage} size="sm" color="light">
+              <Button
+                onClick={() => {
+                  setOpenUploadSection(!openUploadSection);
+                }}
+                size="sm"
+                color="light">
                 <i className="fas fa-image mr-2"></i>
                 Image
               </Button>
             </div>
+
+            {openUploadSection && (
+              <>
+                <div className="mt-4">
+                  <Label htmlFor="imageUrl" value="Image URL:" />
+                  <TextInput
+                    id="imageUrl"
+                    placeholder="Enter image URL"
+                    onChange={(e) => setImageUrl(e.target.value)}
+                  />
+                  <Button size="sm" color="primary" onClick={onAddImage}>
+                    Add Image
+                  </Button>
+                </div>
+
+                {/* OR TEXT */}
+                <span className="mt-4 text-sm font-semibold">OR</span>
+                <div className="mt-4">
+                  <Label htmlFor="imageFile" value="Upload Image:" />
+                  <FileInput
+                    id="imageFile"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 15000000) {
+                          showAlert(
+                            "Image size must be less than 15MB.",
+                            "error"
+                          );
+                          return;
+                        }
+                        setImageFile(file);
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    color="primary"
+                    onClick={async () => {
+                      if (imageFile) {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                          const url = e.target?.result as string;
+                          const img = fabric.FabricImage.fromURL(url, {
+                            crossOrigin: "anonymous",
+                          });
+                          editor?.canvas.add(await img);
+                        };
+                        reader.readAsDataURL(imageFile);
+                      }
+                    }}>
+                    Upload Image
+                  </Button>
+                </div>
+              </>
+            )}
 
             <h5 className="mt-6 text-lg font-medium">Edit Element</h5>
             <div id="properties-panel" className="space-y-2">

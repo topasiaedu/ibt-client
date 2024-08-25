@@ -33,6 +33,10 @@ import { useWhatsAppBusinessAccountContext } from "../../../context/WhatsAppBusi
 import { supabase } from "../../../utils/supabaseClient";
 import MessageComponent from "../../../components/MessageComponent";
 import { Contact, useContactContext } from "../../../context/ContactContext";
+import {
+  PersonalizedImage,
+  usePersonalizedImageContext,
+} from "../../../context/PersonalizedImageContext";
 
 const currentDate = new Date().toLocaleDateString("en-US", {
   month: "short",
@@ -84,6 +88,10 @@ const AddCampaignModal: React.FC = function () {
     useState<ContactList[]>(contactLists);
   const [filteredExcludeContacts, setFilteredExcludeContacts] =
     useState<Contact[]>(contacts);
+  const [imageType, setImageType] = useState<string>("");
+  const { personalizedImages } = usePersonalizedImageContext();
+  const [selectedPersonalizedImage, setPersonalizedImage] =
+    useState<string>("");
 
   const wabaPhoneNumber = whatsAppBusinessAccounts
     .map((waba) => {
@@ -178,33 +186,54 @@ const AddCampaignModal: React.FC = function () {
           component.type === "HEADER" &&
           (component.format === "VIDEO" || component.format === "IMAGE")
         ) {
-          if (!file) {
-            showAlert("Please upload a file", "error");
+          if (!file && !selectedPersonalizedImage) {
+            showAlert(
+              "Please upload a file or select a personalized image",
+              "error"
+            );
             return;
           }
 
-          const randomFileName = Math.random().toString(36).substring(7);
-          const { error } = await supabase.storage
-            .from("media")
-            .upload(`templates/${randomFileName}`, file!);
+          if (file) {
+            const randomFileName = Math.random().toString(36).substring(7);
+            const { error } = await supabase.storage
+              .from("media")
+              .upload(`templates/${randomFileName}`, file!);
 
-          if (error) {
-            showAlert("Error uploading file", "error");
-            console.error("Error uploading file: ", error);
-            return;
-          }
+            if (error) {
+              showAlert("Error uploading file", "error");
+              console.error("Error uploading file: ", error);
+              return;
+            }
 
-          template_payload.components.push({
-            type: component.type,
-            parameters: [
-              {
-                type: component.format.toLowerCase(),
-                [component.format.toLowerCase()]: {
-                  link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`,
+            template_payload.components.push({
+              type: component.type,
+              parameters: [
+                {
+                  type: component.format.toLowerCase(),
+                  [component.format.toLowerCase()]: {
+                    link: `https://yvpvhbgcawvruybkmupv.supabase.co/storage/v1/object/public/media/templates/${randomFileName}`,
+                  },
                 },
-              },
-            ],
-          });
+              ],
+            });
+          } else if (selectedPersonalizedImage) {
+            const personalizedImage = personalizedImages.find(
+              (image) => image.id === selectedPersonalizedImage
+            );
+
+            template_payload.components.push({
+              type: component.type,
+              parameters: [
+                {
+                  type: "image",
+                  image: {
+                    link: personalizedImage?.id,
+                  },
+                },
+              ],
+            });
+          }
         } else if (component.type === "BODY") {
           // const originalMessage = components.data.find((component: any) => component.type === "BODY").text;
           const bodyInputValues = components.data
@@ -257,6 +286,8 @@ const AddCampaignModal: React.FC = function () {
       status: "PENDING",
       phone_number_id: selectedWabaPhoneNumber[0].phone_number_id,
       project_id: currentProject?.project_id || 5,
+      imageType: imageType,
+      personalizedImageId: selectedPersonalizedImage,
     };
 
     const createdCampaign = await addCampaign(
@@ -781,7 +812,12 @@ const AddCampaignModal: React.FC = function () {
                   selectedTemplate,
                   selectedTemplate.components,
                   setFile,
-                  generatePreview
+                  generatePreview,
+                  imageType,
+                  setImageType,
+                  personalizedImages,
+                  setPersonalizedImage,
+                  selectedPersonalizedImage
                 )}
               {/* Helper text to say that can use %name% */}
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
@@ -828,7 +864,12 @@ function generateTemplateExampleFields(
   selectedTemplate: Template,
   components: any,
   setFile: any,
-  generatePreview: any
+  generatePreview: any,
+  imageType: string,
+  setImageType: any,
+  personalizedImages: PersonalizedImage[],
+  setPersonalizedImage: any,
+  selectedPersonalizedImage: any
 ) {
   return components.data.map((component: any, index: number) => {
     if (component?.example) {
@@ -880,22 +921,62 @@ function generateTemplateExampleFields(
                 {component.type} {component.format}
               </Label>
               <div className="mt-1">
-                <FileInput
-                  id={selectedTemplate.template_id.toString() + index}
-                  name={selectedTemplate.template_id.toString() + index}
-                  placeholder={component.example.header_image}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      // Check file size ( cant be more than 15MB )
-                      if (file.size > 15000000) {
-                        alert("File size is too large");
-                        return;
+                {component.format === "IMAGE" && (
+                  <>
+                    {/* Image Type ( generic | personalized) */}
+                    <Label
+                      htmlFor="imageType"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                      Image Type:
+                    </Label>
+                    <Select
+                      className="mt-2"
+                      value={imageType}
+                      onChange={(e) => setImageType(e.target.value)}>
+                      <option value="">Select Image Type</option>
+                      <option value="generic">Generic</option>
+                      <option value="personalized">Personalized</option>
+                    </Select>
+                    {imageType === "personalized" && (
+                      <>
+                        <Label
+                          htmlFor="personalizedImage"
+                          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                          Personalized Image:
+                        </Label>
+                        <Select
+                          className="mt-2"
+                          value={selectedPersonalizedImage}
+                          onChange={(e) =>
+                            setPersonalizedImage(e.target.value)
+                          }>
+                          <option value="">Select Personalized Image</option>
+                          {personalizedImages.map(
+                            (image: PersonalizedImage) => (
+                              <option key={image.id} value={image.id}>
+                                {image.name}
+                              </option>
+                            )
+                          )}
+                        </Select>
+                      </>
+                    )}
+                  </>
+                )}
+                {(imageType === "generic" || component.format === "VIDEO") && (
+                  <FileInput
+                    id={selectedTemplate.template_id.toString() + index}
+                    name={selectedTemplate.template_id.toString() + index}
+                    placeholder={component.example.header_image}
+                    className="mt-2"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFile(file);
                       }
-                      setFile(file);
-                    }
-                  }}
-                />
+                    }}
+                  />
+                )}
                 {/* Write a note saying if left empty will reuse the original one */}
                 {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   If left empty, the original {component.format.toLowerCase()}{" "}

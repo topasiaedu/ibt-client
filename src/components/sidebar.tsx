@@ -126,7 +126,7 @@ const ExampleSidebar: React.FC = function () {
                 </Sidebar.Item>
 
                 {/* Personalized Image */}
-                {/* <Sidebar.Item
+                <Sidebar.Item
                   href="/personalized-image"
                   icon={FaImage}
                   className={
@@ -135,7 +135,7 @@ const ExampleSidebar: React.FC = function () {
                       : ""
                   }>
                   Personalized Image
-                </Sidebar.Item> */}
+                </Sidebar.Item>
 
                 {/* </Sidebar.Collapse> */}
               </Sidebar.ItemGroup>
