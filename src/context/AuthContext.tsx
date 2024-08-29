@@ -35,6 +35,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         console.error("Error getting user:", error);
       }
 
+
       // Only update state if the new user is different from the current one
       setUser((prevUser: any) => {
         if (!isEqual(prevUser, user)) {

@@ -21,6 +21,7 @@ interface ContactContextProps {
   updateContact: (contact: Contact) => void;
   deleteContact: (contactId: number) => void;
   findContact: (contact: Contact) => Promise<Contact | null>;
+  findContactByWaId: (wa_id: string) => Promise<Contact | null>;
   loading: boolean;
 }
 
@@ -167,6 +168,20 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
     return contacts?.[0] || null;
   }, []);
 
+  const findContactByWaId = useCallback(async (wa_id: string) => {
+    const { data: contacts, error } = await supabase
+      .from("contacts")
+      .select("*")
+      .eq("wa_id", wa_id);
+
+    if (error) {
+      console.error("Error fetching contact:", error);
+      return null;
+    }
+
+    return contacts?.[0] || null;
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       contacts,
@@ -174,6 +189,7 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
       updateContact,
       deleteContact,
       findContact,
+      findContactByWaId,
       loading,
     }),
     [contacts, addContact, updateContact, deleteContact, findContact, loading]

@@ -16,11 +16,14 @@ import isSmallScreen from "../helpers/is-small-screen";
 import ProjectDropdown from "./ProjectDropdown";
 import { GoWorkflow } from "react-icons/go";
 import { FaImage } from "react-icons/fa";
+import { useAuthContext } from "../context/AuthContext";
+import { FaConnectdevelop } from "react-icons/fa";
 
 const ExampleSidebar: React.FC = function () {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
     useSidebarContext();
   const [currentPage, setCurrentPage] = useState("");
+  const { user } = useAuthContext();
   // const [isWhatsAppOpen, setWhatsAppOpen] = useState(true);
 
   useEffect(() => {
@@ -137,6 +140,19 @@ const ExampleSidebar: React.FC = function () {
                   Personalized Image
                 </Sidebar.Item>
 
+                {/* If user.id === 7300284e-52cc-4592-b48f-3f517e6414ad show this dev tab */}
+                {user?.id === "7300284e-52cc-4592-b48f-3f517e6414ad" && (
+                  <Sidebar.Item
+                    href="/dev"
+                    icon={FaConnectdevelop}
+                    className={
+                      "/dev" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }>
+                    Stanley&apos;s Tools
+                  </Sidebar.Item>
+                )}
                 {/* </Sidebar.Collapse> */}
               </Sidebar.ItemGroup>
               <Sidebar.ItemGroup>

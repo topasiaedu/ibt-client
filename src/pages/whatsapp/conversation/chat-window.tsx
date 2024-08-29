@@ -94,22 +94,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
     // Check within the last 24 hours, is there any inbound message or message.message_type === "TEMPLATE"
     function isWithinLast24Hours(dateString: string | null) {
       const date = new Date(dateString || "");
-      const diffInHours = (new Date().getTime() - date.getTime()) / (1000 * 60 * 60);
+      const diffInHours =
+        (new Date().getTime() - date.getTime()) / (1000 * 60 * 60);
       return diffInHours < 24;
     }
-    
+
     const lastMessage = messages.find(
       (message) =>
-        (message.direction === "inbound" && message.message_type !== "TEMPLATE") ||
+        (message.direction === "inbound" &&
+          message.message_type !== "TEMPLATE") ||
         message.message_type === "TEMPLATE"
     );
-    
+
     if (lastMessage && isWithinLast24Hours(lastMessage.created_at)) {
       setAbleToSend(true);
     } else {
-      setAbleToSend(true);  // Always true in this scenario
+      setAbleToSend(true); // Always true in this scenario
     }
-    
 
     // Scroll to the bottom of the chat window
     scrollToBottom();
@@ -343,7 +344,10 @@ const generateMessage = (
   switch (message_type) {
     case "text":
       return renderMessageComponent();
+    case "button":
+      return renderMessageComponent();
     case "image":
+      return renderMessageComponent("IMAGE");
     case "sticker":
       return renderMessageComponent("IMAGE");
     case "video":

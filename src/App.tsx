@@ -54,6 +54,8 @@ import { ConversationHistoryProvider } from "./context/ConversationHistoryContex
 import CanvasEditor from "./pages/personalized-image/canvas-editor";
 import { PersonalizedImageProvider } from "./context/PersonalizedImageContext";
 import PersonalizedImageListPage from "./pages/personalized-image/list";
+import DevToolsPage from "./pages/dev";
+import { ContactEventProvider } from "./context/ContactEventContext";
 
 const App = () => (
   <AlertProvider>
@@ -68,167 +70,178 @@ const App = () => (
                     <TemplateProvider>
                       <PersonalizedImageProvider>
                         <ConversationHistoryProvider>
-                          <FlowProvider>
-                            <AlertComponent />
-                            <BrowserRouter>
-                              <Routes>
-                                <Route element={<FlowbiteWrapper />}>
-                                  {/* Protected Routes */}
-                                  <Route element={<ProtectedRoute />}>
+                          <ContactEventProvider>
+                            <FlowProvider>
+                              <AlertComponent />
+                              <BrowserRouter>
+                                <Routes>
+                                  <Route element={<FlowbiteWrapper />}>
+                                    {/* Protected Routes */}
+                                    <Route element={<ProtectedRoute />}>
+                                      <Route
+                                        path="/"
+                                        element={<DashboardPage />}
+                                        index
+                                      />
+                                      <Route
+                                        path="/mailing/compose"
+                                        element={<MailingComposePage />}
+                                      />
+                                      <Route
+                                        path="/mailing/inbox"
+                                        element={<MailingInboxPage />}
+                                      />
+                                      <Route
+                                        path="/mailing/read"
+                                        element={<MailingReadPage />}
+                                      />
+                                      <Route
+                                        path="/mailing/reply"
+                                        element={<MailingReplyPage />}
+                                      />
+                                      <Route
+                                        path="/e-commerce/billing"
+                                        element={<EcommerceBillingPage />}
+                                      />
+                                      <Route
+                                        path="/e-commerce/invoice"
+                                        element={<EcommerceInvoicePage />}
+                                      />
+                                      <Route
+                                        path="/e-commerce/products"
+                                        element={<EcommerceProductsPage />}
+                                      />
+                                      <Route
+                                        path="/users/feed"
+                                        element={<UserFeedPage />}
+                                      />
+                                      <Route
+                                        path="/users/list"
+                                        element={<UserListPage />}
+                                      />
+                                      <Route
+                                        path="/contacts"
+                                        element={<ContactListPage />}
+                                      />
+                                      <Route
+                                        path="/whatsapp/conversation"
+                                        element={
+                                          <ConversationProvider>
+                                            <MessagesProvider>
+                                              <ConversationPage />
+                                            </MessagesProvider>
+                                          </ConversationProvider>
+                                        }
+                                      />
+                                      <Route
+                                        path="/whatsapp/campaigns"
+                                        element={
+                                          <CampaignProvider>
+                                            <CampaignPhoneNumberProvider>
+                                              <CampaignListPage />
+                                            </CampaignPhoneNumberProvider>
+                                          </CampaignProvider>
+                                        }
+                                      />
+                                      <Route
+                                        path="/whatsapp/templates"
+                                        element={<TemplateListPage />}
+                                      />
+                                      <Route
+                                        path="/whatsapp/contact-list"
+                                        element={<WhatsAppContactListPage />}
+                                      />
+                                      <Route
+                                        path="/whatsapp/workflow"
+                                        element={<WorkflowListPage />}
+                                      />
+                                      <Route
+                                        path="/whatsapp/workflow/editor/:id?"
+                                        element={<FlowEditor />}
+                                      />
+                                      <Route
+                                        path="/users/profile"
+                                        element={<UserProfilePage />}
+                                      />
+                                      <Route
+                                        path="/users/settings"
+                                        element={<UserSettingsPage />}
+                                      />
+
+                                      {/* Personalized Image */}
+                                      <Route
+                                        path="/personalized-image/editor/:id?"
+                                        element={<CanvasEditor />}
+                                      />
+
+                                      <Route
+                                        path="/personalized-image"
+                                        element={<PersonalizedImageListPage />}
+                                      />
+
+                                      {/* Dev / Stanley's Tool */}
+                                      <Route
+                                        path="/dev"
+                                        element={<DevToolsPage />}
+                                      />
+                                    </Route>
+
+                                    {/* Public Routes */}
                                     <Route
-                                      path="/"
-                                      element={<DashboardPage />}
-                                      index
+                                      path="/pages/pricing"
+                                      element={<PricingPage />}
                                     />
                                     <Route
-                                      path="/mailing/compose"
-                                      element={<MailingComposePage />}
+                                      path="/pages/maintenance"
+                                      element={<MaintenancePage />}
                                     />
                                     <Route
-                                      path="/mailing/inbox"
-                                      element={<MailingInboxPage />}
+                                      path="/authentication/sign-in"
+                                      element={<SignInPage />}
                                     />
                                     <Route
-                                      path="/mailing/read"
-                                      element={<MailingReadPage />}
+                                      path="/authentication/sign-up"
+                                      element={<SignUpPage />}
                                     />
                                     <Route
-                                      path="/mailing/reply"
-                                      element={<MailingReplyPage />}
+                                      path="/authentication/forgot-password"
+                                      element={<ForgotPasswordPage />}
                                     />
                                     <Route
-                                      path="/e-commerce/billing"
-                                      element={<EcommerceBillingPage />}
+                                      path="/authentication/reset-password"
+                                      element={<ResetPasswordPage />}
                                     />
                                     <Route
-                                      path="/e-commerce/invoice"
-                                      element={<EcommerceInvoicePage />}
-                                    />
-                                    <Route
-                                      path="/e-commerce/products"
-                                      element={<EcommerceProductsPage />}
-                                    />
-                                    <Route
-                                      path="/users/feed"
-                                      element={<UserFeedPage />}
-                                    />
-                                    <Route
-                                      path="/users/list"
-                                      element={<UserListPage />}
-                                    />
-                                    <Route
-                                      path="/contacts"
-                                      element={<ContactListPage />}
-                                    />
-                                    <Route
-                                      path="/whatsapp/conversation"
-                                      element={
-                                        <ConversationProvider>
-                                          <MessagesProvider>
-                                            <ConversationPage />
-                                          </MessagesProvider>
-                                        </ConversationProvider>
-                                      }
-                                    />
-                                    <Route
-                                      path="/whatsapp/campaigns"
-                                      element={
-                                        <CampaignProvider>
-                                          <CampaignPhoneNumberProvider>
-                                            <CampaignListPage />
-                                          </CampaignPhoneNumberProvider>
-                                        </CampaignProvider>
-                                      }
-                                    />
-                                    <Route
-                                      path="/whatsapp/templates"
-                                      element={<TemplateListPage />}
-                                    />
-                                    <Route
-                                      path="/whatsapp/contact-list"
-                                      element={<WhatsAppContactListPage />}
-                                    />
-                                    <Route
-                                      path="/whatsapp/workflow"
-                                      element={<WorkflowListPage />}
-                                    />
-                                    <Route
-                                      path="/whatsapp/workflow/editor/:id?"
-                                      element={<FlowEditor />}
-                                    />
-                                    <Route
-                                      path="/users/profile"
-                                      element={<UserProfilePage />}
-                                    />
-                                    <Route
-                                      path="/users/settings"
-                                      element={<UserSettingsPage />}
+                                      path="/authentication/profile-lock"
+                                      element={<ProfileLockPage />}
                                     />
 
-                                    {/* Personalized Image */}
+                                    {/* Legal Pages */}
                                     <Route
-                                      path="/personalized-image/editor/:id?"
-                                      element={<CanvasEditor />}
+                                      path="/legal/privacy"
+                                      element={<PrivacyPage />}
                                     />
 
+                                    {/* Testing */}
                                     <Route
-                                      path="/personalized-image"
-                                      element={<PersonalizedImageListPage />}
+                                      path="/loading"
+                                      element={<LoadingPage />}
+                                    />
+
+                                    {/* Error Handling Routes */}
+                                    <Route
+                                      path="/500"
+                                      element={<ServerErrorPage />}
+                                    />
+                                    <Route
+                                      path="*"
+                                      element={<NotFoundPage />}
                                     />
                                   </Route>
-
-                                  {/* Public Routes */}
-                                  <Route
-                                    path="/pages/pricing"
-                                    element={<PricingPage />}
-                                  />
-                                  <Route
-                                    path="/pages/maintenance"
-                                    element={<MaintenancePage />}
-                                  />
-                                  <Route
-                                    path="/authentication/sign-in"
-                                    element={<SignInPage />}
-                                  />
-                                  <Route
-                                    path="/authentication/sign-up"
-                                    element={<SignUpPage />}
-                                  />
-                                  <Route
-                                    path="/authentication/forgot-password"
-                                    element={<ForgotPasswordPage />}
-                                  />
-                                  <Route
-                                    path="/authentication/reset-password"
-                                    element={<ResetPasswordPage />}
-                                  />
-                                  <Route
-                                    path="/authentication/profile-lock"
-                                    element={<ProfileLockPage />}
-                                  />
-
-                                  {/* Legal Pages */}
-                                  <Route
-                                    path="/legal/privacy"
-                                    element={<PrivacyPage />}
-                                  />
-
-                                  {/* Testing */}
-                                  <Route
-                                    path="/loading"
-                                    element={<LoadingPage />}
-                                  />
-
-                                  {/* Error Handling Routes */}
-                                  <Route
-                                    path="/500"
-                                    element={<ServerErrorPage />}
-                                  />
-                                  <Route path="*" element={<NotFoundPage />} />
-                                </Route>
-                              </Routes>
-                            </BrowserRouter>
-                          </FlowProvider>
+                                </Routes>
+                              </BrowserRouter>
+                            </FlowProvider>
+                          </ContactEventProvider>
                         </ConversationHistoryProvider>
                       </PersonalizedImageProvider>
                     </TemplateProvider>
