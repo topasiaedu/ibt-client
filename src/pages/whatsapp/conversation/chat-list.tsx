@@ -149,7 +149,14 @@ const ChatList: React.FC<ChatListProps> = ({
       </div>
       <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto flex-grow">
         {searchResults.length > 0 ? (
-          searchResults.map((result, index) => {
+          searchResults
+          .filter((result) => {
+            if (filterByUnread && result.result_type === "conversation") {
+              return result.last_message.status !== "READ";
+            }
+            return true;
+          })
+          .map((result, index) => {
             if (result.result_type === "conversation") {
               return (
                 <li
@@ -255,7 +262,7 @@ const ChatList: React.FC<ChatListProps> = ({
                 return false;
               }
 
-              if (filterByUnread && conversation.unread_messages === 0) {
+              if (filterByUnread && conversation.last_message.status === "READ") {
                 return false;
               }
 
