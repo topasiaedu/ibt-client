@@ -34,7 +34,8 @@ const CanvasEditor: React.FC = () => {
   const [openUploadSection, setOpenUploadSection] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-
+// Unified state for all object properties
+const [objectProperties, setObjectProperties] = useState<any>({});
   useEffect(() => {
     if (id && editor) {
       const personalizedImage = personalizedImages.find(
@@ -209,19 +210,33 @@ const CanvasEditor: React.FC = () => {
       console.log("Object selected:", target);
       console.log("Object type:", target.type); // Log the object type
       setSelectedObject(target);
+      // Dynamically extract properties for the selected object
+      setObjectProperties({
+        fontFamily: target.fontFamily || "Arial",
+        fill: target.fill || "#000000",
+        textAlign: target.textAlign || "left",
+        fontWeight: target.fontWeight || "normal",
+        fontStyle: target.fontStyle || "normal",
+        underline: target.underline || false,
+        // Add more properties as needed
+        opacity: target.opacity || 1,
+      });
     } else {
       console.error("Selected object is undefined or null.", e);
+      setObjectProperties({});
+      setSelectedObject(null);
     }
   };
   const handleDeselectObject = () => {
     setSelectedObject(null);
+    setObjectProperties({});
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleSaveCanvasState = () => {
     if (editor) {
-      const canvasJSON = editor.canvas.toJSON();
-      console.log(canvasJSON); // Assuming you want to see the JSON for debugging
+      // const canvasJSON = editor.canvas.toJSON();
+      // console.log(canvasJSON); // Assuming you want to see the JSON for debugging
     }
   };
 
@@ -235,7 +250,17 @@ const CanvasEditor: React.FC = () => {
 
       // Trigger a state update with the same object reference
       setSelectedObject(selectedObject);
-      console.log("Updated selectedObject:", selectedObject);
+    }
+  };
+
+  const updateObjectProperty = (property: string, value: any) => {
+    if (selectedObject) {
+      selectedObject.set(property, value);
+      editor?.canvas.renderAll();
+      setObjectProperties((prevProps: any) => ({
+        ...prevProps,
+        [property]: value,
+      }));
     }
   };
 
@@ -243,8 +268,6 @@ const CanvasEditor: React.FC = () => {
     if (!selectedObject) {
       return <p>Select an element to edit its properties.</p>;
     }
-
-    console.log("Rendering properties for:", selectedObject.type);
 
     switch (selectedObject.type) {
       case "textbox":
@@ -256,7 +279,7 @@ const CanvasEditor: React.FC = () => {
                 id="fontFamily"
                 value={(selectedObject as fabric.Textbox).fontFamily || "Arial"}
                 onChange={(e) =>
-                  updateSelectedObject("fontFamily", e.target.value)
+                  updateObjectProperty("fontFamily", e.target.value)
                 }>
                 <option value="Arial">Arial</option>
                 <option value="Helvetica">Helvetica</option>
@@ -282,7 +305,7 @@ const CanvasEditor: React.FC = () => {
                   ((selectedObject as fabric.Textbox).fill as string) ||
                   "#000000"
                 }
-                onChange={(e) => updateSelectedObject("fill", e.target.value)}
+                onChange={(e) => updateObjectProperty("fill", e.target.value)}
               />
             </div>
             <div>
@@ -291,7 +314,7 @@ const CanvasEditor: React.FC = () => {
                 id="textAlign"
                 value={(selectedObject as fabric.Textbox).textAlign || "left"}
                 onChange={(e) =>
-                  updateSelectedObject("textAlign", e.target.value)
+                  updateObjectProperty("textAlign", e.target.value)
                 }>
                 <option value="left">Left</option>
                 <option value="center">Center</option>
@@ -302,7 +325,7 @@ const CanvasEditor: React.FC = () => {
               <Button
                 size="sm"
                 onClick={() =>
-                  updateSelectedObject(
+                  updateObjectProperty(
                     "fontWeight",
                     (selectedObject as fabric.Textbox).fontWeight === "bold"
                       ? "normal"
@@ -316,7 +339,7 @@ const CanvasEditor: React.FC = () => {
               <Button
                 size="sm"
                 onClick={() =>
-                  updateSelectedObject(
+                  updateObjectProperty(
                     "fontStyle",
                     (selectedObject as fabric.Textbox).fontStyle === "italic"
                       ? "normal"
@@ -330,7 +353,7 @@ const CanvasEditor: React.FC = () => {
               <Button
                 size="sm"
                 onClick={() =>
-                  updateSelectedObject(
+                  updateObjectProperty(
                     "underline",
                     !(selectedObject as fabric.Textbox).underline
                   )
