@@ -315,9 +315,9 @@ const ChatList: React.FC<ChatListProps> = ({
                         </>
                       )}
                     </div>
-                    {conversation.unread_messages > 0 && (
+                    {conversation.last_message.status !== "READ" && (
                       <Badge color="primary">
-                        {conversation.unread_messages}
+                        1
                       </Badge>
                     )}
                   </div>

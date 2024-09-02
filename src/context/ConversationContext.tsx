@@ -38,6 +38,7 @@ interface ConversationContextType {
   loading: boolean;
   searchConversations: (searchPattern: string) => Promise<void>;
   searchResults: any[];
+  updateLastMessageStatus: (messageId: number, status: string) => Promise<void>;
 }
 
 const ConversationContext = createContext<ConversationContextType>(undefined!);
@@ -86,7 +87,6 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
 
     // Example usage:
     fetchConversations(1, 1000); // Fetch the first page with 10 conversations per page
-    fetchConversations(2, 2000); // Fetch the first page with 10 conversations per page
 
     const handleChanges = async (payload: any) => {
       console.log("Conversation changes:", payload.eventType);
@@ -310,6 +310,38 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     [currentProject, showAlert]
   );
 
+  const updateLastMessageStatus = useCallback(
+    async (messageId: number, status: string) => {
+      // Find conversation, update last message, then update the state
+      const conversation = conversations.find(
+        (conversation) => conversation.last_message_id === messageId
+      );
+
+      if (!conversation) {
+        console.error("Conversation not found");
+        return;
+      }
+
+      setConversations((prevConversations) => {
+        const updatedConversations = prevConversations.map((conv) => {
+          if (conv.id === conversation.id) {
+            return {
+              ...conv,
+              last_message: {
+                ...conv.last_message,
+                status,
+              },
+            };
+          }
+          return conv;
+        });
+
+        return updatedConversations;
+      });
+    },
+    [conversations]
+  );
+
   const value = useMemo(() => {
     return {
       conversations,
@@ -320,6 +352,8 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
       loading,
       searchConversations,
       searchResults,
+      updateLastMessageStatus,
+
     };
   }, [
     conversations,
@@ -330,6 +364,7 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     loading,
     searchConversations,
     searchResults,
+    updateLastMessageStatus,
   ]);
 
   return (

@@ -24,15 +24,31 @@ const ConversationPage: React.FC = function () {
     loading: messagesLoading,
   } = useMessagesContext();
   const { currentProject } = useProjectContext();
-  const { conversations, loading, updateConversation, fetchConversationById } =
-    useConversationContext();
+  const {
+    conversations,
+    loading,
+    updateConversation,
+    fetchConversationById,
+    updateLastMessageStatus,
+  } = useConversationContext();
 
-  const handleSelectConversation = async (conversationId:string) => {
-    const conversation:Conversation|undefined = await fetchConversationById(conversationId);
+  const handleSelectConversation = async (conversationId: string) => {
+    const conversation: Conversation | undefined = await fetchConversationById(
+      conversationId
+    );
     if (!conversation) return;
     setSelectedConversation(conversation);
     setCurrentConversationId(conversationId);
-    
+
+    if (conversation.last_message_id) {
+      updateLastMessageStatus(conversation.last_message_id, "READ");
+
+      updateMessage({
+        message_id: conversation.last_message_id,
+        status: "READ",
+      });
+    }
+
     // // Mark all messages as read
     // for (const message of messages) {
     //   if (message.status !== "READ" && message.direction === "inbound") {
@@ -80,23 +96,32 @@ const ConversationPage: React.FC = function () {
 
   useEffect(() => {
     if (selectedConversation) {
+      // if (currentConversationId !== selectedConversation.id) {
+      //   return;
+      // }
       const updatedConversation = conversations.find(
         (conversation) => conversation.id === selectedConversation.id
       );
       if (updatedConversation) {
-        // Mark all messages as read
-        for (const message of messages) {
-          if (message.status !== "READ" && message.direction === "inbound") {
-            updateMessage({
-              message_id: message.message_id,
-              status: "READ",
-            });
-          }
-        }
+        //   // Mark all messages as read
+        //   for (const message of messages) {
+        //     if (message.status !== "READ" && message.direction === "inbound") {
+        //       updateMessage({
+        //         message_id: message.message_id,
+        //         status: "READ",
+        //       });
+        //     }
+        //   }
         setSelectedConversation(updatedConversation);
       }
     }
-  }, [conversations, messages, selectedConversation, updateMessage]);
+  }, [
+    conversations,
+    messages,
+    selectedConversation,
+    updateMessage,
+    currentConversationId,
+  ]);
 
   // If current project is changed, reset selected conversation
   useEffect(() => {
