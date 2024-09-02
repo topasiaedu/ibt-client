@@ -312,24 +312,36 @@ export type Database = {
       }
       contact_events: {
         Row: {
+          amount: number | null
           contact_id: number
           created_at: string
           description: string | null
           id: string
+          project_id: number
+          tag: string | null
+          tag_2: string | null
           type: string
         }
         Insert: {
+          amount?: number | null
           contact_id: number
           created_at?: string
           description?: string | null
           id?: string
+          project_id: number
+          tag?: string | null
+          tag_2?: string | null
           type: string
         }
         Update: {
+          amount?: number | null
           contact_id?: number
           created_at?: string
           description?: string | null
           id?: string
+          project_id?: number
+          tag?: string | null
+          tag_2?: string | null
           type?: string
         }
         Relationships: [
@@ -339,6 +351,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["contact_id"]
+          },
+          {
+            foreignKeyName: "contact_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["project_id"]
           },
         ]
       }

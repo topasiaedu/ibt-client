@@ -126,7 +126,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
             data.contact_id
           );
         } else {
-          const createContactData: Contact = {
+          const createContactData: ContactInsert = {
             wa_id: contact.phone,
             name: contact.name || "",
             phone: null,

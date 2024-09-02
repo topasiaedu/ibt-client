@@ -2,8 +2,15 @@ import React, { useState } from "react";
 import { Breadcrumb, Button, FileInput, Label } from "flowbite-react";
 import { HiHome } from "react-icons/hi";
 import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
-import { Contact, useContactContext } from "../../context/ContactContext";
-import { useContactEventContext } from "../../context/ContactEventContext";
+import {
+  Contact,
+  ContactInsert,
+  useContactContext,
+} from "../../context/ContactContext";
+import {
+  useContactEventContext,
+  ContactEventInsert,
+} from "../../context/ContactEventContext";
 
 const DevToolsPage: React.FC = function () {
   const [file, setFile] = useState<File | null>(null);
@@ -11,8 +18,9 @@ const DevToolsPage: React.FC = function () {
   const [totalContacts, setTotalContacts] = useState(0);
   const [oldContactCount, setOldContactCount] = useState(0);
   const [newContactCount, setNewContactCount] = useState(0);
-  const { findContactByWaId } = useContactContext();
-  const { addContactEvent } = useContactEventContext();
+  const { findContactByWaId, addContact } = useContactContext();
+  const { addContactEvent, bulkAddContactEvents } = useContactEventContext();
+  const [errorCount, setErrorCount] = useState(0);
 
   type CSVData = Record<string, string | null>;
 
@@ -21,76 +29,172 @@ const DevToolsPage: React.FC = function () {
       console.error("No file selected");
       return;
     }
-
+  
     try {
       // Reading the file as text
       const text = await file.text();
-
+  
       // Splitting the file content into rows
       const rows = text.split("\n").filter((row) => row.trim() !== "");
-
+  
       // Extracting headers
       const headers = rows[0].split(",").map((header) => header.trim());
-
+  
       // Processing each row into a JSON object
       const data: CSVData[] = rows.slice(1).map((row) => {
         const columns = row.split(",").map((col) => col.trim());
-
+  
         // Create a JSON object from the columns
         const rowData: CSVData = headers.reduce<CSVData>(
           (acc, header, index) => {
             // Check if the index exists in columns; if not, assign null
             let value = columns[index] !== undefined ? columns[index] : null;
-
+  
             // Check if phone is empty, if empty skip
             if (header.toLowerCase() === "phone" && !value) {
               return acc;
             }
-
+  
             // Format the phone number if this is the "Phone" column
             if (header.toLowerCase() === "phone" && value !== null) {
               value = formatPhoneNumber(value);
               setTotalContacts((prev) => prev + 1);
             }
+  
+            if (
+              header.toLowerCase() === "date" &&
+              value !== null &&
+              value !== ""
+            ) {
+              const dateString = value;
+  
+              // Split the date and time
+              const [datePart, timePart] = dateString.split(" ");
+  
+              // Split the day, month, and year
+              const [day, month, year] = datePart.split("/");
+  
+              // Check if date values are valid
+              if (
+                isNaN(parseInt(day)) ||
+                isNaN(parseInt(month)) ||
+                isNaN(parseInt(year)) ||
+                parseInt(day) > 31 ||
+                parseInt(month) > 12 ||
+                parseInt(year) < 1900 ||
+                parseInt(year) > new Date().getFullYear()
+              ) {
+                console.error("Invalid date:", datePart);
+                setErrorCount((prev) => prev + 1);
+                return acc;
+              }
+  
+              // Rearrange into a format that the Date object understands (YYYY-MM-DDTHH:mm:ss)
+              const formattedDateString = `${year}-${month}-${day}T${timePart}`;
+  
 
+              console.log("Formatted date string:", formattedDateString);
+              // Create a Date object
+              const dateObject = new Date(formattedDateString);
+  
+              value = dateObject.toISOString();
+            }
+  
             acc[header.toLowerCase()] = value;
             return acc;
           },
           {}
         );
-
+  
         return rowData;
       });
-
-
+  
+      let contactEvents: ContactEventInsert[] = [];
+  
       // Create contacts from the data
-      data.forEach(async (contactData) => {
+      for (const contactData of data) {
         // Skip if the phone number is invalid
         if (contactData.phone === "Invalid") {
-          return;
+          continue;
         }
-
+  
         if (!contactData.phone) {
-          console.log("Skipping contact without phone number:", contactData);
-          return;
+          // console.log("Skipping contact without phone number:", contactData);
+          continue;
         }
-
+  
         // Find the contact by phone number
         const existingContact = await findContactByWaId(contactData.phone);
-
+  
         // If the contact doesn't exist, create a new contact
         if (!existingContact) {
+          // Create a new contact
+          const newContact: ContactInsert = {
+            name: contactData.name || "",
+            wa_id: contactData.phone || "",
+            email: contactData.email || "",
+            project_id: 1,
+          };
+  
+          // Add the contact to the database
+          const contact = await addContact(newContact);
+  
+          if (!contact) {
+            console.error("Error adding contact:", newContact);
+            setErrorCount((prev) => prev + 1);
+            continue;
+          }
+  
+          // Create a new contact event
+          const newContactEvent: ContactEventInsert = {
+            contact_id: contact.contact_id,
+            type: contactData.type || "Unknown",
+            created_at: contactData.date || new Date().toISOString(),
+            project_id: 1,
+            tag: contactData.tag,
+            tag_2: contactData.tag_2,
+            amount: contactData.amount ? parseFloat(contactData.amount) : 0,
+            description: `Purchased ${contactData.tag} on ${
+              contactData.date || new Date().toISOString()
+            } in the amount of ${contactData.amount} (${contactData.tag_2})`,
+          };
+  
+          contactEvents.push(newContactEvent);
           setNewContactCount((prev) => prev + 1);
-          
         } else {
-          console.log("Contact already exists:", existingContact.contact_id);
+          // Create a new contact event
+          const newContactEvent: ContactEventInsert = {
+            contact_id: existingContact.contact_id,
+            type: contactData.type || "Unknown",
+            created_at: contactData.date || new Date().toISOString(),
+            project_id: 1,
+            tag: contactData.tag,
+            tag_2: contactData.tag_2,
+            amount: contactData.amount ? parseFloat(contactData.amount) : 0,
+            description: `Purchased ${contactData.tag} on ${
+              contactData.date || new Date().toISOString()
+            } in the amount of ${contactData.amount} (${contactData.tag_2})`,
+          };
+  
+          contactEvents.push(newContactEvent);
           setOldContactCount((prev) => prev + 1);
         }
-      });
+      }
+  
+      console.log("Contact events:", contactEvents.length);
+      // Bulk add contact events
+      const result = await bulkAddContactEvents(contactEvents);
+      if (!result) {
+        console.error("Error adding contact events:");
+        setErrorCount((prev) => prev + 1);
+      } else {
+        console.log("Successfully added contact events:", result);
+      }
     } catch (error) {
       console.error("Error reading file:", error);
     }
   };
+  
   const [totalInvalid, setTotalInvalid] = useState(0);
 
   const formatPhoneNumber = (phone: string): string => {
@@ -225,6 +329,13 @@ const DevToolsPage: React.FC = function () {
                       <Label>New Contacts</Label>
                       <p className="text-lg font-semibold text-gray-900 dark:text-white">
                         {newContactCount}
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label>Errors</Label>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {errorCount}
                       </p>
                     </div>
                   </div>

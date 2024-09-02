@@ -10,8 +10,12 @@ import { supabase } from "../utils/supabaseClient";
 import { Database } from "../../database.types";
 import { useProjectContext } from "./ProjectContext";
 import isEqual from "lodash.isequal";
+import { useAlertContext } from "./AlertContext";
 
-export type Contact = Database["public"]["Tables"]["contacts"]["Row"];
+export type Contact = Database["public"]["Tables"]["contacts"]["Row"] & {
+  total_paid: number;
+  times_opted_in: number;
+}
 export type Contacts = { contacts: Contact[] };
 export type ContactInsert = Database["public"]["Tables"]["contacts"]["Insert"];
 
@@ -22,7 +26,9 @@ interface ContactContextProps {
   deleteContact: (contactId: number) => void;
   findContact: (contact: Contact) => Promise<Contact | null>;
   findContactByWaId: (wa_id: string) => Promise<Contact | null>;
+  searchContacts: (search: string) => void;
   loading: boolean;
+  searchResults: Contact[];
 }
 
 const ContactContext = createContext<ContactContextProps>(undefined!);
@@ -31,6 +37,8 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const { currentProject } = useProjectContext();
+  const { showAlert } = useAlertContext();
+  const [searchResults, setSearchResults] = useState<Contact[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -38,10 +46,9 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
       if (!currentProject) return;
 
       const { data: contacts, error } = await supabase
-        .from("contacts")
-        .select("*")
-        .eq("project_id", currentProject.project_id)
-        .order("contact_id", { ascending: false });
+        .rpc("fetch_contacts_with_stats", {
+          p_project_id: currentProject.project_id,
+        })
 
       if (error) {
         console.error("Error fetching contacts:", error);
@@ -181,7 +188,38 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
 
     return contacts?.[0] || null;
   }, []);
+  
+  const searchContacts = useCallback(
+    async (searchPattern: string) => {
+      if (!currentProject) return;
 
+      // setLoading(true);
+
+      const { data: conversations, error } = await supabase.rpc(
+        "search_contacts_with_stats",
+        {
+          search_pattern: searchPattern,
+          page: 1,
+          page_size: 1000
+        }
+      );
+
+      if (error) {
+        showAlert("Error searching conversations", "error");
+        console.error("Error searching conversations:", error);
+        // setLoading(false);
+        return;
+      }
+
+      if (conversations) {
+        // setContacts(conversations);
+        setSearchResults(conversations);
+      }
+
+      // setLoading(false);
+    },
+    [currentProject, showAlert]
+  );
   const contextValue = useMemo(
     () => ({
       contacts,
@@ -190,9 +228,11 @@ export function ContactProvider({ children }: { children: React.ReactNode }) {
       deleteContact,
       findContact,
       findContactByWaId,
+      searchContacts,
       loading,
+      searchResults,
     }),
-    [contacts, addContact, updateContact, deleteContact, findContact, loading]
+    [contacts, addContact, updateContact, deleteContact, findContact, findContactByWaId, searchContacts, loading, searchResults]
   );
 
   return (

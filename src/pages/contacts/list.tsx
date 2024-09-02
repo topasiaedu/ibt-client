@@ -1,24 +1,34 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import {
-  Breadcrumb,
-  Label,
-  Table,
-  TextInput,
-} from "flowbite-react";
+import { Breadcrumb, Label, Table, TextInput } from "flowbite-react";
 import type { FC } from "react";
-import React from "react";
-import {
-  HiHome,
-} from "react-icons/hi";
+import React, { useEffect } from "react";
+import { HiHome } from "react-icons/hi";
 import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
 import AddContactModal from "./add-contact-modal";
 import EditContactModal from "./edit-contact-modal";
 import LoadingPage from "../pages/loading";
 import { useContactContext, Contacts } from "../../context/ContactContext";
 import { usePhoneNumberContext } from "../../context/PhoneNumberContext";
+import debounce from "lodash.debounce";
+import { useNavigate } from "react-router-dom";
+import { Dropdown } from "flowbite-react";
+
 const ContactListPage: FC = function () {
-  const { contacts, loading } = useContactContext();
+  const { contacts, loading, searchResults, searchContacts } =
+    useContactContext();
   const [searchValue, setSearchValue] = React.useState("");
+  const [sortValue, setSortValue] = React.useState("Latest");
+
+  const debouncedSearchConversations = debounce((searchPattern: string) => {
+    searchContacts(searchPattern);
+  }, 1000);
+  useEffect(() => {
+    if (searchValue === "") {
+      return;
+    }
+    debouncedSearchConversations(searchValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue]);
 
   if (loading || !contacts || !contacts.length) {
     return <LoadingPage />;
@@ -60,6 +70,19 @@ const ContactListPage: FC = function () {
                 </div>
               </form>
             </div>
+
+            {/* Sort by */}
+            <Dropdown label="Sort By">
+              <Dropdown.Item onClick={() => setSortValue("Latest")}>
+                Latest
+              </Dropdown.Item>
+              <Dropdown.Item onClick={() => setSortValue("Times Opted In")}>
+                Times Opted In
+              </Dropdown.Item>
+              <Dropdown.Item onClick={() => setSortValue("Total Paid")}>
+                Total Paid
+              </Dropdown.Item>
+            </Dropdown>
             <div className="ml-auto flex items-center space-x-2 sm:space-x-3">
               <AddContactModal />
             </div>
@@ -70,9 +93,39 @@ const ContactListPage: FC = function () {
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-hidden shadow">
-              {contacts.length > 0 ? (
-                <ContactsTable contacts={contacts.filter((contact) => contact.name.toLowerCase().includes(searchValue.toLowerCase()) || contact.wa_id.toLowerCase().includes(searchValue.toLowerCase()))} />
-
+              {searchResults.length > 0 && (
+                <ContactsTable
+                  contacts={searchResults.sort((a, b) => {
+                    if (sortValue === "Times Opted In") {
+                      return b.times_opted_in - a.times_opted_in;
+                    } else if (sortValue === "Total Paid") {
+                      return b.total_paid - a.total_paid;
+                    }
+                    return 0;
+                  })}
+                />
+              )}
+              {contacts.length > 0 && searchResults.length === 0 ? (
+                <ContactsTable
+                  contacts={contacts
+                    .sort((a, b) => {
+                      if (sortValue === "Times Opted In") {
+                        return b.times_opted_in - a.times_opted_in;
+                      } else if (sortValue === "Total Paid") {
+                        return b.total_paid - a.total_paid;
+                      }
+                      return 0;
+                    })
+                    .filter(
+                      (contact) =>
+                        contact.name
+                          .toLowerCase()
+                          .includes(searchValue.toLowerCase()) ||
+                        contact.wa_id
+                          .toLowerCase()
+                          .includes(searchValue.toLowerCase())
+                    )}
+                />
               ) : (
                 <div className="p-4 text-center">No contacts found</div>
               )}
@@ -87,6 +140,7 @@ const ContactListPage: FC = function () {
 
 const ContactsTable: React.FC<Contacts> = function ({ contacts }) {
   const { phoneNumbers } = usePhoneNumberContext();
+  const navigate = useNavigate();
 
   return (
     <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
@@ -94,17 +148,31 @@ const ContactsTable: React.FC<Contacts> = function ({ contacts }) {
         <Table.HeadCell>Name</Table.HeadCell>
         <Table.HeadCell>Phone Number</Table.HeadCell>
         <Table.HeadCell>Last Contacted By</Table.HeadCell>
-        {/* <Table.HeadCell>Tags</Table.HeadCell> */}
+        <Table.HeadCell>Times Opted In</Table.HeadCell>
+        <Table.HeadCell>Total Paid</Table.HeadCell>
         <Table.HeadCell>Actions</Table.HeadCell>
       </Table.Head>
       <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
         {contacts.map((contact) => (
-          <Table.Row key={contact.contact_id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+          <Table.Row
+            key={contact.contact_id}
+            onClick={() => {
+              // Redirect them to the contact timeline page
+              navigate(`/contacts/events/${contact.contact_id}`);
+            }}
+            className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Table.Cell>{contact.name}</Table.Cell>
-            <Table.Cell >{contact.wa_id}</Table.Cell>
+            <Table.Cell>{contact.wa_id}</Table.Cell>
             <Table.Cell>
-              {contact.last_contacted_by ? phoneNumbers.find((phoneNumber) => phoneNumber.phone_number_id === contact.last_contacted_by)?.number : "Not contacted yet"}
+              {contact.last_contacted_by
+                ? phoneNumbers.find(
+                    (phoneNumber) =>
+                      phoneNumber.phone_number_id === contact.last_contacted_by
+                  )?.number
+                : "Not contacted yet"}
             </Table.Cell>
+            <Table.Cell>{contact.times_opted_in}</Table.Cell>
+            <Table.Cell>{contact.total_paid}</Table.Cell>
             {/* <Table.Cell>
               {getTags(contact.tags)}
             </Table.Cell> */}

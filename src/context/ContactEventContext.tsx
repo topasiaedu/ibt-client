@@ -30,6 +30,10 @@ interface ContactEventContextProps {
     contactEvent: ContactEvent
   ) => Promise<ContactEvent | null>;
   loading: boolean;
+  bulkAddContactEvents: (
+    contactEvents: ContactEventInsert[]
+  ) => Promise<ContactEvent[]>;
+  fetchContactEventsByContactId: (contactId: number) => Promise<ContactEvent[]>;
 }
 
 const ContactEventContext = createContext<ContactEventContextProps>(undefined!);
@@ -78,9 +82,7 @@ export function ContactEventProvider({
       if (payload.eventType === "UPDATE") {
         setContactEvents((prevContactEvents) => {
           return prevContactEvents.map((contactEvent) => {
-            if (
-              contactEvent.id === payload.new.id
-            ) {
+            if (contactEvent.id === payload.new.id) {
               return payload.new;
             }
             return contactEvent;
@@ -91,8 +93,7 @@ export function ContactEventProvider({
       if (payload.eventType === "DELETE") {
         setContactEvents((prevContactEvents) => {
           return prevContactEvents.filter(
-            (contactEvent) =>
-              contactEvent.id !== payload.old.id
+            (contactEvent) => contactEvent.id !== payload.old.id
           );
         });
       }
@@ -174,6 +175,42 @@ export function ContactEventProvider({
     []
   );
 
+  const bulkAddContactEvents = useCallback(
+    async (contactEvents: ContactEventInsert[]) => {
+      const { data, error } = await supabase
+        .from("contact_events")
+        .insert(contactEvents);
+
+      if (error) {
+        console.error("Error bulk adding contact events:", error);
+        return [];
+      }
+
+      return data || [];
+    },
+
+    []
+  );
+
+  const fetchContactEventsByContactId = useCallback(
+    async (contactId: number) => {
+      const { data, error } = await supabase
+        .from("contact_events")
+        .select("*")
+        .eq("contact_id", contactId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching contact events by contact id:", error);
+        return [];
+      }
+
+      return data || [];
+    },
+
+    []
+  );
+
   const value = useMemo(
     () => ({
       contactEvents,
@@ -182,6 +219,8 @@ export function ContactEventProvider({
       deleteContactEvent,
       findContactEvent,
       loading,
+      bulkAddContactEvents,
+      fetchContactEventsByContactId,
     }),
     [
       contactEvents,
@@ -190,6 +229,8 @@ export function ContactEventProvider({
       deleteContactEvent,
       findContactEvent,
       loading,
+      bulkAddContactEvents,
+      fetchContactEventsByContactId,
     ]
   );
 

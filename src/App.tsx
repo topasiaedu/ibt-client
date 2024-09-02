@@ -56,6 +56,7 @@ import { PersonalizedImageProvider } from "./context/PersonalizedImageContext";
 import PersonalizedImageListPage from "./pages/personalized-image/list";
 import DevToolsPage from "./pages/dev";
 import { ContactEventProvider } from "./context/ContactEventContext";
+import ContactEventPage from "./pages/contacts/contact-timeline";
 
 const App = () => (
   <AlertProvider>
@@ -122,6 +123,13 @@ const App = () => (
                                       <Route
                                         path="/contacts"
                                         element={<ContactListPage />}
+                                      />
+
+                                      <Route
+                                        path="/contacts/events/:contactId"
+                                        element={
+                                          <ContactEventPage />
+                                        }
                                       />
                                       <Route
                                         path="/whatsapp/conversation"
