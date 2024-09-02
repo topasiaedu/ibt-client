@@ -74,7 +74,7 @@ const ActionNodeTypes = [
   "add-to-contact-list",
   "send-message",
   "send-template",
-  "zoom"
+  "zoom",
 ];
 
 export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
@@ -285,7 +285,6 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
     );
     const triggerData = prepareTriggerData(triggerNodes, currentWorkflowId);
     const actionData = prepareActionData(actionNodes, currentWorkflowId);
-    
 
     // Function to update or create data
     const updateOrCreateData = async (
@@ -313,6 +312,28 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
     };
 
     if (currentWorkflowId && workflowData.id !== "1") {
+      // Update Trigger if type is webhook
+      const webhookTrigger = triggerData.find(
+        (trigger) => trigger.type === "webhook"
+      );
+      if (webhookTrigger) {
+        await updateTrigger({
+          ...webhookTrigger,
+          details: {
+            url: `https://ibts3.whatsgenie.com/ibt/webhook/${workflowData.id}`,
+          },
+        });
+
+        // Update the one in the state too
+        const webhookNode = nodes.find((node) => node.id === webhookTrigger.id);
+        if (webhookNode) {
+          updateNodeData(webhookNode.id, {
+            ...webhookNode.data,
+            url: `https://ibts3.whatsgenie.com/ibt/webhook/${workflowData.id}`,
+          });
+        }
+      }
+
       // Update existing workflow
       const workflowUpdate: WorkflowUpdate = {
         id: workflowData.id,
@@ -358,16 +379,24 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
       }
 
       // Update Trigger if type is webhook
-      const webhookTrigger = triggerData.find((trigger) => trigger.type === "webhook");
+      const webhookTrigger = triggerData.find(
+        (trigger) => trigger.type === "webhook"
+      );
       if (webhookTrigger) {
-        await updateTrigger({ ...webhookTrigger, details: {           
-          url: `https://ibts3.whatsgenie.com/ibt/webhook/${newWorkflowId}` 
-        } });
-        
+        await updateTrigger({
+          ...webhookTrigger,
+          details: {
+            url: `https://ibts3.whatsgenie.com/ibt/webhook/${newWorkflowId}`,
+          },
+        });
+
         // Update the one in the state too
         const webhookNode = nodes.find((node) => node.id === webhookTrigger.id);
         if (webhookNode) {
-          updateNodeData(webhookNode.id, { ...webhookNode.data, url: `https://ibts3.whatsgenie.com/ibt/webhook/${newWorkflowId}` });
+          updateNodeData(webhookNode.id, {
+            ...webhookNode.data,
+            url: `https://ibts3.whatsgenie.com/ibt/webhook/${newWorkflowId}`,
+          });
         }
       }
 
