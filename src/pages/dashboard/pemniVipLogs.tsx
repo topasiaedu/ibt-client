@@ -58,8 +58,8 @@ const PemniVipLogs = function () {
                       .toLowerCase()
                       .includes(searchValue.toLowerCase())
                   : false;
-                const phoneMatch = log.contact?.phone
-                  ? log.contact?.phone
+                const phoneMatch = log.contact?.wa_id
+                  ? log.contact?.wa_id
                       .toLowerCase()
                       .includes(searchValue.toLowerCase())
                   : false;
