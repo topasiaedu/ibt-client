@@ -114,6 +114,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, messages }) => {
 
     // Scroll to the bottom of the chat window
     scrollToBottom();
+    setContextMessage(null);
   }, [messages, messages.length]);
 
   const scrollToBottom = () => {

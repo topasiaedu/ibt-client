@@ -290,6 +290,7 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
         "search_conversations_and_messages",
         {
           search_pattern: searchPattern,
+          p_project_id: currentProject.project_id, 
         }
       );
 
