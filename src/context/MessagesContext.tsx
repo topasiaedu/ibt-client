@@ -363,13 +363,13 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
   );
 
   const sendReEngagementMessage = useCallback(
-    async (conversation: Conversation) => {
+    async (conversation: Conversation, ) => {
       const body = JSON.stringify({
         messaging_product: "whatsapp",
         to: conversation.contact?.wa_id,
         type: "template",
         template: {
-          name: "pemni_re_engagement_message",
+          name: currentProject?.name === "Pemni" ? "pemni_re_engagement_message" : "re_engagement_message",
           language: {
             code: "zh_CN",
           },
@@ -409,6 +409,25 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
 
       // Add message to database
 
+      const pemniMessage = `嗨 ${conversation.contact?.name} 👋
+
+由于这信息系统出现了些问题，无法马上回复您。
+
+若您有任何关于上课的疑问请一律 whatsapp Serene: 
++6011-20560692 (Serene)
+https://wa.link/v3pcls  
+
+感谢您的理解 🙆🏼‍♀`
+      const pongMessage =`嗨 ${conversation.contact?.name}👋
+
+由于这信息系统出现了些问题，无法马上回复您。
+
+若您有任何关于上课的疑问请一律 whatsapp Jessica: 
++60 11-5863 9269 (Jessica)
+https://wa.link/ql7a6h  
+
+感谢您的理解 🙆🏼‍♀`
+
       const { data: newMessage, error } = await supabase
         .from("messages")
         .insert({
@@ -418,16 +437,7 @@ export const MessagesProvider: React.FC<PropsWithChildren<{}>> = ({
           contact_id: conversation.contact_id,
           conversation_id: conversation.id,
           message_type: "TEMPLATE",
-          content: `嗨 ${conversation.contact?.name} 👋
-
-由于这信息系统出现了些问题，无法马上回复您。
-
-若您有任何关于上课的疑问请一律 whatsapp Serene: 
-+6011-20560692 (Serene)
-https://wa.link/v3pcls  
-
-感谢您的理解 🙆🏼‍♀
-`,
+          content: currentProject?.name === "Pemni" ? pemniMessage : pongMessage,
         } as MessageInsert)
         .select()
         .single();
@@ -456,7 +466,7 @@ https://wa.link/v3pcls  
 
       showAlert("Re-engagement message sent", "success");
     },
-    [addMessage, currentProject, showAlert]
+    [currentProject, showAlert]
   );
 
   const contextValue = useMemo(

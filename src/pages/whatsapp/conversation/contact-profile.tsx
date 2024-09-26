@@ -101,6 +101,15 @@ const ContactProfile: React.FC<ContactProfileProps> = ({
           </Button>
         </div>
       )}
+      {currentProject?.name === "JE Pong" && (
+        <div>
+          <Button onClick={() => sendReEngagementMessage(conversation)}>
+            <div className="mr-1 flex items-center gap-x-2">
+              <HiChevronLeft className="text-xl" /> Send re-engagement message
+            </div>
+          </Button>
+        </div>
+      )}
 
       {/* New Update: the user can now double click to reply to message */}
       <UpdateNoticeComponent
