@@ -11,7 +11,7 @@ import debounce from "lodash.debounce";
 
 interface ChatListProps {
   conversations: Conversation[];
-  onSelectConversation: (conversationId:string) => void;
+  onSelectConversation: (conversationId: string) => void;
   selectedConversation: Conversation | undefined;
   onMarkAsUnread: (conversation: Conversation) => void;
 }
@@ -101,7 +101,6 @@ const ChatList: React.FC<ChatListProps> = ({
     return <LoadingPage />;
   }
 
-
   console.log("conversations", conversations);
   return (
     <div
@@ -150,190 +149,208 @@ const ChatList: React.FC<ChatListProps> = ({
         <Label htmlFor="filterByUnread">Filter by unread</Label>
       </div>
       <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto flex-grow">
-        {searchResults.length > 0 ? (
-          searchResults
-          .filter((result) => {
-            if (filterByUnread && result.result_type === "conversation") {
-              return result.last_message.status !== "READ";
-            }
-            return true;
-          })
-          .map((result, index) => {
-            if (result.result_type === "conversation") {
-              return (
+        {searchResults.length > 0
+          ? searchResults
+              .filter((result) => {
+                if (filterByUnread && result.result_type === "conversation") {
+                  return result.last_message.status !== "READ";
+                }
+                return true;
+              })
+              .map((result, index) => {
+                if (result.result_type === "conversation") {
+                  return (
+                    <li
+                      key={index}
+                      className={`p-4 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 ${
+                        selectedConversation &&
+                        selectedConversation.id === result.conversation_id
+                          ? "bg-gray-200 dark:bg-gray-700"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        onSelectConversation(result.conversation_id)
+                      }
+                      onContextMenu={(e) => handleContextMenu(e, result)}>
+                      <div className="flex justify-between 2xl:space-x-4 items-center">
+                        <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
+                          <div className="min-w-0 flex-1 w-fit">
+                            <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
+                              {result.contact && result.contact.name}
+                              <Badge color="primary">
+                                {result.phone_number &&
+                                  result.phone_number.number}
+                              </Badge>
+                            </p>
+                            <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
+                              {result.contact && result.contact.wa_id}
+                            </p>
+                            {result.last_message && (
+                              <>
+                                <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
+                                  {result.last_message &&
+                                    result.last_message.content}
+                                </p>
+                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                  Last seen:{" "}
+                                  {result.last_message.created_at &&
+                                    new Date(
+                                      result.last_message.created_at
+                                    ).toLocaleString()}
+                                </p>
+                              </>
+                            )}
+                          </div>
+                          {result.unread_messages > 0 && (
+                            <Badge color="primary">
+                              {result.unread_messages}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                } else if (result.result_type === "message") {
+                  return (
+                    <li
+                      key={index}
+                      className="p-4 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600"
+                      onClick={() =>
+                        onSelectConversation(result.conversation_id)
+                      }
+                      onContextMenu={(e) => handleContextMenu(e, result)}>
+                      <div className="flex justify-between 2xl:space-x-4 items-center">
+                        <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
+                          <div className="min-w-0 flex-1 w-fit">
+                            <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
+                              {result.contact && result.contact.name}
+                              <Badge color="primary">
+                                {result.phone_number &&
+                                  result.phone_number.number}
+                              </Badge>
+                            </p>
+                            <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
+                              {result.matched_message &&
+                                result.matched_message.content}
+                            </p>
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                              {result.message_created_at &&
+                                new Date(
+                                  result.message_created_at
+                                ).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                }
+                return null;
+              })
+          : conversations
+              .sort((a, b) => {
+                if (
+                  a.last_message === null ||
+                  b.last_message === null ||
+                  a.last_message === undefined ||
+                  b.last_message === undefined
+                ) {
+                  return 0;
+                }
+
+                const aDate = a.last_message.created_at
+                  ? new Date(a.last_message.created_at)
+                  : new Date();
+                const bDate = b.last_message.created_at
+                  ? new Date(b.last_message.created_at)
+                  : new Date();
+
+                return bDate.getTime() - aDate.getTime();
+              })
+              .filter((conversation) => {
+                if (conversation.last_message === null) {
+                  return false;
+                }
+
+                if (
+                  filterByUnread &&
+                  conversation.last_message.status === "READ"
+                ) {
+                  return false;
+                }
+
+                if (selectedPhoneNumber !== null) {
+                  return (
+                    conversation.phone_number?.number ===
+                    selectedPhoneNumber.number
+                  );
+                }
+
+                const searchLower = search.toLowerCase();
+                const contact = conversation.contact;
+
+                const filterByUnreadCheck = filterByUnread
+                  ? conversation.unread_messages > 0
+                  : true;
+                if (!filterByUnreadCheck) {
+                  return false;
+                }
+
+                const nameMatch =
+                  contact?.name?.toLowerCase().includes(searchLower) || false;
+                const waIdMatch =
+                  contact?.wa_id?.toLowerCase().includes(searchLower) || false;
+
+                return nameMatch || waIdMatch;
+              })
+              .map((conversation, index) => (
                 <li
                   key={index}
                   className={`p-4 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 ${
-                    selectedConversation &&
-                    selectedConversation.id === result.conversation_id
+                    selectedConversation === conversation
                       ? "bg-gray-200 dark:bg-gray-700"
                       : ""
                   }`}
-                  onClick={() => onSelectConversation(result.conversation_id)}
-                  onContextMenu={(e) => handleContextMenu(e, result)}>
+                  onClick={() => onSelectConversation(conversation.id)}
+                  onContextMenu={(e) => handleContextMenu(e, conversation)}>
                   <div className="flex justify-between 2xl:space-x-4 items-center">
                     <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
                       <div className="min-w-0 flex-1 w-fit">
                         <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
-                          {result.contact && result.contact.name}
+                          {conversation.contact && conversation.contact.name}
                           <Badge color="primary">
-                            {result.phone_number && result.phone_number.number}
+                            {conversation.phone_number &&
+                              conversation.phone_number.number}
                           </Badge>
                         </p>
                         <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                          {result.contact && result.contact.wa_id}
+                          {conversation.contact && conversation.contact.wa_id}
                         </p>
-                        {result.last_message && (
+                        {conversation.last_message && (
                           <>
                             <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                              {result.last_message &&
-                                result.last_message.content}
+                              {conversation.last_message &&
+                                conversation.last_message.content}
                             </p>
                             <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                               Last seen:{" "}
-                              {result.last_message.created_at &&
+                              {conversation.last_message.created_at &&
                                 new Date(
-                                  result.last_message.created_at
+                                  conversation.last_message.created_at
                                 ).toLocaleString()}
                             </p>
                           </>
                         )}
                       </div>
-                      {result.unread_messages > 0 && (
-                        <Badge color="primary">{result.unread_messages}</Badge>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              );
-            } else if (result.result_type === "message") {
-              return (
-                <li
-                  key={index}
-                  className="p-4 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600"
-                  onClick={() => onSelectConversation(result.conversation_id)}
-                  onContextMenu={(e) => handleContextMenu(e, result)}>
-                  <div className="flex justify-between 2xl:space-x-4 items-center">
-                    <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
-                      <div className="min-w-0 flex-1 w-fit">
-                        <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
-                          {result.contact && result.contact.name}
-                          <Badge color="primary">
-                            {result.phone_number && result.phone_number.number}
-                          </Badge>
-                        </p>
-                        <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                          {result.matched_message &&
-                            result.matched_message.content}
-                        </p>
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                          {result.message_created_at &&
-                            new Date(result.message_created_at).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              );
-            }
-            return null;
-          })
-        ) : (
-          conversations
-            .sort((a, b) => {
-              if (
-                a.last_message === null ||
-                b.last_message === null ||
-                a.last_message === undefined ||
-                b.last_message === undefined
-              ) {
-                return 0;
-              }
-
-              const aDate = a.last_message.created_at
-                ? new Date(a.last_message.created_at)
-                : new Date();
-              const bDate = b.last_message.created_at
-                ? new Date(b.last_message.created_at)
-                : new Date();
-
-              return bDate.getTime() - aDate.getTime();
-            })
-            .filter((conversation) => {
-              if (conversation.last_message === null) {
-                return false;
-              }
-
-              if (filterByUnread && conversation.last_message.status === "READ") {
-                return false;
-              }
-
-              if (selectedPhoneNumber !== null) {
-                return (
-                  conversation.phone_number?.number ===
-                  selectedPhoneNumber.number
-                );
-              }
-
-              const searchLower = search.toLowerCase();
-              const contact = conversation.contact;
-
-              const nameMatch =
-                contact?.name?.toLowerCase().includes(searchLower) || false;
-              const waIdMatch =
-                contact?.wa_id?.toLowerCase().includes(searchLower) || false;
-
-              return nameMatch || waIdMatch;
-            })
-            .map((conversation, index) => (
-              <li
-                key={index}
-                className={`p-4 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 ${
-                  selectedConversation === conversation
-                    ? "bg-gray-200 dark:bg-gray-700"
-                    : ""
-                }`}
-                onClick={() => onSelectConversation(conversation.id)}
-                onContextMenu={(e) => handleContextMenu(e, conversation)}>
-                <div className="flex justify-between 2xl:space-x-4 items-center">
-                  <div className="flex space-x-4 xl:mb-4 2xl:mb-0 w-full items-center">
-                    <div className="min-w-0 flex-1 w-fit">
-                      <p className="mb-0.5 truncate text-base font-semibold leading-none text-gray-900 dark:text-white flex items-center gap-x-2">
-                        {conversation.contact && conversation.contact.name}
+                      {conversation.unread_messages > 0 && (
                         <Badge color="primary">
-                          {conversation.phone_number &&
-                            conversation.phone_number.number}
+                          {conversation.unread_messages}
                         </Badge>
-                      </p>
-                      <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                        {conversation.contact && conversation.contact.wa_id}
-                      </p>
-                      {conversation.last_message && (
-                        <>
-                          <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400 font-normal">
-                            {conversation.last_message &&
-                              conversation.last_message.content}
-                          </p>
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                            Last seen:{" "}
-                            {conversation.last_message.created_at &&
-                              new Date(
-                                conversation.last_message.created_at
-                              ).toLocaleString()}
-                          </p>
-                        </>
                       )}
                     </div>
-                    {conversation.unread_messages > 0 && (
-                      <Badge color="primary">
-                       {conversation.unread_messages}
-                      </Badge>
-                    )}
                   </div>
-                </div>
-              </li>
-            ))
-        )}
+                </li>
+              ))}
       </ul>
       {contextMenuVisible && (
         <div

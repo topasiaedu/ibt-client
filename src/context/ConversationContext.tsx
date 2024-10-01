@@ -72,6 +72,8 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
         )
         .eq("project_id", currentProject.project_id)
         .order("last_message_id", { ascending: false })
+        // last_message not null
+        .not("last_message_id", 'is', null)
         .range(start, end); // Fetch only the specified range of conversations
 
       if (error) {
@@ -105,7 +107,7 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     };
 
     // Example usage:
-    fetchConversations(1, 500); // Fetch the first page with 10 conversations per page
+    fetchConversations(1, 100); // Fetch the first page with 10 conversations per page
 
     const handleChanges = async (payload: any) => {
       console.log("Conversation changes:", payload.eventType);
