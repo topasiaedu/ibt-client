@@ -36,7 +36,7 @@ const WorkflowListPage: React.FC = function () {
     ),
   };
 
-  if (loading || !workflows || !workflows.length) {
+  if (loading) {
     return <LoadingPage />;
   }
   

@@ -21,6 +21,7 @@ export type Conversation =
     contact: Contact;
     phone_number: PhoneNumber;
     last_message: Message;
+    unread_messages: number;
   };
 
 export type Conversations = { conversations: Conversation[] };
@@ -39,6 +40,7 @@ interface ConversationContextType {
   searchConversations: (searchPattern: string) => Promise<void>;
   searchResults: any[];
   updateLastMessageStatus: (messageId: number, status: string) => Promise<void>;
+  readMessages: (conversationId: string) => Promise<void>;
 }
 
 const ConversationContext = createContext<ConversationContextType>(undefined!);
@@ -77,16 +79,33 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
         return;
       }
 
+      // Fetch Unread count for each conversation
+      for (const conversation of conversations) {
+        const { data: unreadCount, error: unreadCountError } = await supabase
+          .from("messages")
+          .select("message_id")
+          .eq("conversation_id", conversation.id)
+          .eq("direction", "inbound")
+          .neq("status", "READ");
+
+        if (unreadCountError) {
+          console.error("Error fetching unread count:", unreadCountError);
+          return;
+        }
+
+        conversation.unread_messages = unreadCount?.length || 0;
+      }
+
       setConversations((prevConversations) => {
         if (isEqual(prevConversations, conversations)) {
-          return [conversations, ...prevConversations];
+          return prevConversations;
         }
         return conversations;
       });
     };
 
     // Example usage:
-    fetchConversations(1, 1000); // Fetch the first page with 10 conversations per page
+    fetchConversations(1, 500); // Fetch the first page with 10 conversations per page
 
     const handleChanges = async (payload: any) => {
       console.log("Conversation changes:", payload.eventType);
@@ -140,6 +159,21 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
           console.error("Error fetching last message:", lastMessageError);
           return;
         }
+
+        // Unread Messages
+        const { data: unreadCount, error: unreadCountError } = await supabase
+          .from("messages")
+          .select("message_id")
+          .eq("conversation_id", payload.new.id)
+          .eq("direction", "inbound")
+          .neq("status", "READ");
+
+        if (unreadCountError) {
+          console.error("Error fetching unread count:", unreadCountError);
+          return;
+        }
+
+        payload.new.unread_messages = unreadCount?.length || 0;
 
         setConversations((prevConversations) => {
           // Remove the conversation with the matching id from the list
@@ -343,6 +377,33 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     [conversations]
   );
 
+  const readMessages = useCallback(
+    async (conversationId: string) => {
+      const { data: messages, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .eq("direction", "inbound");
+
+      if (error) {
+        console.error("Error fetching messages:", error);
+        return;
+      }
+
+      const unreadMessages = messages.filter(
+        (message: Message) => message.status !== "READ"
+      );
+
+      for (const message of unreadMessages) {
+        await supabase
+          .from("messages")
+          .update({ status: "READ" })
+          .eq("message_id", message.message_id);
+      }
+    },
+    []
+  );
+
   const value = useMemo(() => {
     return {
       conversations,
@@ -354,6 +415,7 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
       searchConversations,
       searchResults,
       updateLastMessageStatus,
+      readMessages,
 
     };
   }, [
@@ -366,6 +428,7 @@ export const ConversationProvider: React.FC<PropsWithChildren<{}>> = ({
     searchConversations,
     searchResults,
     updateLastMessageStatus,
+    readMessages,
   ]);
 
   return (

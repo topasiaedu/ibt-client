@@ -30,6 +30,7 @@ const ConversationPage: React.FC = function () {
     updateConversation,
     fetchConversationById,
     updateLastMessageStatus,
+    readMessages
   } = useConversationContext();
 
   const handleSelectConversation = async (conversationId: string) => {
@@ -40,15 +41,18 @@ const ConversationPage: React.FC = function () {
     setSelectedConversation(conversation);
     setCurrentConversationId(conversationId);
 
-    if (conversation.last_message_id) {
-      updateLastMessageStatus(conversation.last_message_id, "READ");
+    // if (conversation.last_message_id) {
+    //   updateLastMessageStatus(conversation.last_message_id, "READ");
 
-      updateMessage({
-        message_id: conversation.last_message_id,
-        status: "READ",
-      });
-    }
+    //   updateMessage({
+    //     message_id: conversation.last_message_id,
+    //     status: "READ",
+    //   });
+    // }
 
+    readMessages(conversationId);
+
+    conversation.unread_messages = 0;
     // // Mark all messages as read
     // for (const message of messages) {
     //   if (message.status !== "READ" && message.direction === "inbound") {

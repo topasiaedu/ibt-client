@@ -101,6 +101,8 @@ const ChatList: React.FC<ChatListProps> = ({
     return <LoadingPage />;
   }
 
+
+  console.log("conversations", conversations);
   return (
     <div
       className="overflow-y-auto h-full divide-gray-200 dark:divide-gray-700"
@@ -322,9 +324,9 @@ const ChatList: React.FC<ChatListProps> = ({
                         </>
                       )}
                     </div>
-                    {conversation.last_message.status !== "READ" && (
+                    {conversation.unread_messages > 0 && (
                       <Badge color="primary">
-                        1
+                       {conversation.unread_messages}
                       </Badge>
                     )}
                   </div>
