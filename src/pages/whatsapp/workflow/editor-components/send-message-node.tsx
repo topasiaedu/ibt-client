@@ -8,7 +8,7 @@ import {
 } from "flowbite-react";
 import debounce from "lodash.debounce";
 import React, { useCallback, useEffect } from "react";
-import { Handle, NodeProps, Position } from "reactflow";
+import { Handle, NodeProps, Position, useReactFlow } from "reactflow";
 import { useFlowContext } from "../../../../context/FlowContext";
 
 export type SendMessageData = {
@@ -31,6 +31,7 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
     props.data?.postDate ?? new Date()
   );
   const { removeNode, updateNodeData } = useFlowContext();
+  const reactFlowInstance = useReactFlow(); // Get react flow instance to manage drag behavior
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdateNodeData = useCallback(
@@ -54,6 +55,31 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
     props.id,
   ]);
 
+  // Function to disable dragging
+  const disableDrag = () => {
+    updateNodeData(props.id, { draggable: false });
+    // reactFlowInstance.setNodes((nodes) =>
+    //   nodes.map((node) => {
+    //     if (node.id === props.id) {
+    //       return { ...node, draggable: false };
+    //     }
+    //     return node;
+    //   })
+    // );
+  };
+
+  // Function to enable dragging
+  const enableDrag = () => {
+    reactFlowInstance.setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === props.id) {
+          return { ...node, draggable: true };
+        }
+        return node;
+      })
+    );
+  };
+
   return (
     <div className="dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow-lg max-w-sm flex flex-col gap-2">
       <h1 className="text-lg font-semibold">Send Message Node</h1>
@@ -61,7 +87,12 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
         <Label className="mt-4">Message</Label>
         <Textarea
           value={message}
+          className="z-10 h-96"
           onChange={(e) => setMessage(e.target.value)}
+          onMouseDown={disableDrag} // Disable drag when interacting
+          onMouseUp={enableDrag} // Enable drag when interaction ends
+          onTouchStart={disableDrag} // For touch devices, disable drag
+          onTouchEnd={enableDrag} // For touch devices, re-enable drag
         />
       </div>
       <div>
@@ -69,16 +100,13 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
         <Select
           className="mt-2"
           value={timePostType}
-          onChange={(e) => setTimePostType(e.target.value)}>
-          {" "}
+          onChange={(e) => setTimePostType(e.target.value)}
+        >
           <option value="immediately">Immediately</option> {/* Default value */}
-          {/* Specific Date Time */}
           <option value="specific_date_time">Specific Date Time</option>
-          {/* X minutes after the previous node */}
           <option value="minutes_after">
             X minutes after the previous node
           </option>
-          {/* X hours after the previous node */}
         </Select>
       </div>
 
@@ -87,7 +115,8 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
           <div className="mb-4">
             <Label
               htmlFor="postTime"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >
               Select date:
             </Label>
             <Datepicker
@@ -102,7 +131,8 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
           <div className="mb-4">
             <label
               htmlFor="time"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >
               Select time:
             </label>
             <div className="relative">
@@ -112,7 +142,8 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="currentColor"
-                  viewBox="0 0 24 24">
+                  viewBox="0 0 24 24"
+                >
                   <path
                     fillRule="evenodd"
                     d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z"
@@ -139,7 +170,8 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
         <div className="mb-4">
           <Label
             htmlFor="minutes"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+          >
             Minutes after the previous node:
           </Label>
           <TextInput
@@ -156,7 +188,8 @@ export default function SendMessageNode(props: NodeProps<SendMessageData>) {
         color={"red"}
         onClick={() => {
           removeNode(props.id);
-        }}>
+        }}
+      >
         Delete
       </Button>
       <Handle type="target" position={Position.Left} />

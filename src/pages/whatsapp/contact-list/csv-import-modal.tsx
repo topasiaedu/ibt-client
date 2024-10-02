@@ -177,7 +177,7 @@ const CSVImportModal: React.FC<EditContactListModalProps> = ({
                 {/* Helper Text to guide the user on what the csv should be like */}
                 <div className="flex flex-col items-center justify-center w-full">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    The CSV should be in the format: Phone Number, Name
+                    The CSV should be in the format: Name, Phone Number
                     (optional)
                   </p>
                 </div>
