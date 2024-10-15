@@ -9,14 +9,16 @@ const PhoneNumberStatus = function () {
   const finalPhoneNumbers = phoneNumbers.filter((phoneNumber) => {
     return whatsAppBusinessAccounts.some(
       (account) => account.account_id === phoneNumber.waba_id
-    ) && phoneNumber.quality_rating !== "UNKNOWN";
+    )
   });
 
   return (
     <Card className="p-4">
       <h2 className="text-lg font-semibold">Phone Number Status</h2>
 
-      {finalPhoneNumbers.map((phoneNumber) => (
+      {finalPhoneNumbers
+      .filter((phoneNumber) => phoneNumber.quality_rating !== "UNKNOWN")
+      .map((phoneNumber) => (
         <div
           key={phoneNumber.phone_number_id}
           className="flex items-center justify-between mt-4">
@@ -51,7 +53,7 @@ const generateBadgeColor = function (qualityRating:string | null) {
     case "HEALTHY":
       return "green";
     default:
-      return qualityRating;
+      return qualityRating.toLowerCase();
   }
 }
 export default PhoneNumberStatus;
