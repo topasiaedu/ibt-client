@@ -9,7 +9,7 @@ const PhoneNumberStatus = function () {
   const finalPhoneNumbers = phoneNumbers.filter((phoneNumber) => {
     return whatsAppBusinessAccounts.some(
       (account) => account.account_id === phoneNumber.waba_id
-    );
+    ) && phoneNumber.quality_rating !== "UKNOWN";
   });
 
   return (
@@ -51,7 +51,7 @@ const generateBadgeColor = function (qualityRating:string | null) {
     case "HEALTHY":
       return "green";
     default:
-      return "info";
+      return qualityRating;
   }
 }
 export default PhoneNumberStatus;
