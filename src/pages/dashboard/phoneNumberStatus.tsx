@@ -9,7 +9,7 @@ const PhoneNumberStatus = function () {
   const finalPhoneNumbers = phoneNumbers.filter((phoneNumber) => {
     return whatsAppBusinessAccounts.some(
       (account) => account.account_id === phoneNumber.waba_id
-    ) && phoneNumber.quality_rating !== "UKNOWN";
+    ) && phoneNumber.quality_rating !== "UNKNOWN";
   });
 
   return (
