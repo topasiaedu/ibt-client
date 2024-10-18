@@ -57,6 +57,7 @@ import PersonalizedImageListPage from "./pages/personalized-image/list";
 import DevToolsPage from "./pages/dev";
 import { ContactEventProvider } from "./context/ContactEventContext";
 import ContactEventPage from "./pages/contacts/contact-timeline";
+import FIRECalculator from "./pages/mini/fire";
 
 const App = () => (
   <AlertProvider>
@@ -127,9 +128,7 @@ const App = () => (
 
                                       <Route
                                         path="/contacts/events/:contactId"
-                                        element={
-                                          <ContactEventPage />
-                                        }
+                                        element={<ContactEventPage />}
                                       />
                                       <Route
                                         path="/whatsapp/conversation"
@@ -195,6 +194,11 @@ const App = () => (
                                     </Route>
 
                                     {/* Public Routes */}
+                                    <Route
+                                      path="/fire-calc/age/:age/targetAge/:targetAge/monthlyIncome/:monthlyIncome/monthlyExpenses/:monthlyExpenses/inflationRate/:inflationRate/annualContribution/:annualContribution/capital/:capital/dividendRate/:dividendRate/appreciationRate/:appreciationRate"
+                                      element={<FIRECalculator />}
+                                    />
+
                                     <Route
                                       path="/pages/pricing"
                                       element={<PricingPage />}

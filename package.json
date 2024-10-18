@@ -6,6 +6,7 @@
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/types": "^0.12.2",
     "@ffmpeg/util": "^0.12.1",
+    "@nivo/line": "^0.87.0",
     "@supabase/supabase-js": "^2.40.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
