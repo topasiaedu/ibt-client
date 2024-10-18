@@ -42,7 +42,7 @@ const FIRECalculator = () => {
     ) {
       calculateFIRE();
     }
-  }, [
+    }, [
     age,
     targetAge,
     monthlyIncome,
