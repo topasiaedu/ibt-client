@@ -56,9 +56,9 @@ const FlowSidebar: React.FC = () => {
         Send Message
       </Card>
 
-      {/* <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'delay')} draggable>
+      <Card className="mb-2 p-0" onDragStart={(event) => onDragStart(event, 'delay')} draggable>
         Delay
-      </Card> */}
+      </Card>
 
       {/* Add to contact list */}
       <Card
