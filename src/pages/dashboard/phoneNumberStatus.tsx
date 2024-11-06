@@ -2,14 +2,14 @@ import React from "react";
 import { useWhatsAppBusinessAccountContext } from "../../context/WhatsAppBusinessAccountContext";
 import { usePhoneNumberContext } from "../../context/PhoneNumberContext";
 import { Badge, Card } from "flowbite-react";
+import { useProjectContext } from "../../context/ProjectContext";
 
 const PhoneNumberStatus = function () {
   const { phoneNumbers } = usePhoneNumberContext();
+  const { currentProject } = useProjectContext();
   const { whatsAppBusinessAccounts } = useWhatsAppBusinessAccountContext();
   const finalPhoneNumbers = phoneNumbers.filter((phoneNumber) => {
-    return whatsAppBusinessAccounts.some(
-      (account) => account.account_id === phoneNumber.waba_id
-    )
+    return phoneNumber.project_id === currentProject?.project_id
   });
 
   return (

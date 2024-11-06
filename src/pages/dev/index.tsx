@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Breadcrumb, Button, FileInput, Label } from "flowbite-react";
 import { HiHome } from "react-icons/hi";
 import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
@@ -11,7 +11,14 @@ import {
   useContactEventContext,
   ContactEventInsert,
 } from "../../context/ContactEventContext";
-
+// Extend window type for custom properties
+declare global {
+  interface Window {
+    fbAsyncInit?: () => void;
+    FB?: any;
+    fbq?: (...args: any[]) => void;
+  }
+}
 const DevToolsPage: React.FC = function () {
   const [file, setFile] = useState<File | null>(null);
   const [totalValidContacts, setTotalValidContacts] = useState(0);
@@ -21,6 +28,67 @@ const DevToolsPage: React.FC = function () {
   const { findContactByWaId, addContact } = useContactContext();
   const { addContactEvent, bulkAddContactEvents } = useContactEventContext();
   const [errorCount, setErrorCount] = useState(0);
+
+  useEffect(() => {
+    // Load the Facebook SDK script asynchronously
+    const loadFacebookSDK = () => {
+      if (document.getElementById('facebook-jssdk')) return;
+
+      const js = document.createElement('script');
+      js.id = 'facebook-jssdk';
+      js.src = 'https://connect.facebook.net/en_US/sdk.js';
+      js.onload = initializeFacebookSDK;
+      document.body.appendChild(js);
+    };
+
+    // Initialize the Facebook SDK
+    const initializeFacebookSDK = () => {
+      window.fbAsyncInit = function () {
+        window.FB.init({
+          appId: '421461570288196', // Replace with your actual Facebook App ID
+          cookie: true,
+          xfbml: true,
+          version: 'v21.0', // Graph API version
+        });
+      };
+    };
+
+    loadFacebookSDK();
+  }, []);
+
+  // Function to launch WhatsApp signup with Facebook login
+  const launchWhatsAppSignup = () => {
+    // Conversion tracking code
+    if (window.fbq) {
+      window.fbq('trackCustom', 'WhatsAppOnboardingStart', {
+        appId: '421461570288196',
+        feature: 'whatsapp_embedded_signup',
+      });
+    }
+
+    // Launch Facebook login
+    window.FB.login(
+      function (response:any) {
+        if (response.authResponse) {
+          const code = response.authResponse.code;
+          // You can send this code to your backend for further processing
+          console.log(response.authResponse)
+        } else {
+          console.log('User cancelled login or did not fully authorize.');
+        }
+      },
+      {
+        config_id: '<CONFIG_ID>', // Replace with your configuration ID
+        response_type: 'code', // must be 'code' for System User access token
+        override_default_response_type: true,
+        extras: {
+          setup: {
+            // Prefilled data can go here
+          },
+        },
+      }
+    );
+  };
 
   type CSVData = Record<string, string | null>;
 
@@ -290,6 +358,9 @@ const DevToolsPage: React.FC = function () {
           </div>
         </div>
       </div>
+
+      <button onClick={launchWhatsAppSignup} className="background-color: #1877f2; border: 0; border-radius: 4px; color: #fff; cursor: pointer; font-family: Helvetica, Arial, sans-serif; font-size: 16px; font-weight: bold; height: 40px; padding: 0 24px;">Login with Facebook</button>
+
       <div className="flex flex-col p-4 ">
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">

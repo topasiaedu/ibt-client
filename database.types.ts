@@ -845,39 +845,52 @@ export type Database = {
       }
       phone_numbers: {
         Row: {
+          access_token: string | null
           created_at: string | null
           name: string | null
           number: string
           phone_number_id: number
+          project_id: number | null
           quality_rating: string | null
           restricted: boolean | null
           throughput_level: string | null
           wa_id: string
-          waba_id: number
+          waba_id: number | null
         }
         Insert: {
+          access_token?: string | null
           created_at?: string | null
           name?: string | null
           number: string
           phone_number_id?: number
+          project_id?: number | null
           quality_rating?: string | null
           restricted?: boolean | null
           throughput_level?: string | null
           wa_id: string
-          waba_id: number
+          waba_id?: number | null
         }
         Update: {
+          access_token?: string | null
           created_at?: string | null
           name?: string | null
           number?: string
           phone_number_id?: number
+          project_id?: number | null
           quality_rating?: string | null
           restricted?: boolean | null
           throughput_level?: string | null
           wa_id?: string
-          waba_id?: number
+          waba_id?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "phone_numbers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["project_id"]
+          },
           {
             foreignKeyName: "public_phone_numbers_waba_id_fkey"
             columns: ["waba_id"]
@@ -940,13 +953,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "project"
             referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "public_project_permission_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -1285,6 +1291,24 @@ export type Database = {
           total_contacts: number
         }[]
       }
+      fetch_contacts_with_stats: {
+        Args: {
+          p_project_id: number
+        }
+        Returns: {
+          contact_id: number
+          created_at: string
+          email: string
+          last_contacted_by: number
+          name: string
+          phone: string
+          project_id: number
+          tsv_name_waid: unknown
+          wa_id: string
+          total_paid: number
+          times_opted_in: number
+        }[]
+      }
       fetch_conversations: {
         Args: {
           project_id_param: number
@@ -1299,6 +1323,20 @@ export type Database = {
           phone_number: Json
           whatsapp_business_account: Json
           last_message: Json
+        }[]
+      }
+      fetch_conversations_with_unread_count: {
+        Args: {
+          p_project_id: number
+          start: number
+          p_end: number
+        }
+        Returns: {
+          conversation_id: string
+          contact: Json
+          phone_number: Json
+          last_message: Json
+          unread_messages_count: number
         }[]
       }
       fetch_workflows: {
@@ -1347,21 +1385,58 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
-      search_conversations_and_messages: {
+      search_contacts_with_stats: {
         Args: {
           search_pattern: string
+          page: number
+          page_size: number
         }
         Returns: {
-          result_type: string
-          conversation_id: string
-          contact: Json
-          phone_number: Json
-          last_message: Json
-          message_id: number
-          matched_message: Json
-          message_created_at: string
+          contact_id: number
+          created_at: string
+          email: string
+          last_contacted_by: number
+          name: string
+          phone: string
+          project_id: number
+          tsv_name_waid: unknown
+          wa_id: string
+          total_paid: number
+          times_opted_in: number
         }[]
       }
+      search_conversations_and_messages:
+        | {
+            Args: {
+              search_pattern: string
+            }
+            Returns: {
+              result_type: string
+              conversation_id: string
+              contact: Json
+              phone_number: Json
+              last_message: Json
+              message_id: number
+              matched_message: Json
+              message_created_at: string
+            }[]
+          }
+        | {
+            Args: {
+              search_pattern: string
+              p_project_id: number
+            }
+            Returns: {
+              result_type: string
+              conversation_id: string
+              contact: Json
+              phone_number: Json
+              last_message: Json
+              message_id: number
+              matched_message: Json
+              message_created_at: string
+            }[]
+          }
     }
     Enums: {
       [_ in never]: never
@@ -1452,4 +1527,19 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
