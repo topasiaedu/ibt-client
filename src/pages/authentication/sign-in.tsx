@@ -1,113 +1,115 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { Button, Card, Label, TextInput } from "flowbite-react";
-import type { FC } from "react";
-import React from "react";
+import { Button, Card, Label, TextInput, Alert } from "flowbite-react";
+import React, { useState, FC } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingPage from "../pages/loading";
 import { useAuthContext } from "../../context/AuthContext";
 
+const SignInPage: FC = () => {
+  const navigate = useNavigate();
+  const { signIn, user, loading } = useAuthContext();
 
-const SignInPage: FC = function () {
-  const navigate = useNavigate(); // Use useNavigate from react-router-dom
-  const { signIn, user, loading } = useAuthContext(); // Use signIn from useSupabaseAuth
-
-  // Assume you've defined a state htmlFor email and password to capture form inputs
-  const [username, setUsername] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [error, setError] = React.useState(''); // Assume you've defined a state to capture errors [optional]
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission behavior
-    const email = username
-    const result = await signIn(email, password);
+    e.preventDefault();
+    const result = await signIn(username, password);
 
-    // Handle sign-in errors
     if (result.error) {
-      console.error('Sign in error:', result.error.message);
       setError(result.error.message);
     } else {
-      navigate('/'); // Redirect to dashboard after successful sign-in
+      navigate("/");
     }
-  }
+  };
 
   if (loading) {
     return <LoadingPage />;
-  } else if (user) {
-    navigate('/'); // Redirect to dashboard if user is already signed in
+  }
+
+  if (user) {
+    navigate("/");
+    return null;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center px-6 lg:h-screen lg:gap-y-12">
-      <a href="/" className="my-6 flex items-center gap-x-1 lg:my-0">
-        <img
-          alt="Logo"
-          src="../../images/logo.svg"
-          className="mr-3 h-10"
-        />
-        <span className="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">
-          NM Media
-        </span>
-      </a>
-      <Card
-        horizontal
-        imgSrc="/images/authentication/login.jpg"
-        imgAlt=""
-        className="w-full md:max-w-[1024px] md:[&>*]:w-full md:[&>*]:p-16 [&>img]:hidden md:[&>img]:w-96 md:[&>img]:p-0 lg:[&>img]:block"
-      >
-        <h1 className="mb-3 text-2xl font-bold dark:text-white md:text-3xl">
-          Sign in to platform
-        </h1>
-        {error && ( 
-            <div className="mb-6 p-3 text-sm text-center text-red-500 bg-red-100 dark:bg-red-500 dark:text-red-100 rounded-md">
-              {error}
-            </div>
-          )}
-        <form>
-          <div className="mb-4 flex flex-col gap-y-3">
-            <Label htmlFor="email">Your Username</Label>
-            <TextInput
-              id="email"
-              name="email"
-              placeholder="username123"
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </div>
-          <div className="mb-6 flex flex-col gap-y-3">
-            <Label htmlFor="password">Your password</Label>
-            <TextInput
-              id="password"
-              name="password"
-              placeholder="••••••••"
-              type="password"
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          {/* <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-x-3">
-              <Checkbox id="rememberMe" name="rememberMe" />
-              <Label htmlFor="rememberMe">Remember me</Label>
-            </div>
+    <div className="flex flex-col items-center justify-center px-6 lg:h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="grid max-w-screen-xl w-full py-8 lg:gap-20 lg:py-16 lg:grid-cols-12">
+        {/* Form Section */}
+        <div className="lg:col-span-6 w-full mx-auto">
+          <Card className="p-6 bg-white rounded-lg shadow dark:bg-gray-800 sm:max-w-xl sm:p-8">
             <a
               href="#"
-              className="w-1/2 text-right text-sm text-primary-600 dark:text-primary-300"
+              className="inline-flex items-center mb-4 text-xl font-semibold text-gray-900 dark:text-white"
             >
-              Lost Password?
+              <img
+                className="w-8 h-8 mr-2"
+                src="/images/logo.svg"
+                alt="LuminoChat Logo"
+              />
+              LuminoChat
             </a>
-          </div> */}
-          <div className="mb-6">
-            <Button type="submit" className="w-full lg:w-auto" onClick={handleLogin}>
-              Login to your account
-            </Button>
-          </div>
-          
-          <p className="text-sm text-gray-500 dark:text-gray-300">
-            Not registered?&nbsp;
-            <a href="/authentication/sign-up" className="text-primary-600 dark:text-primary-300">
-              Create account
-            </a>
-          </p>
-        </form>
-      </Card>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Welcome back
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-300">
+              Start your website in seconds. Don’t have an account?{" "}
+              <a
+                href="/authentication/sign-up"
+                className="text-primary-600 hover:underline dark:text-primary-500"
+              >
+                Sign up
+              </a>
+              .
+            </p>
+            {error && (
+              <Alert color="failure" className="my-4">
+                {error}
+              </Alert>
+            )}
+            <form className="space-y-6" onSubmit={handleLogin}>
+              <div>
+                <Label htmlFor="username" className="mb-2">
+                  Your Username
+                </Label>
+                <TextInput
+                  id="username"
+                  name="username"
+                  placeholder="username123"
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="password" className="mb-2">
+                  Your Password
+                </Label>
+                <TextInput
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Login to your account
+              </Button>
+            </form>
+          </Card>
+        </div>
+
+        {/* Illustration Section */}
+        <div className="lg:col-span-6 place-self-center">
+          <img
+            className="hidden lg:block mx-auto"
+            src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/authentication/illustration.svg"
+            alt="Sign-in Illustration"
+          />
+        </div>
+      </div>
     </div>
   );
 };

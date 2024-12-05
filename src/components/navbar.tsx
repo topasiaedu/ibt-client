@@ -36,7 +36,7 @@ const ExampleNavbar: React.FC = function () {
                 className="mr-3 h-6 sm:h-8"
               />
               <span className="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">
-                NM Media
+                LuminoChat
               </span>
             </Navbar.Brand>
             {/* <form className="ml-16 hidden md:block">
