@@ -2,7 +2,10 @@
 import classNames from "classnames";
 import { DarkThemeToggle, Sidebar, Tooltip } from "flowbite-react";
 import React, { useEffect, useState } from "react";
+import { BsTelephoneFill } from "react-icons/bs";
+import { FaConnectdevelop, FaImage } from "react-icons/fa";
 import { FaListUl } from "react-icons/fa6";
+import { GoWorkflow } from "react-icons/go";
 import {
   HiAdjustments,
   HiChartPie,
@@ -12,28 +15,23 @@ import {
   HiTemplate,
 } from "react-icons/hi";
 import { IoMdContact } from "react-icons/io";
+import { MdLogout } from "react-icons/md";
 import { TbBrandCampaignmonitor } from "react-icons/tb";
+import { useAuthContext } from "../context/AuthContext";
 import { useSidebarContext } from "../context/SidebarContext";
 import isSmallScreen from "../helpers/is-small-screen";
 import ProjectDropdown from "./ProjectDropdown";
-import { GoWorkflow } from "react-icons/go";
-import { FaImage } from "react-icons/fa";
-import { useAuthContext } from "../context/AuthContext";
-import { FaConnectdevelop } from "react-icons/fa";
-import { BsTelephoneFill } from "react-icons/bs";
 
 const ExampleSidebar: React.FC = function () {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
     useSidebarContext();
   const [currentPage, setCurrentPage] = useState("");
-  const { user } = useAuthContext();
-  // const [isWhatsAppOpen, setWhatsAppOpen] = useState(true);
+  const { user, signOut } = useAuthContext();
 
   useEffect(() => {
     const newPage = window.location.pathname;
 
     setCurrentPage(newPage);
-    // setWhatsAppOpen(newPage.includes("/whatsapp/"));
   }, [setCurrentPage]);
 
   return (
@@ -152,34 +150,20 @@ const ExampleSidebar: React.FC = function () {
                 Personalized Image
               </Sidebar.Item>
 
-                  {/* Phone Numbers */}
-                  <Sidebar.Item
-                  href="/phone-numbers"
-                  icon={BsTelephoneFill}
-                  className={
-                    "/phone-numbers" === currentPage
-                      ? "bg-gray-100 dark:bg-gray-700"
-                      : ""
-                  }>
-                  Phone Numbers
-                </Sidebar.Item>
+              {/* Phone Numbers */}
+              <Sidebar.Item
+                href="/phone-numbers"
+                icon={BsTelephoneFill}
+                className={
+                  "/phone-numbers" === currentPage
+                    ? "bg-gray-100 dark:bg-gray-700"
+                    : ""
+                }>
+                Phone Numbers
+              </Sidebar.Item>
 
-                {/* If user.id === 7300284e-52cc-4592-b48f-3f517e6414ad show this dev tab */}
-                {user?.id === "7300284e-52cc-4592-b48f-3f517e6414ad" && (
-                  <Sidebar.Item
-                    href="/dev"
-                    icon={FaConnectdevelop}
-                    className={
-                      "/dev" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }>
-                    Stanley&apos;s Tools
-                  </Sidebar.Item>
-                )}
-                {/* </Sidebar.Collapse> */}
-              </Sidebar.ItemGroup>
-              <Sidebar.ItemGroup>
+              {/* If user.id === 7300284e-52cc-4592-b48f-3f517e6414ad show this dev tab */}
+              {user?.id === "7300284e-52cc-4592-b48f-3f517e6414ad" && (
                 <Sidebar.Item
                   href="/dev"
                   icon={FaConnectdevelop}
@@ -189,7 +173,18 @@ const ExampleSidebar: React.FC = function () {
                   Stanley&apos;s Tools
                 </Sidebar.Item>
               )}
-              {/* </Sidebar.Collapse> */}
+
+              {/* Logout */}
+              <Sidebar.Item
+                icon={MdLogout}
+                onClick={signOut}
+                className={
+                  "/logout" === currentPage
+                    ? "bg-gray-100 dark:bg-gray-700"
+                    : ""
+                }>
+                Logout
+              </Sidebar.Item>
             </Sidebar.ItemGroup>
             <Sidebar.ItemGroup>
               <Sidebar.Item
