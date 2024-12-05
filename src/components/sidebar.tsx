@@ -1,10 +1,12 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import classNames from "classnames";
-import { Sidebar } from "flowbite-react";
+import { DarkThemeToggle, Sidebar, Tooltip } from "flowbite-react";
 import React, { useEffect, useState } from "react";
 import { FaListUl } from "react-icons/fa6";
 import {
+  HiAdjustments,
   HiChartPie,
+  HiCog,
   HiInboxIn,
   HiInformationCircle,
   HiTemplate,
@@ -42,11 +44,15 @@ const ExampleSidebar: React.FC = function () {
         aria-label="Sidebar with multi-level dropdown example"
         className="pt-2"
         collapsed={isSidebarOpenOnSmallScreens && !isSmallScreen()}>
-        <Sidebar.Logo href="/" img="/images/logo.svg" imgAlt="Flowbite logo">
-          <span className="bg-gradient-to-r from-[#CBB26B] to-[#CBB26B] bg-clip-text text-transparent font-bold text-xl">
-            LuminoChat
-          </span>
+        <Sidebar.Logo href="/" img="/images/logo.svg" imgAlt="LuminoChat logo">
+          <div className="flex items-center justify-between gap-2">
+            <span className="bg-gradient-to-r from-[#CBB26B] to-[#CBB26B] bg-clip-text text-transparent font-bold text-xl">
+              LuminoChat
+            </span>
+            <DarkThemeToggle />
+          </div>
         </Sidebar.Logo>
+
         <div>
           <ProjectDropdown
             collapsed={isSidebarOpenOnSmallScreens && !isSmallScreen()}
@@ -168,7 +174,6 @@ const ExampleSidebar: React.FC = function () {
             </Sidebar.ItemGroup>
           </Sidebar.Items>
         </div>
-        {/* <BottomMenu /> */}
       </Sidebar>
     </div>
   );
@@ -177,7 +182,7 @@ const ExampleSidebar: React.FC = function () {
 // const BottomMenu: React.FC = function () {
 //   return (
 //     <div className="flex items-center justify-center gap-x-5">
-//       <button className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+//       {/* <button className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
 //         <span className="sr-only">Tweaks</span>
 //         <HiAdjustments className="text-2xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white " />
 //       </button>
@@ -186,13 +191,13 @@ const ExampleSidebar: React.FC = function () {
 //         <Tooltip content="Settings page">
 //           <a
 //             href="/users/settings"
-//             className="inline-flex cursor-pointer justify-center rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white"
-//           >
+//             className="inline-flex cursor-pointer justify-center rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white">
 //             <span className="sr-only">Settings page</span>
 //             <HiCog className="text-2xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" />
 //           </a>
 //         </Tooltip>
-//       </div>
+//       </div> */}
+//       <DarkThemeToggle />
 //     </div>
 //   );
 // };
