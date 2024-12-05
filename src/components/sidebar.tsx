@@ -20,6 +20,7 @@ import { GoWorkflow } from "react-icons/go";
 import { FaImage } from "react-icons/fa";
 import { useAuthContext } from "../context/AuthContext";
 import { FaConnectdevelop } from "react-icons/fa";
+import { BsTelephoneFill } from "react-icons/bs";
 
 const ExampleSidebar: React.FC = function () {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
@@ -151,8 +152,34 @@ const ExampleSidebar: React.FC = function () {
                 Personalized Image
               </Sidebar.Item>
 
-              {/* If user.id === 7300284e-52cc-4592-b48f-3f517e6414ad show this dev tab */}
-              {user?.id === "7300284e-52cc-4592-b48f-3f517e6414ad" && (
+                  {/* Phone Numbers */}
+                  <Sidebar.Item
+                  href="/phone-numbers"
+                  icon={BsTelephoneFill}
+                  className={
+                    "/phone-numbers" === currentPage
+                      ? "bg-gray-100 dark:bg-gray-700"
+                      : ""
+                  }>
+                  Phone Numbers
+                </Sidebar.Item>
+
+                {/* If user.id === 7300284e-52cc-4592-b48f-3f517e6414ad show this dev tab */}
+                {user?.id === "7300284e-52cc-4592-b48f-3f517e6414ad" && (
+                  <Sidebar.Item
+                    href="/dev"
+                    icon={FaConnectdevelop}
+                    className={
+                      "/dev" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }>
+                    Stanley&apos;s Tools
+                  </Sidebar.Item>
+                )}
+                {/* </Sidebar.Collapse> */}
+              </Sidebar.ItemGroup>
+              <Sidebar.ItemGroup>
                 <Sidebar.Item
                   href="/dev"
                   icon={FaConnectdevelop}

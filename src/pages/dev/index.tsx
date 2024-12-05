@@ -1,16 +1,12 @@
-import React, { useEffect, useState } from "react";
 import { Breadcrumb, Button, FileInput, Label } from "flowbite-react";
+import React, { useEffect, useState } from "react";
 import { HiHome } from "react-icons/hi";
-import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
+import { ContactInsert, useContactContext } from "../../context/ContactContext";
 import {
-  Contact,
-  ContactInsert,
-  useContactContext,
-} from "../../context/ContactContext";
-import {
-  useContactEventContext,
   ContactEventInsert,
+  useContactEventContext,
 } from "../../context/ContactEventContext";
+import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
 // Extend window type for custom properties
 declare global {
   interface Window {
@@ -26,17 +22,17 @@ const DevToolsPage: React.FC = function () {
   const [oldContactCount, setOldContactCount] = useState(0);
   const [newContactCount, setNewContactCount] = useState(0);
   const { findContactByWaId, addContact } = useContactContext();
-  const { addContactEvent, bulkAddContactEvents } = useContactEventContext();
+  const { bulkAddContactEvents } = useContactEventContext();
   const [errorCount, setErrorCount] = useState(0);
 
   useEffect(() => {
     // Load the Facebook SDK script asynchronously
     const loadFacebookSDK = () => {
-      if (document.getElementById('facebook-jssdk')) return;
+      if (document.getElementById("facebook-jssdk")) return;
 
-      const js = document.createElement('script');
-      js.id = 'facebook-jssdk';
-      js.src = 'https://connect.facebook.net/en_US/sdk.js';
+      const js = document.createElement("script");
+      js.id = "facebook-jssdk";
+      js.src = "https://connect.facebook.net/en_US/sdk.js";
       js.onload = initializeFacebookSDK;
       document.body.appendChild(js);
     };
@@ -45,10 +41,10 @@ const DevToolsPage: React.FC = function () {
     const initializeFacebookSDK = () => {
       window.fbAsyncInit = function () {
         window.FB.init({
-          appId: '421461570288196', // Replace with your actual Facebook App ID
+          appId: "421461570288196", // Replace with your actual Facebook App ID
           cookie: true,
           xfbml: true,
-          version: 'v21.0', // Graph API version
+          version: "v21.0", // Graph API version
         });
       };
     };
@@ -60,26 +56,27 @@ const DevToolsPage: React.FC = function () {
   const launchWhatsAppSignup = () => {
     // Conversion tracking code
     if (window.fbq) {
-      window.fbq('trackCustom', 'WhatsAppOnboardingStart', {
-        appId: '421461570288196',
-        feature: 'whatsapp_embedded_signup',
+      window.fbq("trackCustom", "WhatsAppOnboardingStart", {
+        appId: "421461570288196",
+        feature: "whatsapp_embedded_signup",
       });
     }
 
     // Launch Facebook login
     window.FB.login(
-      function (response:any) {
+      function (response: any) {
         if (response.authResponse) {
           const code = response.authResponse.code;
+          console.log("Code: ", code);
           // You can send this code to your backend for further processing
-          console.log(response.authResponse)
+          console.log(response.authResponse);
         } else {
-          console.log('User cancelled login or did not fully authorize.');
+          console.log("User cancelled login or did not fully authorize.");
         }
       },
       {
-        config_id: '<CONFIG_ID>', // Replace with your configuration ID
-        response_type: 'code', // must be 'code' for System User access token
+        config_id: "<CONFIG_ID>", // Replace with your configuration ID
+        response_type: "code", // must be 'code' for System User access token
         override_default_response_type: true,
         extras: {
           setup: {
@@ -97,51 +94,51 @@ const DevToolsPage: React.FC = function () {
       console.error("No file selected");
       return;
     }
-  
+
     try {
       // Reading the file as text
       const text = await file.text();
-  
+
       // Splitting the file content into rows
       const rows = text.split("\n").filter((row) => row.trim() !== "");
-  
+
       // Extracting headers
       const headers = rows[0].split(",").map((header) => header.trim());
-  
+
       // Processing each row into a JSON object
       const data: CSVData[] = rows.slice(1).map((row) => {
         const columns = row.split(",").map((col) => col.trim());
-  
+
         // Create a JSON object from the columns
         const rowData: CSVData = headers.reduce<CSVData>(
           (acc, header, index) => {
             // Check if the index exists in columns; if not, assign null
             let value = columns[index] !== undefined ? columns[index] : null;
-  
+
             // Check if phone is empty, if empty skip
             if (header.toLowerCase() === "phone" && !value) {
               return acc;
             }
-  
+
             // Format the phone number if this is the "Phone" column
             if (header.toLowerCase() === "phone" && value !== null) {
               value = formatPhoneNumber(value);
               setTotalContacts((prev) => prev + 1);
             }
-  
+
             if (
               header.toLowerCase() === "date" &&
               value !== null &&
               value !== ""
             ) {
               const dateString = value;
-  
+
               // Split the date and time
               const [datePart, timePart] = dateString.split(" ");
-  
+
               // Split the day, month, and year
               const [day, month, year] = datePart.split("/");
-  
+
               // Check if date values are valid
               if (
                 isNaN(parseInt(day)) ||
@@ -156,44 +153,43 @@ const DevToolsPage: React.FC = function () {
                 setErrorCount((prev) => prev + 1);
                 return acc;
               }
-  
+
               // Rearrange into a format that the Date object understands (YYYY-MM-DDTHH:mm:ss)
               const formattedDateString = `${year}-${month}-${day}T${timePart}`;
-  
 
               console.log("Formatted date string:", formattedDateString);
               // Create a Date object
               const dateObject = new Date(formattedDateString);
-  
+
               value = dateObject.toISOString();
             }
-  
+
             acc[header.toLowerCase()] = value;
             return acc;
           },
           {}
         );
-  
+
         return rowData;
       });
-  
+
       let contactEvents: ContactEventInsert[] = [];
-  
+
       // Create contacts from the data
       for (const contactData of data) {
         // Skip if the phone number is invalid
         if (contactData.phone === "Invalid") {
           continue;
         }
-  
+
         if (!contactData.phone) {
           // console.log("Skipping contact without phone number:", contactData);
           continue;
         }
-  
+
         // Find the contact by phone number
         const existingContact = await findContactByWaId(contactData.phone);
-  
+
         // If the contact doesn't exist, create a new contact
         if (!existingContact) {
           // Create a new contact
@@ -203,16 +199,16 @@ const DevToolsPage: React.FC = function () {
             email: contactData.email || "",
             project_id: 1,
           };
-  
+
           // Add the contact to the database
           const contact = await addContact(newContact);
-  
+
           if (!contact) {
             console.error("Error adding contact:", newContact);
             setErrorCount((prev) => prev + 1);
             continue;
           }
-  
+
           // Create a new contact event
           const newContactEvent: ContactEventInsert = {
             contact_id: contact.contact_id,
@@ -226,7 +222,7 @@ const DevToolsPage: React.FC = function () {
               contactData.date || new Date().toISOString()
             } in the amount of ${contactData.amount} (${contactData.tag_2})`,
           };
-  
+
           contactEvents.push(newContactEvent);
           setNewContactCount((prev) => prev + 1);
         } else {
@@ -243,12 +239,12 @@ const DevToolsPage: React.FC = function () {
               contactData.date || new Date().toISOString()
             } in the amount of ${contactData.amount} (${contactData.tag_2})`,
           };
-  
+
           contactEvents.push(newContactEvent);
           setOldContactCount((prev) => prev + 1);
         }
       }
-  
+
       console.log("Contact events:", contactEvents.length);
       // Bulk add contact events
       const result = await bulkAddContactEvents(contactEvents);
@@ -262,7 +258,7 @@ const DevToolsPage: React.FC = function () {
       console.error("Error reading file:", error);
     }
   };
-  
+
   const [totalInvalid, setTotalInvalid] = useState(0);
 
   const formatPhoneNumber = (phone: string): string => {
@@ -359,7 +355,11 @@ const DevToolsPage: React.FC = function () {
         </div>
       </div>
 
-      <button onClick={launchWhatsAppSignup} className="background-color: #1877f2; border: 0; border-radius: 4px; color: #fff; cursor: pointer; font-family: Helvetica, Arial, sans-serif; font-size: 16px; font-weight: bold; height: 40px; padding: 0 24px;">Login with Facebook</button>
+      <button
+        onClick={launchWhatsAppSignup}
+        className="background-color: #1877f2; border: 0; border-radius: 4px; color: #fff; cursor: pointer; font-family: Helvetica, Arial, sans-serif; font-size: 16px; font-weight: bold; height: 40px; padding: 0 24px;">
+        Login with Facebook
+      </button>
 
       <div className="flex flex-col p-4 ">
         <div className="overflow-x-auto">

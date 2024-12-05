@@ -58,6 +58,7 @@ import DevToolsPage from "./pages/dev";
 import { ContactEventProvider } from "./context/ContactEventContext";
 import ContactEventPage from "./pages/contacts/contact-timeline";
 import FIRECalculator from "./pages/mini/fire";
+import PhoneNumbersPage from "./pages/phone-numbers";
 
 const App = () => (
   <AlertProvider>
@@ -190,6 +191,12 @@ const App = () => (
                                       <Route
                                         path="/dev"
                                         element={<DevToolsPage />}
+                                      />
+
+                                      {/* Phone numbers */}
+                                      <Route
+                                        path="/phone-numbers"
+                                        element={<PhoneNumbersPage />}
                                       />
                                     </Route>
 

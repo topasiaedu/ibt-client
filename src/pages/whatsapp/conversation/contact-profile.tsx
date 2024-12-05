@@ -1,12 +1,12 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { Button, Card } from "flowbite-react";
+import { Button } from "flowbite-react";
 import React, { useEffect } from "react";
 import { HiChevronLeft } from "react-icons/hi";
-import { Contact } from "../../../context/ContactContext";
-import { useMessagesContext } from "../../../context/MessagesContext";
-import { Conversation } from "../../../context/ConversationContext";
-import { useProjectContext } from "../../../context/ProjectContext";
 import UpdateNoticeComponent from "../../../components/UpdateNoticeComponent";
+import { Contact } from "../../../context/ContactContext";
+import { Conversation } from "../../../context/ConversationContext";
+import { useMessagesContext } from "../../../context/MessagesContext";
+import { useProjectContext } from "../../../context/ProjectContext";
 
 interface ContactProfileProps {
   conversation: Conversation;

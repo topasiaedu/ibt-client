@@ -1,17 +1,16 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { Breadcrumb, Label, Table, TextInput } from "flowbite-react";
+import { Breadcrumb, Dropdown, Label, Table, TextInput } from "flowbite-react";
+import debounce from "lodash.debounce";
 import type { FC } from "react";
 import React, { useEffect } from "react";
 import { HiHome } from "react-icons/hi";
+import { useNavigate } from "react-router-dom";
+import { Contacts, useContactContext } from "../../context/ContactContext";
+import { usePhoneNumberContext } from "../../context/PhoneNumberContext";
 import NavbarSidebarLayout from "../../layouts/navbar-sidebar";
+import LoadingPage from "../pages/loading";
 import AddContactModal from "./add-contact-modal";
 import EditContactModal from "./edit-contact-modal";
-import LoadingPage from "../pages/loading";
-import { useContactContext, Contacts } from "../../context/ContactContext";
-import { usePhoneNumberContext } from "../../context/PhoneNumberContext";
-import debounce from "lodash.debounce";
-import { useNavigate } from "react-router-dom";
-import { Dropdown } from "flowbite-react";
 
 const ContactListPage: FC = function () {
   const { contacts, loading, searchResults, searchContacts } =
