@@ -53,7 +53,7 @@ const PhoneNumbersPage: React.FC = function () {
     // Conversion tracking code
     if (window.fbq) {
       window.fbq("trackCustom", "WhatsAppOnboardingStart", {
-        appId: "421461570288196",
+        appId: "8812952435450879",
         feature: "whatsapp_embedded_signup",
       });
     }
@@ -71,7 +71,7 @@ const PhoneNumbersPage: React.FC = function () {
         }
       },
       {
-        config_id: "<CONFIG_ID>", // Replace with your configuration ID
+        config_id: "8953343201416567", // Replace with your configuration ID
         response_type: "code", // must be 'code' for System User access token
         override_default_response_type: true,
         extras: {
