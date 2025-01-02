@@ -37,7 +37,7 @@ const PhoneNumbersPage: React.FC = function () {
     const initializeFacebookSDK = () => {
       window.fbAsyncInit = function () {
         window.FB.init({
-          appId: "421461570288196", // Replace with your actual Facebook App ID
+          appId: "8812952435450879", // Replace with your actual Facebook App ID
           cookie: true,
           xfbml: true,
           version: "v21.0", // Graph API version
